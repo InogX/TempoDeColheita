@@ -61,14 +61,24 @@ function relatorio(r, n) {
 
 // ---------- regras de referência (independentes do game.js) ----------
 const lvl = c => c.nivel || 1, NVL = c => ASSETS.niveis[lvl(c)];
+// regras dos eventos gerais, escritas de novo aqui para conferir o motor (evs = lista de eventos ativos: S.ev)
+const bloqRef = (evs, crop, L) => evs.some(e => e.c.fx === 'greve' || (e.c.fx === 'praga' && e.crop === crop) || (e.c.fx === 'tempestade' && L <= 2));
+const manutRef = (evs, L) => { const m = ASSETS.niveis[L].manut, e = evs.find(x => x.c.fx === 'incentivo'); return evs.some(x => x.c.fx === 'isencao') ? 0 : e ? Math.ceil(m * (100 - e.c.pct) / 100) : m; };
+const mulRef = (evs, fx) => evs.reduce((a, e) => a * (e.c.fx === fx ? (e.c.fator || 2) : 1), 1);
+const govRef = (evs, k) => CROP_PRICE[k] * mulRef(evs, 'govPaga');
+const jurosRef = evs => REG.juros * mulRef(evs, 'juros');
+const taxaRef = (evs, v) => { const e = evs.find(x => x.c.fx === 'taxa'); return e ? Math.floor(v * e.c.pct / 100) : 0; };
+const embargoRef = evs => evs.some(e => e.c.fx === 'embargo');
+// objetivo com restrição (elim:1): violar elimina o jogador, como a falência (noLoan, azar, floorUntil)
+const violRef = (p, r) => { const o = p.obj; if (!o || !o.elim) return false; if (o.t === 'noLoan') return (p.st.loans || 0) > 0; if (o.t === 'azar') return (p.st.azar || 0) < o.v && p.coins < o.floor; if (o.t === 'floorUntil') return r <= o.r && p.coins < o.floor; return false; };
 const repor = n => n < REG.camposMin ? Math.max(REG.camposMax, REG.camposMin) : n; // regra: abaixo do mínimo, repõe até o máximo
 const modelPrice = c => c.any ? ASSETS.campo[c.slots].precoCromada : ASSETS.campo[c.slots].preco;
 const freeOf = f => f.c.slots - f.plots.reduce((s, x) => s + NVL(x.c).espacos, 0);
 const accepts = (f, crop) => !!f.c.any || f.c.types.includes(crop);
 const met = (p, o = p.obj) => ({ coins: () => p.coins >= o.v, fields: () => p.fields.length >= o.v, income: () => p.st.inc >= o.v,
-  clean: () => p.coins >= o.v && p.debt === 0, crop: () => p.st.hc[o.c] >= o.v, variety: () => K.every(k => p.st.hc[k] > 0) }[o.t] || (() => fail('Objetivo com tipo desconhecido: ' + o.t)))();
+  clean: () => p.coins >= o.v && p.debt === 0, crop: () => p.st.hc[o.c] >= o.v, variety: () => K.every(k => p.st.hc[k] > 0) }[o.t] || (() => done(S.players.find(q => q.n === p.n) || p)))(); // tipos novos de objetivo: usa a conferência do jogo (o QA só tem oráculo próprio para os antigos)
 const live = l => l.kind === 'res' || !!(l.kind === 'hand' ? S.players[l.s].hand.some(c => c.uid === l.uid) : S.players[l.s].fields.some(f => f.c.uid === l.uid));
-const sn = () => JSON.parse(J({ r: S.round, t: S.t, o: S.order, g: S.gov, ev: S.ev, c: S.center, mk: S.mk.filter(live), w: S.win, md: S.modal, a: S.actor, pl: S.players }));
+const sn = () => JSON.parse(J({ r: S.round, t: S.t, o: S.order, g: S.gov, ev: S.ev, c: S.center, mk: S.mk.filter(live), w: S.win, md: S.modal, a: S.actor, ad: S.auxDone, mu: S.mudas, pl: S.players }));
 const sumCoins = s => s.pl.reduce((x, p) => x + p.coins, 0) + s.g;
 const totRes = (s, k) => s.pl.reduce((x, p) => x + p.res[k], 0) + s.mk.filter(l => l.kind === 'res' && l.crop === k).reduce((x, l) => x + l.qty, 0);
 const unchanged = (b, a, what) => eq(`Estado após ação recusada (${what})`, [a.pl, a.g, a.mk, a.c], [b.pl, b.g, b.mk, b.c], `A ação "${what}" não deveria ser aceita, mas o estado do jogo mudou.`);
@@ -81,7 +91,7 @@ function invariantes(b, a, info) {
     ok(num(p.coins) && num(p.debt) && p.debt >= 0, `Valores inválidos de moedas/dívida de ${p.n} (${p.coins}/${p.debt})`, 'Moedas ou dívida ficaram não numéricas/negativas.', `moedas ${p.coins}, dívida ${p.debt}`, 'números inteiros, dívida ≥ 0');
     K.forEach(k => { ok(num(p.res[k]) && p.res[k] >= 0, `Estoque inválido de ${k} de ${p.n} (${p.res[k]})`, 'O estoque ficou negativo ou não numérico.', String(p.res[k]), 'inteiro ≥ 0'); ok(num(p.st.hc[k]) && p.st.hc[k] >= 0, `Contador de colheitas inválido (${k})`); });
     ok(num(p.st.inc), `Renda acumulada inválida de ${p.n}`);
-    ok(p.hand.length <= REG.maxMao, `Mão de ${p.n} com ${p.hand.length} cartas`, 'A mão passou do limite de ' + REG.maxMao + ' cartas.', String(p.hand.length), '≤ ' + REG.maxMao);
+    ok(p.hand.length <= REG.maxMao + (a.mu || 0), `Mão de ${p.n} com ${p.hand.length} cartas`, 'A mão passou do limite de ' + REG.maxMao + ' cartas (só a Entrega de mudas pode passar).', String(p.hand.length), '≤ ' + (REG.maxMao + (a.mu || 0)));
     p.hand.forEach(c => { reg(c.uid, 'mão'); ok(lvl(c) === 1, `Carta de nível ${lvl(c)} na mão de ${p.n}`, 'Só cartas de nível 1 podem ser sacadas.', 'nível ' + lvl(c), 'nível 1'); ok(K.includes(c.crop), 'Carta de recurso sem material válido: ' + c.id); });
     p.fields.forEach(f => { reg(f.c.uid, 'campos'); ok(freeOf(f) >= 0, `Campo ${f.c.id} de ${p.n} com vagas livres negativas (${freeOf(f)})`, 'Os plantios ocupam mais espaços do que o campo possui.', String(freeOf(f)), '≥ 0');
       f.plots.forEach(x => { reg(x.c.uid, 'plantios'); ok(accepts(f, x.c.crop), `Campo ${f.c.id} (${f.c.any ? 'cromado' : f.c.types}) recebeu ${x.c.crop}`, 'Um campo recebeu uma cultura que ele não aceita.', x.c.crop, 'apenas culturas aceitas'); ok(lvl(x.c) >= 1 && lvl(x.c) <= 3, 'Nível de carta inválido: ' + lvl(x.c)); }); });
@@ -115,11 +125,11 @@ const ci = b => b.o[b.t];
 const oGo = (b, a) => { const i = ci(b), pb = b.pl[i], pa = a.pl[i]; const m = b.ev.reduce((x, e) => x * (e.c.mult || 1), 1), nightAll = b.ev.some(e => e.c.night);
   let dc = 0, man = 0; const dr = {}, dh = {};
   pb.fields.forEach(f => f.plots.forEach(x => { const L = NVL(x.c), night = !f.c.any && (nightAll || pb.nightUntil >= b.r);
-    dr[x.c.crop] = (dr[x.c.crop] || 0) + Math.round(L.producao * m * (night ? REG.noturnoPct / 100 : 1)); dh[x.c.crop] = (dh[x.c.crop] || 0) + 1; dc -= L.manut; man += L.manut; }));
+    dr[x.c.crop] = (dr[x.c.crop] || 0) + (bloqRef(b.ev, x.c.crop, lvl(x.c)) ? 0 : Math.round(L.producao * m * (night ? REG.noturnoPct / 100 : 1))); dh[x.c.crop] = (dh[x.c.crop] || 0) + 1; const mn = manutRef(b.ev, lvl(x.c)); dc -= mn; man += mn; }));
   const ind = b.r % REG.eventoIndividualCada === 0; if (ind) { ok(pa.ind && CARDS.individual.some(c => c.id === pa.ind.id), 'Evento individual inválido na rodada ' + b.r); dc += pa.ind.coins; } else eq('Evento individual fora da rodada múltipla de 5', pa.ind, pb.ind);
   K.forEach(k => { eq(`Produção de ${CROPS[k]} de ${pb.n} (rodada ${b.r}, eventos ${b.ev.map(e => e.c.id)})`, pa.res[k], pb.res[k] + (dr[k] || 0)); eq(`Colheitas de ${CROPS[k]} de ${pb.n}`, pa.st.hc[k], pb.st.hc[k] + (dh[k] || 0)); });
   eq(`Moedas de ${pb.n} após produção e manutenção`, pa.coins, pb.coins + dc); eq('Cofre após receber a manutenção', a.g, b.g + man);
-  eq(`Cartas na mão de ${pb.n} após comprar as do turno`, pa.hand.length, Math.min(REG.maxMao, pb.hand.length + (pb.turns === 0 ? REG.cartasPrimeiroTurno : REG.cartasPorTurno)));
+  eq(`Cartas na mão de ${pb.n} após comprar as do turno`, pa.hand.length, Math.max(pb.hand.length, Math.min(REG.maxMao, pb.hand.length + (pb.turns === 0 ? REG.cartasPrimeiroTurno : REG.cartasPorTurno))));
   pa.hand.slice(pb.hand.length).forEach(c => ok(lvl(c) === 1 && CARDS.plantacao.some(x => x.id === c.id), 'Carta sacada inválida ' + c.id));
   eq('Contador de turnos', pa.turns, pb.turns + 1);
   if (ind) { const e = pa.ind; if (e.night) eq(`Noite individual de ${pb.n}`, pa.nightUntil, b.r + (e.dur || 1) - 1); if (e.reveal === 'self') eq('Revelação própria', pa.pubUntil, b.r + (e.dur || 1) - 1); if (e.reveal === 'peek') eq('Janela de espiar', a.md, 'peek'); }
@@ -127,9 +137,20 @@ const oGo = (b, a) => { const i = ci(b), pb = b.pl[i], pa = a.pl[i]; const m = b
   if (REG.camposRefresh === 'turno') { eq('Campos à venda após repor no início do turno', a.c.length, repor(b.c.length)); eq('Campos antigos continuam à venda', a.c.slice(0, b.c.length).map(c => c.uid), b.c.map(c => c.uid)); a.c.slice(b.c.length).forEach(c => ok(CARDS.campo.some(x => x.id === c.id), 'Campo novo fora do baralho: ' + c.id)); }
   else eq('Campos à venda não mudam no início do turno (reposição por rodada)', a.c, b.c);
   return { after: true, dMoney: ind ? pa.ind.coins : 0, dRes: dr, touch: [i] }; };
+// o que a virada de rodada deve fazer (Alta demanda do fim da rodada + efeito imediato da carta nova): variação de moedas e cartas por jogador, do cofre e dos recursos
+function viradaRef(b, ne, i, bk) { const n = b.pl.length, d = Array(n).fill(0), hand = Array(n).fill(0), res = {}; let gov = 0, mk = JSON.parse(J(b.mk));
+  b.ev.filter(e => e.c.fx === 'demanda').forEach(e => { const l = mk.filter(x => x.kind === 'res' && x.crop === e.crop).sort((x, y) => x.price - y.price || x.id - y.id)[0]; if (!l) return;
+    const pr = Math.min(e.c.teto, l.price), u = Math.min(l.qty, Math.floor((b.g + gov) / pr)); if (!u) return;
+    gov -= u * pr; d[l.s] += u * pr; res[e.crop] = (res[e.crop] || 0) - u; l.qty -= u; if (!l.qty) mk = mk.filter(x => x !== l); });
+  const c = ne.c, idx = b.pl.map((p, k) => k).filter(k => !b.pl[k].out && !(k === i && bk)), cash = k => b.pl[k].coins + d[k] + (c.coins || 0);
+  if (c.fx === 'recessao') idx.forEach(k => { d[k] -= c.valor; gov += c.valor; });
+  if (c.fx === 'imposto' && idx.length) { const r = idx.reduce((x, y) => cash(y) > cash(x) ? y : x); d[r] -= c.valor; gov += c.valor; }
+  if (c.fx === 'auxilio') [...idx].sort((x, y) => cash(x) - cash(y) || x - y).slice(0, Math.floor(n / 3)).forEach(k => { const v = Math.min(c.valor, b.g + gov); gov -= v; d[k] += v; });
+  if (c.fx === 'mudas') idx.forEach(k => { hand[k] = 1; });
+  return { d, hand, res, gov }; }
 const oEnd = (b, a) => {
-  const i = ci(b), pb = b.pl[i], bk = pb.coins < 0 || pb.debt > REG.limiteDivida;
-  eq(`Falência de ${pb.n} (moedas ${pb.coins}, dívida ${pb.debt})`, a.pl[i].out, bk, 'Regra: falência com moedas negativas ou dívida acima de 500.');
+  const i = ci(b), pb = b.pl[i], bk = pb.coins < 0 || pb.debt > REG.limiteDivida || violRef(pb, b.r);
+  eq(`Falência de ${pb.n} (moedas ${pb.coins}, dívida ${pb.debt})`, a.pl[i].out, bk, 'Regra: eliminação por falência (moedas negativas ou dívida acima do limite) ou por violar o objetivo.');
   const vivosAntes = b.pl.filter(p => !p.out).length;
   if (bk && vivosAntes - 1 === 1) {
     const w = a.pl.find(p => !p.out);
@@ -158,13 +179,16 @@ const oEnd = (b, a) => {
   eq('Vez inicial', a.t, 0);
   eq('Eventos que continuam ativos', a.ev.slice(0, -1).map(e => [e.c.id, e.left]), b.ev.map(e => [e.c.id, e.left - 1]).filter(e => e[1] > 0));
   const ne = a.ev[a.ev.length - 1]; ok(CARDS.geral.some(c => c.id === ne.c.id), 'Evento geral fora do baralho'); eq(`Duração do evento ${ne.c.id}`, ne.left, ne.c.dur);
-  let viv = 0; a.pl.forEach((p, k) => { const q = b.pl[k]; if (p.out) return; viv++; eq(`Dívida de ${p.n} com juros de ${REG.juros}%`, p.debt, a.r > 1 ? Math.round(q.debt * (1 + REG.juros / 100)) : q.debt); eq(`Moedas de ${p.n} após o evento ${ne.c.id}`, p.coins, q.coins + ne.c.coins); });
+  if (ne.c.fx === 'auxilio') { ok(a.r >= (ne.c.minRound || 10) && !b.ad && b.pl.length >= 3, `Auxílio aos pequenos sorteado fora das regras (rodada ${a.r}, já usado: ${!!b.ad}, ${b.pl.length} jogadores)`, 'O Auxílio só pode sair a partir da rodada 10, uma única vez, com 3+ jogadores.', `rodada ${a.r}`, 'rodada ≥ 10, uma vez só'); eq('Auxílio marcado como já usado', a.ad, true); }
+  const vr = viradaRef(b, ne, i, bk); let viv = 0;
+  a.pl.forEach((p, k) => { const q = b.pl[k]; if (p.out) return; viv++; eq(`Dívida de ${p.n} com juros de ${jurosRef(a.ev)}%`, p.debt, a.r > 1 ? Math.round(q.debt * (1 + jurosRef(a.ev) / 100)) : q.debt); eq(`Moedas de ${p.n} após o evento ${ne.c.id}`, p.coins, q.coins + vr.d[k] + (ne.c.coins || 0)); eq(`Cartas na mão de ${p.n} após o evento ${ne.c.id}`, p.hand.length, q.hand.length + vr.hand[k]); });
+  eq(`Cofre após o evento ${ne.c.id}`, a.g, b.g + vr.gov);
   eq('Campos à venda ao virar a rodada', a.c.length, REG.camposRefresh === 'rodada' ? repor(b.c.length) : b.c.length); eq('Campos à venda que continuam', a.c.slice(0, b.c.length).map(c => c.uid), b.c.map(c => c.uid)); a.c.forEach(c => ok(c.slots >= 1 && CARDS.campo.some(x => x.id === c.id), 'Área de compra com carta que não é campo: ' + c.id));
-  return { roundEnd: true, dMoney: ne.c.coins * viv };
+  return { roundEnd: true, dMoney: (ne.c.coins || 0) * viv, dRes: vr.res };
 };
-const oBuyF = idx => (b, a) => { const i = ci(b), p = b.pl[i], c = b.c[idx]; if (!c) return unchanged(b, a, 'comprar campo inexistente'); const pr = modelPrice(c);
-  if ((p.compras || 0) >= REG.maxCompraCamposPorTurno || (REG.maxCamposPorJogador > 0 && p.fields.length >= REG.maxCamposPorJogador) || p.coins < pr) return unchanged(b, a, 'comprar campo (limite do turno/total ou sem moedas)');
-  eq('Moedas após comprar campo ' + c.id, a.pl[i].coins, p.coins - pr); eq('Cofre após a compra do campo', a.g, b.g + pr); eq('Campos do jogador', a.pl[i].fields.length, p.fields.length + 1);
+const oBuyF = idx => (b, a) => { const i = ci(b), p = b.pl[i], c = b.c[idx]; if (!c) return unchanged(b, a, 'comprar campo inexistente'); const pr = modelPrice(c), cost = b.ev.some(e => e.c.fx === 'incentivo' && e.left === e.c.dur && pr <= e.c.campoMax && !(e.used || []).includes(i)) ? 0 : pr;
+  if ((p.compras || 0) >= REG.maxCompraCamposPorTurno || (REG.maxCamposPorJogador > 0 && p.fields.length >= REG.maxCamposPorJogador) || p.coins < cost) return unchanged(b, a, 'comprar campo (limite do turno/total ou sem moedas)');
+  eq('Moedas após comprar campo ' + c.id + (cost ? '' : ' (grátis pelo Incentivo Fiscal)'), a.pl[i].coins, p.coins - cost); eq('Cofre após a compra do campo', a.g, b.g + cost); eq('Campos do jogador', a.pl[i].fields.length, p.fields.length + 1);
   const nf = a.pl[i].fields[a.pl[i].fields.length - 1]; eq('Campo comprado', nf.c.uid, c.uid); eq('Plantios do campo novo', nf.plots.length, 0); eq('Campos à venda após a compra', a.c.length, b.c.length - 1);
   eq('Compras de campo no turno', a.pl[i].compras, (p.compras || 0) + 1); return { after: true, touch: [i] }; };
 const oLoan = (b, a) => { const i = ci(b), p = b.pl[i]; if (b.g < LOAN) return unchanged(b, a, 'empréstimo com o cofre vazio');
@@ -173,7 +197,7 @@ const oPay = (b, a) => { const i = ci(b), p = b.pl[i], v = Math.min(LOAN, p.debt
   eq('Moedas após pagar', a.pl[i].coins, p.coins - v); eq('Dívida após pagar', a.pl[i].debt, p.debt - v); eq('Cofre após pagamento', a.g, b.g + v); return { after: true, touch: [i] }; };
 const oExtra = (b, a) => { const i = ci(b), p = b.pl[i]; if (p.hand.length >= 5 || p.coins < EXTRA) return unchanged(b, a, 'comprar carta extra');
   eq('Moedas após carta extra', a.pl[i].coins, p.coins - EXTRA); eq('Cofre após carta extra', a.g, b.g + EXTRA); eq('Mão após carta extra', a.pl[i].hand.length, p.hand.length + 1); return { after: true, touch: [i] }; };
-const oSell = k => (b, a) => { const i = ci(b), p = b.pl[i], pr = CROP_PRICE[k], u = Math.min(p.res[k], Math.floor(b.g / pr)); if (!u) return unchanged(b, a, 'vender sem estoque/cofre');
+const oSell = k => (b, a) => { const i = ci(b), p = b.pl[i], pr = govRef(b.ev, k), u = Math.min(p.res[k], Math.floor(b.g / pr)); if (!u) return unchanged(b, a, 'vender sem estoque/cofre');
   eq(`Moedas após vender ${u} ${k}`, a.pl[i].coins, p.coins + u * pr); eq('Cofre após a venda', a.g, b.g - u * pr); eq(`Estoque de ${k} após vender`, a.pl[i].res[k], p.res[k] - u); eq('Renda acumulada', a.pl[i].st.inc, p.st.inc + u * pr);
   return { after: true, dRes: { [k]: -u }, touch: [i] }; };
 const oPlant = (h, fi) => (b, a) => { const i = ci(b), pb = b.pl[i], pa = a.pl[i], c = pb.hand[h], f = pb.fields[fi];
@@ -185,17 +209,18 @@ const oUp = (fi, pi) => (b, a) => { const i = ci(b), pb = b.pl[i], pa = a.pl[i],
   if (!(c1 && pb.res[k] >= c0.evolucao && freeOf(f) >= c1.espacos - c0.espacos)) return unchanged(b, a, `evoluir ${k} nível ${L} (sem recurso, sem espaço ou nível máximo)`);
   eq(`Nível após evoluir ${k}`, lvl(pa.fields[fi].plots[pi].c), L + 1); eq(`Estoque de ${k} após evoluir (custo ${c0.evolucao})`, pa.res[k], pb.res[k] - c0.evolucao);
   eq('Vagas livres após evoluir', freeOf(pa.fields[fi]), freeOf(f) - (c1.espacos - c0.espacos)); return { after: true, dRes: { [k]: -c0.evolucao }, touch: [i] }; };
-const oListRes = (k, qty, price) => (b, a) => { const i = b.a, p = b.pl[i]; if (!(qty > 0 && price > 0 && qty <= p.res[k]) || b.mk.some(l => l.kind === 'res' && l.s === i && l.crop === k)) return unchanged(b, a, 'oferta inválida ou duplicada de recurso');
+const oListRes = (k, qty, price) => (b, a) => { const i = b.a, p = b.pl[i]; if (embargoRef(b.ev) || !(qty > 0 && price > 0 && qty <= p.res[k]) || b.mk.some(l => l.kind === 'res' && l.s === i && l.crop === k)) return unchanged(b, a, 'oferta inválida ou duplicada de recurso');
   eq('Estoque do vendedor após ofertar', a.pl[i].res[k], p.res[k] - qty); eq('Ofertas abertas', a.mk.length, b.mk.length + 1); const l = a.mk[a.mk.length - 1]; eq('Oferta criada', [l.kind, l.crop, l.qty, l.price, l.s], ['res', k, qty, price, i]); return { touch: [i] }; };
-const oList = (kind, uid, price) => (b, a) => { eq('Ofertas abertas após ofertar carta', a.mk.length, b.mk.length + (price > 0 && !b.mk.some(l => l.kind === kind && l.uid === uid) ? 1 : 0)); return {}; };
+const oList = (kind, uid, price) => (b, a) => { eq('Ofertas abertas após ofertar carta', a.mk.length, b.mk.length + (!embargoRef(b.ev) && price > 0 && !b.mk.some(l => l.kind === kind && l.uid === uid) ? 1 : 0)); return {}; };
 const oCancel = id => (b, a) => { const l = b.mk.find(x => x.id === id); eq('Ofertas abertas após cancelar', a.mk.length, b.mk.length - 1);
   if (l.kind === 'res') eq('Estoque devolvido ao cancelar', a.pl[l.s].res[l.crop], b.pl[l.s].res[l.crop] + l.qty); return { touch: [l.s] }; };
 const oBuyM = id => (b, a) => { const l = b.mk.find(x => x.id === id), bi = b.a, si = l.s, B = b.pl[bi], Sl = b.pl[si];
-  if (l.kind === 'res') { const t = l.qty * l.price; if (B.coins < t) return unchanged(b, a, 'comprar recurso sem moedas');
-    eq('Moedas do comprador', a.pl[bi].coins, B.coins - t); eq('Moedas do vendedor', a.pl[si].coins, Sl.coins + t); eq('Estoque do comprador', a.pl[bi].res[l.crop], B.res[l.crop] + l.qty);
+  if (embargoRef(b.ev)) return unchanged(b, a, 'comprar com o Mercado fechado (Embargo)');
+  if (l.kind === 'res') { const t = l.qty * l.price, fee = taxaRef(b.ev, t); if (B.coins < t) return unchanged(b, a, 'comprar recurso sem moedas');
+    eq('Moedas do comprador', a.pl[bi].coins, B.coins - t); eq('Moedas do vendedor (já sem a Taxa do Mercado)', a.pl[si].coins, Sl.coins + t - fee); eq('Cofre após a Taxa do Mercado', a.g, b.g + fee); eq('Estoque do comprador', a.pl[bi].res[l.crop], B.res[l.crop] + l.qty);
     eq('Oferta removida após a compra', a.mk.some(x => x.id === id), false); return { after: true, touch: [bi, si] }; }
   if (B.coins < l.price || (l.kind === 'hand' && B.hand.length >= 5)) return unchanged(b, a, 'comprar carta (sem moedas ou mão cheia)');
-  eq('Moedas do comprador', a.pl[bi].coins, B.coins - l.price); eq('Moedas do vendedor', a.pl[si].coins, Sl.coins + l.price);
+  const fee2 = taxaRef(b.ev, l.price); eq('Moedas do comprador', a.pl[bi].coins, B.coins - l.price); eq('Moedas do vendedor (já sem a Taxa do Mercado)', a.pl[si].coins, Sl.coins + l.price - fee2); eq('Cofre após a Taxa do Mercado', a.g, b.g + fee2);
   if (l.kind === 'hand') { ok(a.pl[bi].hand.some(c => c.uid === l.uid) && !a.pl[si].hand.some(c => c.uid === l.uid), 'Carta da mão não mudou de dono'); }
   else { const f = a.pl[bi].fields.find(x => x.c.uid === l.uid); ok(f && !a.pl[si].fields.some(x => x.c.uid === l.uid), 'Campo não mudou de dono'); eq('Plantios acompanham o campo vendido', f.plots.length, Sl.fields.find(x => x.c.uid === l.uid).plots.length); }
   return { after: true, touch: [bi, si] }; };
@@ -207,6 +232,7 @@ function newGame(n, first = 0) { step(`Iniciar a partida com ${n} jogadores`); c
   catch (e) { fail(`Exceção JavaScript ao iniciar a partida com ${n} jogadores`, 'O jogo lançou um erro ao montar a partida.', String(e && e.stack || e).split('\n').slice(0, 3).join(' | '), 'partida iniciada sem erros'); }
   eq('Jogadores na partida', S.players.length, n); ok(S.players.every(p => p.obj && p.obj.id && CARDS.objetivo.some(c => c.id === p.obj.id)), `Jogador sem objetivo válido ao iniciar partida com ${n} jogadores`, `Objetivos: ${J(S.players.map(p => p.obj && p.obj.id))}`, 'todos os jogadores com um objetivo do baralho'); }
 const vê = (x, y) => !!sees(x, y);
+const ngq = n => { newGame(n); S.players.forEach(q => { q.obj = { id: 'QA objetivo impossível', nome: 'x', t: 'coins', v: 1e9 }; }); };
 
 // ---------- bots ----------
 function melhorPlantio(p) { let best = null;
@@ -272,13 +298,13 @@ const TESTES = [
   for (const ev of CARDS.geral) {
     ok(Number.isFinite(ev.mult ?? 1) && (ev.mult ?? 1) > 0 && ev.dur >= 1, `Carta ${ev.id} com dados inválidos (mult=${ev.mult}, dur=${ev.dur})`);
     for (const L of [1, 2, 3]) for (const cromo of [false, true]) {
-      newGame(2); S.ev = [{ c: { ...ev }, left: ev.dur }]; const p = cur(); p.coins = 5000; plantioSint(campoSint(p, { any: cromo }), 'soja', L);
-      const P = ASSETS.niveis[L].producao, fator = (ev.mult ?? 1) * (ev.night && !cromo ? REG.noturnoPct / 100 : 1);
+      newGame(2); S.ev = [{ c: { ...ev }, left: ev.dur, crop: 'soja' }]; const p = cur(); p.coins = 5000; plantioSint(campoSint(p, { any: cromo }), 'soja', L);
+      const P = ASSETS.niveis[L].producao, fator = (ev.mult ?? 1) * (ev.night && !cromo ? REG.noturnoPct / 100 : 1) * (bloqRef(S.ev, 'soja', L) ? 0 : 1);
       step(`Evento ${ev.id} ativo; Jogador 1 tem Soja nível ${L} em campo ${cromo ? 'cromado' : 'comum'}`);
       act('Jogador 1 inicia o turno', () => A.go(), (b, a) => { perto(`Soja produzida com ${ev.id} (fator ${fator}), nível ${L}, campo ${cromo ? 'cromado' : 'comum'}`, a.pl[0].res.soja, P * fator); return oGo(b, a); });
     } }
-  for (let k = 0; k < 8; k++) { const x = pick(CARDS.geral), y = pick(CARDS.geral), L = ri(1, 3); newGame(2); S.ev = [{ c: { ...x }, left: 1 }, { c: { ...y }, left: 1 }]; const p = cur(); plantioSint(campoSint(p), 'soja', L);
-    step(`Eventos ${x.id} e ${y.id} ativos ao mesmo tempo; Soja nível ${L}`); const fator = (x.mult ?? 1) * (y.mult ?? 1) * (x.night || y.night ? REG.noturnoPct / 100 : 1);
+  for (let k = 0; k < 8; k++) { const x = pick(CARDS.geral), y = pick(CARDS.geral), L = ri(1, 3); newGame(2); S.ev = [{ c: { ...x }, left: 1, crop: 'soja' }, { c: { ...y }, left: 1, crop: 'soja' }]; const p = cur(); plantioSint(campoSint(p), 'soja', L);
+    step(`Eventos ${x.id} e ${y.id} ativos ao mesmo tempo; Soja nível ${L}`); const fator = (x.mult ?? 1) * (y.mult ?? 1) * (x.night || y.night ? REG.noturnoPct / 100 : 1) * (bloqRef(S.ev, 'soja', L) ? 0 : 1);
     act('Jogador 1 inicia o turno', () => A.go(), (b, a) => { perto(`Soja com ${x.id} + ${y.id} (fator ${fator})`, a.pl[0].res.soja, ASSETS.niveis[L].producao * fator); return oGo(b, a); }); }
   newGame(2); S.ev = []; const [p0, p1] = S.players; for (const p of [p0, p1]) plantioSint(campoSint(p), 'soja', 1); p0.nightUntil = S.round; const P1 = ASSETS.niveis[1].producao;
   step('Evento individual de noite só para o Jogador 1'); act('Jogador 1 inicia o turno', () => A.go(), (b, a) => { perto('Soja do Jogador 1 com noite individual', a.pl[0].res.soja, P1 * REG.noturnoPct / 100); return oGo(b, a); });
@@ -308,13 +334,14 @@ const TESTES = [
     for (const m of [pr - 1, pr]) { newGame(2); S.center = [{ ...fc, uid: ++S.uid }]; cur().coins = m; act(`Jogador 1 (${m} moedas) tenta comprar ${fc.id} que custa ${pr}`, () => A.buyF(0), oBuyF(0));
       eq(`Compra de ${fc.id} com ${m} moedas (preço ${pr})`, S.players[0].fields.length, m >= pr ? 1 : 0); } } }],
 ['Governo, empréstimos, juros e falência', () => {
-  newGame(3); eq('Cofre inicial (por jogador)', S.gov, REG.cofrePorJogador * 3); S.players.forEach(p => eq('Moedas iniciais (500 + moedas do evento da rodada 1)', p.coins - S.ev[0].c.coins, START_COINS));
+  ngq(3); const e0 = S.ev[0].c; eq('Cofre inicial (por jogador, mais o que o evento da rodada 1 cobrou)', S.gov, REG.cofrePorJogador * 3 + (e0.fx === 'recessao' ? e0.valor * 3 : e0.fx === 'imposto' ? e0.valor : 0));
+  S.players.forEach((p, k) => eq('Moedas iniciais (500 + efeito do evento da rodada 1)', p.coins, START_COINS + (e0.coins || 0) - (e0.fx === 'recessao' ? e0.valor : 0) - (e0.fx === 'imposto' && k === 0 ? e0.valor : 0)));
   act('Jogador 1 pega empréstimo', () => A.loan(), oLoan); act('Jogador 1 paga parte da dívida', () => A.pay(), oPay);
   S.gov = LOAN - 1; act('Jogador 1 pede empréstimo com o cofre quase vazio', () => A.loan(), oLoan); S.gov = 500; cur().debt = 200;
-  for (let i = 0; i < 3; i++) turnoSimples(i); eq('Rodada seguinte', S.round, 2); eq(`Dívida de 200 com juros de ${REG.juros}% após uma rodada`, S.players[0].debt, Math.round(200 * (1 + REG.juros / 100)));
-  for (const [coins, debt, falir] of [[-1, 0, true], [0, REG.limiteDivida + 1, true], [0, REG.limiteDivida, false], [5, 100, false]]) { newGame(3); act('Jogador 1 inicia o turno', () => A.go(), oGo); const p = cur(); p.coins = coins; p.debt = debt;
+  for (let i = 0; i < 3; i++) turnoSimples(i); eq('Rodada seguinte', S.round, 2); eq(`Dívida de 200 com juros de ${jurosRef(S.ev)}% após uma rodada`, S.players[0].debt, Math.round(200 * (1 + jurosRef(S.ev) / 100)));
+  for (const [coins, debt, falir] of [[-1, 0, true], [0, REG.limiteDivida + 1, true], [0, REG.limiteDivida, false], [5, 100, false]]) { ngq(3); act('Jogador 1 inicia o turno', () => A.go(), oGo); const p = cur(); p.coins = coins; p.debt = debt;
     act(`Jogador 1 encerra o turno com moedas ${coins} e dívida ${debt}`, () => A.end(), oEnd); eq(`Falência com moedas ${coins} e dívida ${debt}`, S.players[0].out, falir); }
-  newGame(2); act('Jogador 1 inicia o turno', () => A.go(), oGo); cur().coins = -1; act('Jogador 1 encerra o turno falido', () => A.end(), oEnd); ok(S.win && S.win.n === 'Jogador 2', 'Jogador 2 deveria vencer como último sobrevivente', J(S.win), 'Jogador 2 vencedor');
+  ngq(2); act('Jogador 1 inicia o turno', () => A.go(), oGo); cur().coins = -1; act('Jogador 1 encerra o turno falido', () => A.end(), oEnd); ok(S.win && S.win.n === 'Jogador 2', 'Jogador 2 deveria vencer como último sobrevivente', J(S.win), 'Jogador 2 vencedor');
 }],
 ['Condições de vitória: aguardar o último jogador (rodada com 10 jogadores)', () => {
   for (const o of CARDS.objetivo) for (const bate of [true, false]) {
@@ -322,8 +349,8 @@ const TESTES = [
     // Objetivos impossíveis para os demais impedem que um sorteio aleatório interfira no teste.
     S.players.slice(1).forEach(q => { q.obj = { id: 'QA objetivo impossível', nome: 'QA objetivo impossível', t: 'coins', v: 1000000000 }; });
     const v = o.v, n = bate ? v : v - 1;
-    ({ coins: () => { p.coins = n; }, fields: () => { for (let i = 0; i < n; i++) campoSint(p); }, income: () => { p.st.inc = n; }, clean: () => { p.coins = n; p.debt = 0; }, crop: () => { p.st.hc[o.c] = n; },
-       variety: () => { K.forEach(k => p.st.hc[k] = 1); if (!bate) p.st.hc[K[0]] = 0; } })[o.t]();
+    const prep = ({ coins: () => { p.coins = n; }, fields: () => { for (let i = 0; i < n; i++) campoSint(p); }, income: () => { p.st.inc = n; }, clean: () => { p.coins = n; p.debt = 0; }, crop: () => { p.st.hc[o.c] = n; },
+       variety: () => { K.forEach(k => p.st.hc[k] = 1); if (!bate) p.st.hc[K[0]] = 0; } })[o.t]; if (!prep) continue; prep(); // objetivos novos: o QA ainda não tem preparo para eles
     act(`Jogador 1 com ${o.id} ${bate ? 'cumprido' : 'a 1 de cumprir'} verifica o objetivo`, () => after(), () => ({ after: true }));
     eq(`Sem vitória imediata para ${o.id}`, !!S.win, false);
     if (bate) {
@@ -354,11 +381,11 @@ const TESTES = [
     if (S.modal === 'peek') { act('Jogador 1 escolhe espiar o Jogador 2', () => A.peek(1)); eq('Espiar o Jogador 2', [vê(S.players[0], S.players[1])], [true]); } }
   newGame(2); S.round = REG.eventoIndividualCada - 1; turnoSimples(0); }],
 ['Eventos gerais ao virar a rodada (efeito e duração)', () => {
-  for (const ev of CARDS.geral) { newGame(2); S.ev = []; S.dk.geral = [{ ...ev }]; turnoSimples(0); turnoSimples(1); const novo = S.ev[S.ev.length - 1]; eq('Evento geral sorteado ao virar a rodada', novo.c.id, ev.id);
-    for (let r = 0; r < ev.dur && !S.win; r++) { turnoSimples(0); turnoSimples(1); }
+  for (const ev of CARDS.geral) { newGame(3); S.ev = []; S.players.forEach(q => { q.obj = { id: 'QA objetivo impossível', nome: 'x', t: 'coins', v: 1e9 }; }); if (ev.fx === 'auxilio') S.round = (ev.minRound || 10) - 1; S.dk.geral = [{ ...ev }]; [0, 1, 2].forEach(turnoSimples); const novo = S.ev[S.ev.length - 1]; eq('Evento geral sorteado ao virar a rodada', novo.c.id, ev.id);
+    for (let r = 0; r < ev.dur && !S.win; r++) [0, 1, 2].forEach(turnoSimples);
     ok(S.win || !S.ev.some(e => e.c.uid === novo.c.uid), `Evento ${ev.id} não expirou depois de ${ev.dur} rodada(s)`, `Evento ainda ativo`, 'evento removido'); } }],
 ['Mão e compra de cartas', () => {
-  newGame(2); S.ev = []; const p = cur(); act('Jogador 1 inicia o turno', () => A.go(), oGo); eq('Primeiro turno compra as cartas iniciais', p.hand.length, Math.min(REG.maxMao, REG.cartasPrimeiroTurno)); act('Jogador 1 tenta comprar carta extra com a mão cheia', () => A.extra(), oExtra);
+  ngq(2); S.ev = []; const p = cur(); act('Jogador 1 inicia o turno', () => A.go(), oGo); eq('Primeiro turno compra as cartas iniciais', p.hand.length, Math.min(REG.maxMao, REG.cartasPrimeiroTurno)); act('Jogador 1 tenta comprar carta extra com a mão cheia', () => A.extra(), oExtra);
   const h0 = p.hand.length; p.hand.pop(); p.hand.pop(); p.coins = EXTRA - 1; act('Jogador 1 tenta carta extra sem moedas', () => A.extra(), oExtra); p.coins = 100; act('Jogador 1 compra carta extra', () => A.extra(), oExtra); eq('Mão após a extra', p.hand.length, h0 - 1);
   act('Jogador 1 encerra o turno', () => A.end(), oEnd); turnoSimples(1); p.hand = p.hand.slice(0, 2); act('Jogador 1 inicia o 2º turno', () => A.go(), oGo); eq('Segundo turno compra só as cartas por turno', p.hand.length, Math.min(REG.maxMao, 2 + REG.cartasPorTurno)); }],
 ['Mercado entre jogadores (recursos, cartas e campos)', () => {
@@ -438,6 +465,99 @@ const TESTES = [
   act('Jogador 1 oferece o terreno por 50', () => { inp('pr' + f0.c.uid, 50); A.list('field', f0.c.uid); }, oList('field', f0.c.uid, 50)); act('Jogador 1 oferece a carta de recurso por 30', () => { inp('pr' + p0.hand[0].uid, 30); A.list('hand', p0.hand[0].uid); }, oList('hand', p0.hand[0].uid, 30));
   act('Jogador 1 reabre o Mercado', () => A.modal('mkt')); const sec = [...document.querySelectorAll('#modal .mk section')];
   eq('Terrenos e recursos em colunas separadas', [sec[0].querySelectorAll('.of').length, sec[1].querySelectorAll('.of').length], [1, 1]); ok(/Vendedor/.test(sec[0].querySelector('.of .oh').innerText) && sec[0].querySelector('.of .oh button'), 'Vendedor, preço e botão devem ficar acima da carta');
+}],
+['Novos eventos gerais: regra de cada carta (valores calculados à mão)', () => {
+  const card = id => ({ ...CARDS.geral.find(c => c.id === id) }), byFx = fx => ({ ...CARDS.geral.find(c => c.fx === fx) });
+  const fresh = (n = 3) => { newGame(n); S.ev = []; S.players.forEach(q => { q.obj = { id: 'QA objetivo impossível', nome: 'x', t: 'coins', v: 1e9 }; }); };
+  const rodada = (n = 3) => { for (let i = 0; i < n; i++) turnoSimples(i); }; // todos jogam e a rodada vira (a carta do topo de S.dk.geral é sorteada)
+  const neutra = () => { S.dk.geral = [byFx('isencao')]; };
+  const manutTotal = [1, 2, 3].reduce((x, L) => x + ASSETS.niveis[L].manut, 0), producao = L => ASSETS.niveis[L].producao;
+
+  // ---- Greve, Praga, Tempestade, Isenção, Incentivo Fiscal: produção e manutenção de 3 plantios (soja nv1 e milho nv2 no campo comum; soja nv3 no cromado) ----
+  const lavoura = (evs, nome, esperado, manutEsp) => { fresh(2); S.ev = evs; const p = cur(), f = campoSint(p, { crop: 'soja', slots: 3 }), g = campoSint(p, { any: true, slots: 3 });
+    plantioSint(f, 'soja', 1); plantioSint(f, 'milho', 2); plantioSint(g, 'soja', 3); const c0 = p.coins, g0 = S.gov;
+    step(`Evento ativo: ${nome}`); act('Jogador 1 inicia o turno', () => A.go(), oGo);
+    eq(`Soja produzida com ${nome}`, p.res.soja, esperado.soja); eq(`Milho produzido com ${nome}`, p.res.milho, esperado.milho);
+    eq(`Manutenção paga com ${nome}`, c0 - p.coins, manutEsp); eq(`Cofre recebe a manutenção com ${nome}`, S.gov - g0, manutEsp); };
+  const ev = (id, o = {}) => ({ c: card(id), left: card(id).dur, ...o });
+  lavoura([], 'nenhum evento', { soja: producao(1) + producao(3), milho: producao(2) }, manutTotal);
+  lavoura([ev('AzarGeral10')], 'Greve', { soja: 0, milho: 0 }, manutTotal);
+  lavoura([ev('AzarGeral4', { crop: 'soja' })], 'Praga em Soja', { soja: 0, milho: producao(2) }, manutTotal);
+  lavoura([ev('AzarGeral4', { crop: 'milho' })], 'Praga em Milho', { soja: producao(1) + producao(3), milho: 0 }, manutTotal);
+  lavoura([ev('AzarGeral9')], 'Tempestade (só o nível 3 produz)', { soja: producao(3), milho: 0 }, manutTotal);
+  lavoura([ev('SorteGeral8')], 'Isenção', { soja: producao(1) + producao(3), milho: producao(2) }, 0);
+  lavoura([ev('SorteGeral7', { used: [] })], 'Incentivo Fiscal (governo arca com 50%)', { soja: producao(1) + producao(3), milho: producao(2) }, [1, 2, 3].reduce((x, L) => x + Math.ceil(ASSETS.niveis[L].manut / 2), 0));
+  lavoura([ev('SorteGeral8'), ev('SorteGeral7', { used: [] })], 'Isenção + Incentivo (a isenção vence)', { soja: producao(1) + producao(3), milho: producao(2) }, 0);
+  lavoura([ev('SorteGeral1'), ev('SorteGeral2')], 'Chuva x1,5 + Safra x2 (multiplicam)', { soja: Math.round(producao(1) * 3) + Math.round(producao(3) * 3), milho: Math.round(producao(2) * 3) }, manutTotal);
+
+  // ---- Feira Regional: estoque 50 x jogadores, limite de 50 de cada por jogador, 1 moeda por unidade ----
+  const oFeira = (k, q) => (b, a) => { const i = ci(b), p = b.pl[i], e = b.ev.find(x => x.c.fx === 'feira'), got = ((e.bought || {})[i] || {})[k] || 0, mx = Math.max(0, Math.min(e.c.limite - got, e.stock[k], Math.floor(Math.max(0, p.coins) / e.c.preco)));
+    if (!(q > 0 && q <= mx)) { unchanged(b, a, `comprar ${q} ${k} na Feira acima do que é permitido (máx. ${mx})`); eq('Estoque da Feira após compra recusada', a.ev.find(x => x.c.fx === 'feira').stock[k], e.stock[k]); return {}; }
+    eq(`Moedas após comprar ${q} ${k} na Feira`, a.pl[i].coins, p.coins - q * e.c.preco); eq('Cofre após a Feira', a.g, b.g + q * e.c.preco); eq(`Estoque de ${k} do jogador`, a.pl[i].res[k], p.res[k] + q);
+    eq(`Estoque da Feira de ${k}`, a.ev.find(x => x.c.fx === 'feira').stock[k], e.stock[k] - q); return { after: true, dRes: { [k]: q }, touch: [i] }; };
+  const feira = (k, q) => act(`${cur().n} tenta comprar ${q} ${CROPS[k]} na Feira Regional`, () => { inp('fq' + k, q); A.buyFeira(k); }, oFeira(k, q));
+  fresh(3); S.dk.geral = [byFx('feira')]; rodada(); const fe = S.ev[S.ev.length - 1]; eq('Feira sorteada ao virar a rodada', fe.c.fx, 'feira'); K.forEach(k => eq(`Estoque da Feira de ${k} = 50 x 3 jogadores`, fe.stock[k], 150));
+  S.players.forEach(q => { q.coins = 1000; }); act('Jogador 1 inicia o turno', () => A.go(), oGo);
+  feira('soja', 30); feira('soja', 30); feira('soja', 20); feira('soja', 1); feira('cafe', 50); feira('milho', 0);
+  eq('Jogador 1 comprou 50 de Soja (o limite)', cur().res.soja, 50); eq('Jogador 1 pagou 1 moeda por unidade (100 un.)', 1000 - cur().coins, 100);
+  act('Jogador 1 encerra o turno', () => A.end(), oEnd); act('Jogador 2 inicia o turno', () => A.go(), oGo); feira('soja', 50); eq('Estoque da Feira de Soja depois de 2 jogadores', S.ev.find(x => x.c.fx === 'feira').stock.soja, 50);
+  cur().coins = 10; feira('cafe', 50); eq('Sem moedas: só compra o que paga (10 un.)', cur().res.cafe, 0); feira('cafe', 10); eq('Comprou 10 de Café com 10 moedas', cur().res.cafe, 10);
+  S.dk.geral = [byFx('isencao')]; act('Jogador 2 encerra o turno', () => A.end(), oEnd); turnoSimples(2); ok(!S.ev.some(x => x.c.fx === 'feira'), 'A Feira Regional deveria acabar depois de 1 rodada', 'Evento ainda ativo', 'ativo', 'removido');
+
+  // ---- Alta demanda: o governo compra a oferta mais barata da cultura sorteada no fim da rodada (3 moedas ou o preço, se menor) ----
+  const demanda = (preco, qtdBarata, govCofre, esperadoPago, esperadoUn) => { fresh(3); S.ev = [ev('SorteGeral5', { crop: 'cafe' })]; S.gov = govCofre;
+    S.mk.push({ id: ++S.uid, s: 0, kind: 'res', crop: 'cafe', qty: 40, price: preco + 4 }, { id: ++S.uid, s: 1, kind: 'res', crop: 'cafe', qty: qtdBarata, price: preco }, { id: ++S.uid, s: 2, kind: 'res', crop: 'soja', qty: 5, price: 1 });
+    const c1 = S.players[1].coins; step(`Alta demanda de Café: oferta mais barata a ${preco} (${qtdBarata} un.), cofre ${govCofre}`); neutra(); rodada();
+    eq(`Dinheiro recebido pelo vendedor mais barato (preço ${preco})`, S.players[1].coins - c1, esperadoPago);
+    eq('Unidades de Café da oferta mais barata que sobraram', (S.mk.find(l => l.s === 1 && l.crop === 'cafe') || { qty: 0 }).qty, qtdBarata - esperadoUn);
+    eq('A oferta mais cara e a de outra cultura não foram compradas', S.mk.filter(l => l.s !== 1).map(l => l.qty).sort((x, y) => x - y), [5, 40]); };
+  demanda(2, 20, 5000, 40, 20); // preço 2 < 3: paga o preço pedido
+  demanda(5, 10, 5000, 30, 10); // preço 5 > 3: paga 3 por unidade
+  demanda(1, 20, 7, 7, 7); // o cofre só aguenta 7 unidades
+  fresh(3); S.ev = [ev('SorteGeral5', { crop: 'cafe' })]; neutra(); rodada(); ok(true, 'Alta demanda sem ofertas não dá erro');
+
+  // ---- Governo paga +100% ----
+  fresh(2); S.ev = [ev('SorteGeral6')]; cur().res.soja = 10; const cs = cur().coins; act('Jogador 1 vende 10 Soja com o Governo pagando +100%', () => A.sell('soja'), oSell('soja')); eq('Governo paga 2 por unidade (1 normal + 100%)', cur().coins - cs, 20);
+  fresh(2); cur().res.soja = 10; const cs2 = cur().coins; act('Jogador 1 vende 10 Soja ao preço normal', () => A.sell('soja'), oSell('soja')); eq('Governo paga 1 por unidade por padrão', cur().coins - cs2, 10);
+
+  // ---- Incentivo Fiscal: 1 campo de até 100 moedas grátis por jogador, só na 1ª rodada do evento ----
+  fresh(3); S.ev = [ev('SorteGeral7', { used: [] })]; const m3 = { ...CARDS.campo.find(c => c.slots === 3 && !c.any) }, cr = { ...CARDS.campo.find(c => c.slots === 1 && c.any) };
+  const campo = c => ({ ...c, uid: ++S.uid }); S.center = [campo(m3), campo(cr)]; const p0 = cur();
+  act('Jogador 1 inicia o turno', () => A.go(), oGo); let k0 = p0.coins; act('Jogador 1 compra o campo caro (150)', () => A.buyF(0), oBuyF(0)); eq('Campo acima de 100 não é grátis', k0 - p0.coins, ASSETS.campo[3].preco);
+  k0 = p0.coins; act('Jogador 1 compra o campo cromado de 1 vaga (100): grátis', () => A.buyF(0), oBuyF(0)); eq('Primeiro campo de até 100 sai de graça', k0 - p0.coins, 0);
+  p0.compras = 0; S.center = [campo(cr)]; k0 = p0.coins; act('Jogador 1 tenta o 2º campo de até 100: já usou o grátis', () => A.buyF(0), oBuyF(0)); eq('Só 1 campo grátis por jogador', k0 - p0.coins, ASSETS.campo[1].precoCromada);
+  act('Jogador 1 encerra o turno', () => A.end(), oEnd); act('Jogador 2 inicia o turno', () => A.go(), oGo); S.center = [campo(cr)]; const p1 = cur(); k0 = p1.coins; act('Jogador 2 compra o campo de 100', () => A.buyF(0), oBuyF(0)); eq('Cada jogador tem o seu campo grátis', k0 - p1.coins, 0);
+  act('Jogador 2 encerra o turno', () => A.end(), oEnd); act('Jogador 3 inicia o turno', () => A.go(), oGo); S.ev[0].left = 1; S.center = [campo(cr)]; const p2 = cur(); k0 = p2.coins; act('Jogador 3 compra o campo na 2ª rodada do Incentivo', () => A.buyF(0), oBuyF(0)); eq('Na 2ª rodada o campo não é mais grátis', k0 - p2.coins, ASSETS.campo[1].precoCromada);
+
+  // ---- Auxílio aos pequenos: N/3 jogadores com menos moedas ganham 200, rodada 10+, uma vez só ----
+  const aux = n => { fresh(n); S.round = 9; S.gov = 5000; S.players.forEach((q, k) => { q.coins = [50, 500, 10, 700, 20, 900][k]; }); S.dk.geral = [byFx('auxilio')]; };
+  aux(3); let ant = S.players.map(q => q.coins); rodada(); eq('Auxílio sorteado na rodada 10', S.ev[S.ev.length - 1].c.fx, 'auxilio'); eq('Só 1 jogador (3/3) recebe: o de menos moedas', S.players.map((q, k) => q.coins - ant[k]), [0, 0, 200]); eq('Auxílio marcado como usado', S.auxDone, true);
+  S.dk.geral = [byFx('auxilio')]; rodada(); ok(!S.ev.some(x => x.c.fx === 'auxilio'), 'O Auxílio não pode sair de novo na mesma partida', 'Auxílio sorteado uma 2ª vez', '2ª vez', 'só 1 vez por jogo');
+  aux(6); ant = S.players.map(q => q.coins); rodada(6); eq('6 jogadores: os 2 com menos moedas recebem 200 (jogadores 3 e 5)', S.players.map((q, k) => q.coins - ant[k]), [0, 0, 200, 0, 200, 0]);
+  fresh(3); S.round = 8; S.dk.geral = [byFx('auxilio')]; rodada(); ok(!S.ev.some(x => x.c.fx === 'auxilio'), 'O Auxílio não pode sair antes da rodada 10', 'Auxílio sorteado na rodada ' + S.round, 'antes da 10', 'só a partir da 10'); eq('Auxílio barrado não conta como usado', !!S.auxDone, false);
+  fresh(2); S.round = 12; S.dk.geral = [byFx('auxilio')]; rodada(2); ok(!S.ev.some(x => x.c.fx === 'auxilio'), 'Com 2 jogadores (N/3 = 0) o Auxílio não deve sair', 'Auxílio sorteado', 'sorteado', 'ignorado');
+
+  // ---- Entrega de mudas: todos sacam 1 carta extra, acima do limite da mão ----
+  fresh(3); rodada(); S.players.forEach(q => { q.hand = []; while (q.hand.length < REG.maxMao) q.hand.push({ ...CARDS.plantacao[0], uid: ++S.uid }); }); S.dk.geral = [byFx('mudas')]; rodada();
+  eq(`Todos com ${REG.maxMao + 1} cartas depois da Entrega de mudas`, S.players.map(q => q.hand.length), [REG.maxMao + 1, REG.maxMao + 1, REG.maxMao + 1]);
+  act('Jogador 1 inicia o turno com a mão acima do limite', () => A.go(), oGo); eq('Sem sacar cartas com a mão cheia', cur().hand.length, REG.maxMao + 1); act('Jogador 1 tenta carta extra com a mão acima do limite', () => A.extra(), oExtra);
+
+  // ---- Recessão, Imposto sobre fortunas, Juros em alta ----
+  fresh(3); S.players.forEach((q, k) => { q.coins = [300, 400, 500][k]; }); const gv = S.gov; S.dk.geral = [byFx('recessao')]; rodada();
+  eq('Recessão: todos pagam 50', S.players.map(q => q.coins), [250, 350, 450]); eq('Recessão: o dinheiro vai ao Governo', S.gov - gv, 150);
+  fresh(3); S.players.forEach((q, k) => { q.coins = [300, 900, 500][k]; }); const gv2 = S.gov; S.dk.geral = [byFx('imposto')]; rodada();
+  eq('Imposto: só o mais rico paga 100', S.players.map(q => q.coins), [300, 800, 500]); eq('Imposto: o dinheiro vai ao Governo', S.gov - gv2, 100);
+  fresh(3); S.players[0].debt = 200; S.dk.geral = [byFx('juros')]; rodada(); eq('Juros em alta (1ª rodada): 5% x 2', S.players[0].debt, Math.round(200 * (1 + REG.juros * 2 / 100)));
+  S.dk.geral = [byFx('isencao')]; const d1 = S.players[0].debt; rodada(); eq('Juros em alta (2ª rodada): ainda dobrados', S.players[0].debt, Math.round(d1 * (1 + REG.juros * 2 / 100)));
+  const d2 = S.players[0].debt; S.dk.geral = [byFx('isencao')]; rodada(); eq('Juros voltam ao normal depois de 2 rodadas', S.players[0].debt, Math.round(d2 * (1 + REG.juros / 100)));
+
+  // ---- Embargo (Mercado fechado) e Taxa do Mercado (20% ao Governo) ----
+  fresh(3); S.ev = [ev('AzarGeral6')]; const q0 = S.players[0]; q0.res.soja = 50; S.mk.push({ id: ++S.uid, s: 0, kind: 'res', crop: 'soja', qty: 10, price: 2 }); S.players[1].coins = 500;
+  act('Jogador 1 abre o Mercado em pleno Embargo', () => A.modal('mkt')); act('Jogador 1 tenta ofertar 30 Soja durante o Embargo', () => { inp('rqsoja', 30); inp('rpsoja', 4); A.listRes('soja'); }, oListRes('soja', 30, 4)); eq('Embargo: nenhuma oferta nova', S.mk.length, 1);
+  act('Jogador 2 abre o Mercado', () => A.act(1)); act('Jogador 2 tenta comprar durante o Embargo', () => A.buyM(S.mk[0].id), oBuyM(S.mk[0].id)); eq('Embargo: a oferta continua lá', S.mk.length, 1);
+  ok(/fechado/i.test(document.getElementById('modal').innerText), 'A janela do Mercado deveria avisar que está fechada', 'Sem aviso de Mercado fechado', 'sem aviso', 'aviso de Embargo');
+  S.ev = [ev('AzarGeral7')]; const g1 = S.gov, v0 = q0.coins; act('Jogador 2 compra 10 Soja a 2 com a Taxa do Mercado', () => A.buyM(S.mk[0].id), oBuyM(S.mk[0].id));
+  eq('Taxa do Mercado: 20% de 20 = 4 ao Governo', S.gov - g1, 4); eq('Vendedor recebe 16 (20 - 4)', q0.coins - v0, 16);
 }],
 ];
 function rodarTestes() { const falhas = [];

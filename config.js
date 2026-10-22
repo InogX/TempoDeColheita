@@ -31,8 +31,8 @@ const T = {
 
 
 // ===== Padrões usados para completar o cartas.js (o jogo e o editor aplicam sozinhos) =====
-// Preço PROVISÓRIO (moedas por unidade) que o Governo paga pelos recursos, até existir o sistema de mercado
-const CROP_PRICE = { soja: 3, milho: 2, cana: 2, cafe: 5, algodao: 4 };
+// Preço (moedas por unidade) que o Governo paga pelos recursos: 1 por padrão (o evento "Governo paga +100%" dobra)
+const CROP_PRICE = { soja: 1, milho: 1, cana: 1, cafe: 1, algodao: 1 };
 // Níveis das cartas de recurso: espaços do campo que ocupa, produção/rodada, custo p/ evoluir (do próprio recurso) e manutenção/rodada (moedas)
 const LEVEL_DEFAULTS = {
   1: { espacos: 1, producao: 20, evolucao: 100, manut: 25 },
@@ -84,6 +84,48 @@ const DECKS_V4 = {
     D2('Objetivo 18', { t: 'noites', n: 3, v: 2000 }), D2('Objetivo 19', { t: 'floorUntil', r: 25, floor: 50, v: 2500, elim: 1 }),
     D2('Objetivo 20', { t: 'allLvl', r: 30, n: 4, v: 1000 })]
 };
+// ===== Eventos gerais: textos das regras (os {campos} vêm da carta; {c} é a cultura sorteada). Editar os números no editor.html muda o texto sozinho =====
+const EVT = {
+ feira: 'o Governo vende {estoque}×(nº de jogadores) de cada recurso a {preco} moeda cada; cada jogador compra até {limite} de cada',
+ demanda: 'no fim da rodada o Governo compra a oferta mais barata de {c} no Mercado por {teto} moedas cada (ou pelo preço pedido, se menor)',
+ govPaga: 'o Governo paga {fator}x pelos recursos vendidos a ele',
+ incentivo: 'o Governo arca com {pct}% da manutenção; na 1ª rodada, 1 campo de até {campoMax} moedas é grátis (por jogador)',
+ isencao: 'sem manutenção dos plantios',
+ auxilio: 'os N/3 jogadores com menos moedas ganham {valor} do Governo (1 vez por jogo, a partir da rodada {minRound})',
+ mudas: 'todos sacam 1 carta de recurso extra (passa do limite da mão)',
+ recessao: 'todos pagam {valor} moedas ao Governo',
+ praga: '{c} não produz',
+ juros: 'os juros da dívida são multiplicados por {fator}',
+ embargo: 'Mercado entre jogadores fechado',
+ taxa: '{pct}% de cada venda entre jogadores vai ao Governo',
+ imposto: 'o jogador mais rico paga {valor} moedas ao Governo',
+ tempestade: 'plantios nível 1 e 2 não produzem',
+ greve: 'ninguém produz'
+};
+// ===== Eventos gerais (20): campo fx = efeito especial tratado em rodada.js / acoes-*.js; mult = multiplicador de produção; night/reveal = como antes =====
+const DECKS_V5 = {
+  geral: [
+    D2('SorteGeral1', { nome: 'Chuva generosa', dur: 2, mult: 1.5, coins: 0 }),
+    D2('SorteGeral2', { nome: 'Safra recorde', dur: 1, mult: 2, coins: 0 }),
+    D2('SorteGeral3', { nome: 'Clima ameno', dur: 3, mult: 1.25, coins: 0 }),
+    D2('SorteGeral4', { nome: 'Feira Regional', dur: 1, coins: 0, fx: 'feira', estoque: 50, limite: 50, preco: 1 }),
+    D2('SorteGeral5', { nome: 'Alta demanda', dur: 1, coins: 0, fx: 'demanda', teto: 3 }),
+    D2('SorteGeral6', { nome: 'Governo paga +100%', dur: 1, coins: 0, fx: 'govPaga', fator: 2 }),
+    D2('SorteGeral7', { nome: 'Incentivo Fiscal', dur: 2, coins: 0, fx: 'incentivo', pct: 50, campoMax: 100 }),
+    D2('SorteGeral8', { nome: 'Isenção', dur: 1, coins: 0, fx: 'isencao' }),
+    D2('SorteGeral9', { nome: 'Auxílio aos pequenos', dur: 1, coins: 0, fx: 'auxilio', valor: 200, minRound: 10 }),
+    D2('SorteGeral10', { nome: 'Entrega de mudas', dur: 1, coins: 0, fx: 'mudas' }),
+    D2('AzarGeral1', { nome: 'Campos noturnos', dur: 2, coins: 0, azar: true, night: true }),
+    D2('AzarGeral2', { nome: 'Tudo à vista', dur: 2, coins: 0, azar: true, reveal: 'all' }),
+    D2('AzarGeral3', { nome: 'Recessão', dur: 1, coins: 0, azar: true, fx: 'recessao', valor: 50 }),
+    D2('AzarGeral4', { nome: 'Praga', dur: 1, coins: 0, azar: true, fx: 'praga' }),
+    D2('AzarGeral5', { nome: 'Juros em alta', dur: 2, coins: 0, azar: true, fx: 'juros', fator: 2 }),
+    D2('AzarGeral6', { nome: 'Embargo', dur: 1, coins: 0, azar: true, fx: 'embargo' }),
+    D2('AzarGeral7', { nome: 'Taxa do Mercado', dur: 2, coins: 0, azar: true, fx: 'taxa', pct: 20 }),
+    D2('AzarGeral8', { nome: 'Imposto sobre fortunas', dur: 1, coins: 0, azar: true, fx: 'imposto', valor: 100 }),
+    D2('AzarGeral9', { nome: 'Tempestade', dur: 1, coins: 0, azar: true, fx: 'tempestade' }),
+    D2('AzarGeral10', { nome: 'Greve', dur: 1, coins: 0, azar: true, fx: 'greve' })]
+};
 function migrate(CARDS, ASSETS) {
   for (const s in FIELD_DEFAULTS) ASSETS.campo[s] = { ...FIELD_DEFAULTS[s], ...ASSETS.campo[s] };
   CARDS.campo.forEach(c => delete c.price); // o preço agora é do modelo de campo
@@ -107,5 +149,9 @@ function migrate(CARDS, ASSETS) {
   if (!(ASSETS.deckVersion >= 4)) { // objetivos: lista de 20 (mantém nome e sprite de quem já existia com o mesmo id)
     for (const k in DECKS_V4) CARDS[k] = DECKS_V4[k].map(d => { const o = (CARDS[k] || []).find(c => c.id === d.id); return { ...d, nome: (o && o.nome) || d.nome, sprite: (o && o.sprite) || '' }; });
     ASSETS.deckVersion = 4;
+  }
+  if (!(ASSETS.deckVersion >= 5)) { // eventos gerais: os 20 novos (10 sorte + 10 azar). Cartas novas, então as sprites antigas não se aplicam
+    for (const k in DECKS_V5) CARDS[k] = DECKS_V5[k].map(d => ({ ...d }));
+    ASSETS.deckVersion = 5;
   }
 }

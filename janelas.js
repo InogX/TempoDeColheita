@@ -28,17 +28,19 @@ function modal() {
     ${row('Eventos', `${sel('dvGe', CARDS.geral.map(c => [c.id, `${nm(c)}: ${desc(c)}`]))}<button onclick="D.gEvent()">Ativar evento geral</button><br>${sel('dvIe', CARDS.individual.map(c => [c.id, `${nm(c)}: ${desc(c)}`]))}<button onclick="D.iEvent()">Aplicar ao jogador</button>`)}
     ${row('Partida', `Rodada ${S.round} <button onclick="D.round()">Definir rodada</button><button onclick="D.next()">Avançar rodada</button><button onclick="D.rebuy()">Zerar compras de campo do turno</button><button onclick="D.clearMk()">Limpar Mercado</button><button onclick="D.all()">Ver tudo: ${S.devAll ? 'ligado' : 'desligado'}</button><button onclick="D.win()">Declarar vitória</button>`)}`;
   } else if (S.modal == 'gov') { const p = cur();
-    h = `<h3>🏛 Governo</h3>Suas moedas: ${moeda(p.coins)} · Dívida: ${p.debt} <small>(+5% por rodada)</small><br>
+    h = `<h3>🏛 Governo</h3>Suas moedas: ${moeda(p.coins)} · Dívida: ${p.debt} <small>(+${jurosPct()}% por rodada)</small><br>
     <button onclick="A.loan()">Pegar empréstimo (${LOAN})</button><button onclick="A.pay()">Pagar (${LOAN})</button><br>
     <button onclick="A.extra()">Comprar carta de recurso nível 1 (${EXTRA}) — mão ${p.hand.length}/5</button>
-    <h4>Vender recursos ao Governo <small>(preços provisórios, até o mercado)</small></h4>${K.map(k => `<button onclick="A.sell('${k}')">${CROPS[k]}: ${p.res[k] || 0} un. × ${CROP_PRICE[k]}</button>`).join('')}`;
+    <h4>Vender recursos ao Governo <small>(${evOn('govPaga') ? 'Governo paga +100% nesta rodada' : 'preço fixo por unidade'})</small></h4>${K.map(k => `<button onclick="A.sell('${k}')">${CROPS[k]}: ${p.res[k] || 0} un. × ${govPreco(k)}</button>`).join('')}
+    ${(fe => fe ? `<h4>🎪 Feira Regional <small>(${moeda(fe.c.preco)} por unidade · até ${fe.c.limite} de cada por jogador)</small></h4>${K.map(k => `<div class="rl"><span>${rec(k, p.res[k] || 0)} ${CROPS[k]}</span> estoque do Governo: ${fe.stock[k]} · você pode comprar: ${feiraMax(fe, p, k)}
+      <input id="fq${k}" type="number" min="1" placeholder="qtd"><button onclick="A.buyFeira('${k}')">Comprar</button></div>`).join('')}` : '')(evFind('feira'))}`;
   } else { const a = S.players[S.actor]; S.mk = S.mk.filter(find);
     const opts = S.players.map((q, i) => q.out ? '' : `<option value="${i}"${i == S.actor ? ' selected' : ''}>${q.n}</option>`).join('');
     const nmv = l => S.players[l.s].n, btn = l => l.s == S.actor ? `<button onclick="A.cancel(${l.id})">Cancelar</button>` : `<button onclick="A.buyM(${l.id})">Comprar</button>`;
     const oferta = l => { if (l.kind == 'res') return `<div class="of rv"><div class="oh"><span class="ot">Vendedor: ${nmv(l)} · ${moeda(l.price)} cada · total ${moeda(l.qty * l.price)}</span>${btn(l)}</div><div class="rbox"><b>${rec(l.crop, l.qty)} ${CROPS[l.crop]}</b></div></div>`;
       const c = l.kind == 'hand' ? find(l) : find(l).c; return `<div class="of ${c.slots ? 'h' : 'v'}"><div class="oh"><span class="ot">Vendedor: ${nmv(l)} · ${moeda(l.price)}</span>${btn(l)}</div>${cardHTML(c)}</div>`; };
     const lancar = (k, c) => `<div class="of ${k == 'field' ? 'h' : 'v'}"><div class="oh"><input id="pr${c.uid}" type="number" min="1" placeholder="preço"><button onclick="A.list('${k}',${c.uid})">Ofertar</button></div>${cardHTML(c)}</div>`;
-    h = `<h3>🤝 Mercado entre jogadores</h3>Atuar como: <select onchange="A.act(this.value)">${opts}</select> · ${moeda(a.coins)}
+    h = mercadoFechado() ? '<h3>🤝 Mercado entre jogadores</h3><b>🚫 Mercado fechado pelo Embargo.</b> Volte na próxima rodada.' : `<h3>🤝 Mercado entre jogadores</h3>Atuar como: <select onchange="A.act(this.value)">${opts}</select> · ${moeda(a.coins)}
     <div class="mk"><section><h4>Terrenos à venda</h4><div class="mkc">${S.mk.filter(l => l.kind == 'field').map(oferta).join('') || 'Nenhum'}</div></section>
     <section><h4>Recursos à venda</h4><div class="mkc">${S.mk.filter(l => l.kind != 'field').map(oferta).join('') || 'Nenhum'}</div></section>
     <section><h4>Vender recursos (${a.n}) <small>quantidade e preço por unidade</small></h4>${K.map(k => `<div class="rl"><span>${rec(k, a.res[k] || 0)} ${CROPS[k]}</span>

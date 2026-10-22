@@ -9,7 +9,7 @@ function render() {
     return m.innerHTML = `<h2>🏆 ${S.win.n} venceu!</h2><p>${S.win.why}</p><button onclick="A.quit()">Voltar ao menu</button>`; }
   localStorage.setItem('tc_save', JSON.stringify(S));
   const p = cur();
-  const evb = `<div id="evb"><b>Evento Geral Ativo</b>${S.ev.map(e => `<div>${nm(e.c)}: ${desc(e.c)} (${e.left} rod.)</div>`).join('')}
+  const evb = `<div id="evb"><b>Evento Geral Ativo</b>${S.ev.map(e => `<div>${nm(e.c)}: ${evDesc(e)} (${e.left} rod.)</div>`).join('')}
     <b>Evento Individual Ativo</b><div>${!S.hide && p.ind ? nm(p.ind) + ': ' + desc(p.ind) : '—'}</div></div>`;
   if (S.hide) return m.innerHTML = `<h2>Vez do jogador ${p.n}</h2><p>Rodada ${S.round}. Passe o dispositivo e clique quando estiver pronto.</p>
     <button onclick="A.go()">Estou pronto</button><button onclick="A.modal('mkt')">🤝 Mercado</button>${REG.devAtivo ? '<button onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<p class="log">${S.log.join('<br>')}</p>${evb}${modal()}`;
@@ -25,7 +25,7 @@ function render() {
   m.innerHTML = `${hud}<div class="top">Rodada ${S.round} · Vez de <b>${p.n}</b> · Dívida ${p.debt}${done(p) ? ' · ✔ objetivo cumprido (vale no fim da rodada)' : ''}${S.ev.some(e => e.c.reveal == 'all') ? ' · Cofre do governo: ' + moeda(S.gov) : ''}
     <button onclick="A.modal('gov')">🏛 Acionar Governo</button><button onclick="A.modal('mkt')">🤝 Mercado</button><button onclick="A.modal('obj')">🎯 Objetivo</button>${REG.devAtivo ? '<button onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<button onclick="A.end()">Encerrar turno ➜</button><button onclick="A.quit()">Sair</button>
     ${sel ? `<b class="pickmsg">Escolha o campo para plantar ${CROPS[sel.crop]} <button onclick="A.cancelPick()">Cancelar</button></b>` : ''}</div>
-    <div class="center"><h3>Campos sendo vendidos</h3><div class="cards">${S.center.map((c, i) => `<div class="fs">${cardHTML(c)}<button class="${p.coins >= price(c) ? 'ok' : 'no'}" onclick="A.buyF(${i})">${price(c)}</button></div>`).join('') || 'Nenhum'}</div></div>
+    <div class="center"><h3>Campos sendo vendidos</h3><div class="cards">${S.center.map((c, i) => `<div class="fs">${cardHTML(c)}<button class="${p.coins >= buyPrice(p, c) ? 'ok' : 'no'}" onclick="A.buyF(${i})">${buyPrice(p, c) || 'Grátis'}</button></div>`).join('') || 'Nenhum'}</div></div>
     <div class="cards mine">${mine || '<i>Você ainda não tem campos</i>'}</div>
     <div class="hand">${hand}</div>
     <div class="side sideL">${tabs(oth.slice(0, half))}</div><div class="side sideR">${tabs(oth.slice(half))}</div>

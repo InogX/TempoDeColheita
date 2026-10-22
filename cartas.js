@@ -1,11 +1,26 @@
 // ARQUIVO DE DADOS - editado pelo editor.html (ou à mão, se preferir)
 const CARDS = {
  "objetivo": [
-  {"id":"Objetivo 1","nome":"Objetivo 1","sprite":"","t":"coins","v":1500},
-  {"id":"Objetivo 2","nome":"Objetivo 2","sprite":"","t":"fields","v":4},
-  {"id":"Objetivo 3","nome":"Objetivo 3","sprite":"","t":"income","v":1200},
-  {"id":"Objetivo 4","nome":"Objetivo 4","sprite":"","t":"variety","v":5},
-  {"id":"Objetivo 5","nome":"Objetivo 5","sprite":"","t":"clean","v":900}
+  {"id":"Objetivo 1","nome":"Objetivo 1","sprite":"","t":"lvl3n","v":4},
+  {"id":"Objetivo 2","nome":"Objetivo 2","sprite":"","t":"lvl3crops","v":3},
+  {"id":"Objetivo 3","nome":"Objetivo 3","sprite":"","t":"lvlsum","v":16},
+  {"id":"Objetivo 4","nome":"Objetivo 4","sprite":"","t":"prodEach","v":150},
+  {"id":"Objetivo 5","nome":"Objetivo 5","sprite":"","t":"stockN","v":250,"n":3},
+  {"id":"Objetivo 6","nome":"Objetivo 6","sprite":"","t":"coins","v":6000},
+  {"id":"Objetivo 7","nome":"Objetivo 7","sprite":"","t":"clean","v":4000},
+  {"id":"Objetivo 8","nome":"Objetivo 8","sprite":"","t":"noLoan","v":3000,"elim":1},
+  {"id":"Objetivo 9","nome":"Objetivo 9","sprite":"","t":"chrome","v":3},
+  {"id":"Objetivo 10","nome":"Objetivo 10","sprite":"","t":"slots","v":14},
+  {"id":"Objetivo 11","nome":"Objetivo 11","sprite":"","t":"mSales","v":10,"esc":1},
+  {"id":"Objetivo 12","nome":"Objetivo 12","sprite":"","t":"mBuys","v":8,"esc":1},
+  {"id":"Objetivo 13","nome":"Objetivo 13","sprite":"","t":"mProfit","v":2000,"esc":1},
+  {"id":"Objetivo 14","nome":"Objetivo 14","sprite":"","t":"mAll","v":3},
+  {"id":"Objetivo 15","nome":"Objetivo 15","sprite":"","t":"mSellTo","v":4},
+  {"id":"Objetivo 16","nome":"Objetivo 16","sprite":"","t":"mUnits","v":600,"esc":1},
+  {"id":"Objetivo 17","nome":"Objetivo 17","sprite":"","t":"azar","v":5,"v2":1500,"floor":100,"elim":1},
+  {"id":"Objetivo 18","nome":"Objetivo 18","sprite":"","t":"noites","n":3,"v":2000},
+  {"id":"Objetivo 19","nome":"Objetivo 19","sprite":"","t":"floorUntil","r":25,"floor":50,"v":2500,"elim":1},
+  {"id":"Objetivo 20","nome":"Objetivo 20","sprite":"","t":"allLvl","r":30,"n":4,"v":1000}
  ],
  "campo": [
   {"id":"Campo 1","nome":"Campo 1","slots":1,"types":["soja","milho"]},
@@ -29,16 +44,26 @@ const CARDS = {
   {"id":"Plantação 4","nome":"Algodão","crop":"algodao","sprite":"img/CottonCard1.png","sprite2":"img/CottonCard2.png","sprite3":"img/CottonCard3.png"}
  ],
  "geral": [
-  {"id":"SorteGeral1","nome":"SorteGeral1","sprite":"","dur":2,"mult":1.25,"coins":20},
-  {"id":"AzarGeral1","nome":"AzarGeral1","sprite":"","dur":2,"mult":0.8,"coins":-20},
-  {"id":"SorteGeral2","nome":"SorteGeral2","sprite":"","dur":1,"mult":1.5,"coins":0},
-  {"id":"AzarGeral2","nome":"AzarGeral2","sprite":"","dur":1,"mult":0.5,"coins":0},
-  {"id":"SorteGeral3","nome":"SorteGeral3","sprite":"","dur":3,"mult":1.1,"coins":30},
-  {"id":"AzarGeral3","nome":"AzarGeral3","sprite":"","dur":2,"mult":1,"coins":0,"night":true},
-  {"id":"SorteGeral4","nome":"SorteGeral4","sprite":"","dur":1,"mult":2,"coins":0},
-  {"id":"AzarGeral4","nome":"AzarGeral4","sprite":"","dur":2,"mult":1,"coins":0,"reveal":"all"},
-  {"id":"SorteGeral5","nome":"SorteGeral5","sprite":"","dur":2,"mult":1.2,"coins":50},
-  {"id":"AzarGeral5","nome":"AzarGeral5","sprite":"","dur":3,"mult":0.9,"coins":-30}
+  {"id":"SorteGeral1","nome":"Chuva generosa","sprite":"","dur":2,"mult":1.5,"coins":0},
+  {"id":"SorteGeral2","nome":"Safra recorde","sprite":"","dur":1,"mult":2,"coins":0},
+  {"id":"SorteGeral3","nome":"Clima ameno","sprite":"","dur":3,"mult":1.25,"coins":0},
+  {"id":"SorteGeral4","nome":"Feira Regional","sprite":"","dur":1,"coins":0,"fx":"feira","estoque":50,"limite":50,"preco":1},
+  {"id":"SorteGeral5","nome":"Alta demanda","sprite":"","dur":1,"coins":0,"fx":"demanda","teto":3},
+  {"id":"SorteGeral6","nome":"Governo paga +100%","sprite":"","dur":1,"coins":0,"fx":"govPaga","fator":2},
+  {"id":"SorteGeral7","nome":"Incentivo Fiscal","sprite":"","dur":2,"coins":0,"fx":"incentivo","pct":50,"campoMax":100},
+  {"id":"SorteGeral8","nome":"Isenção","sprite":"","dur":1,"coins":0,"fx":"isencao"},
+  {"id":"SorteGeral9","nome":"Auxílio aos pequenos","sprite":"","dur":1,"coins":0,"fx":"auxilio","valor":200,"minRound":10},
+  {"id":"SorteGeral10","nome":"Entrega de mudas","sprite":"","dur":1,"coins":0,"fx":"mudas"},
+  {"id":"AzarGeral1","nome":"Campos noturnos","sprite":"","dur":2,"coins":0,"azar":true,"night":true},
+  {"id":"AzarGeral2","nome":"Tudo à vista","sprite":"","dur":2,"coins":0,"azar":true,"reveal":"all"},
+  {"id":"AzarGeral3","nome":"Recessão","sprite":"","dur":1,"coins":0,"azar":true,"fx":"recessao","valor":50},
+  {"id":"AzarGeral4","nome":"Praga","sprite":"","dur":1,"coins":0,"azar":true,"fx":"praga"},
+  {"id":"AzarGeral5","nome":"Juros em alta","sprite":"","dur":2,"coins":0,"azar":true,"fx":"juros","fator":2},
+  {"id":"AzarGeral6","nome":"Embargo","sprite":"","dur":1,"coins":0,"azar":true,"fx":"embargo"},
+  {"id":"AzarGeral7","nome":"Taxa do Mercado","sprite":"","dur":2,"coins":0,"azar":true,"fx":"taxa","pct":20},
+  {"id":"AzarGeral8","nome":"Imposto sobre fortunas","sprite":"","dur":1,"coins":0,"azar":true,"fx":"imposto","valor":100},
+  {"id":"AzarGeral9","nome":"Tempestade","sprite":"","dur":1,"coins":0,"azar":true,"fx":"tempestade"},
+  {"id":"AzarGeral10","nome":"Greve","sprite":"","dur":1,"coins":0,"azar":true,"fx":"greve"}
  ],
  "individual": [
   {"id":"SorteIndividual1","nome":"SorteIndividual1","sprite":"","coins":100},
@@ -131,11 +156,11 @@ const ASSETS = {
   "juros": 5,
   "limiteDivida": 500,
   "precoRecursoGoverno": {
-   "soja": 3,
-   "milho": 2,
-   "cana": 2,
-   "cafe": 5,
-   "algodao": 4
+   "soja": 1,
+   "milho": 1,
+   "cana": 1,
+   "cafe": 1,
+   "algodao": 1
   },
   "eventoIndividualCada": 5,
   "noturnoPct": 50,
@@ -146,5 +171,5 @@ const ASSETS = {
   "camposRefresh": "turno",
   "devAtivo": 1
  },
- "deckVersion": 3
+ "deckVersion": 5
 };
