@@ -1,0 +1,142 @@
+/* =====================================================================
+   FICHA TÉCNICA: style.css cuida só da APARÊNCIA (cores, tamanhos, posições, zoom, animação). Não tem regra do jogo.
+   TEMPO DE COLHEITA - style.css
+   Seções: 1 Variáveis · 2 Base · 3 Layout · 4 Tela do jogo · 5 Cartas ·
+           6 Grades de cartas · 7 Sprites e estados · 8 Zoom, modal e eventos
+   ===================================================================== */
+
+/* ---------- 1. VARIÁVEIS ---------- */
+:root{
+  --bg:#f2f0eb; --box:#fff; --ink:#2b2b2b; --line:#cfcac0; --acc:#6b7f5a;
+  --ratio-campo:1248/832;         /* cartas de CAMPO: horizontal 3:2 (arte 1248x832) */
+  --ratio-carta:576/1032;         /* DEMAIS cartas (recurso, objetivo, eventos): vertical (arte 576x1032) */
+}
+@media(prefers-color-scheme:dark){:root{--bg:#1e1f1c;--box:#2a2b27;--ink:#e8e6e0;--line:#44453f;--acc:#8fa57c}}
+
+/* ---------- 2. BASE ---------- */
+*{box-sizing:border-box}
+body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--ink)}
+header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
+h1{font-size:1.2rem;margin:0}
+main{max-width:1400px;margin:auto;padding:16px 16px 200px}
+button{background:var(--acc);color:#fff;border:0;border-radius:6px;padding:6px 10px;margin:2px;cursor:pointer}
+button:hover{opacity:.85}
+button.ok{background:#4f8a3c}     /* preço: dá para comprar */
+button.no{background:#b3443c}     /* preço: sem moedas */
+input,select{padding:5px;margin:2px;background:var(--box);color:var(--ink);border:1px solid var(--line);border-radius:4px}
+
+/* ---------- 3. LAYOUT GERAL ---------- */
+.row{display:flex;flex-wrap:wrap;gap:12px}
+.box{background:var(--box);border:1px solid var(--line);border-radius:8px;padding:10px;flex:1;min-width:250px;margin-bottom:12px}
+.box h3{margin:0 0 8px;font-size:.95rem}
+.top{display:flex;flex-wrap:wrap;gap:6px;align-items:center;padding:8px 0;font-size:1.05rem}
+.log{font-size:.8rem;opacity:.8}
+
+/* ---------- 4. TELA DO JOGO ---------- */
+/* área de compra (campos à venda): as cartas se ajustam sozinhas pela função fit() do tela.js */
+.center{position:relative;width:60%;min-width:200px;height:34vh;min-height:230px;margin:8px auto;overflow:auto;border:2px dashed var(--line);border-radius:8px;padding:8px;text-align:center}
+.center h3{margin:0 0 6px}
+#hud{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center;justify-content:center;padding:6px;background:var(--box);border-bottom:2px solid var(--line)}  /* barra de recursos */
+.hi{display:flex;align-items:center;gap:6px;font-size:1.15rem}
+.cards.mine{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:8px 0}   /* seus campos */
+.cards.mine .card{width:170px}
+.hand{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:6px;pointer-events:none}   /* sua mão: metade escondida */
+.hand .card{width:130px;margin:0;transform:translateY(50%);transition:transform .2s;pointer-events:auto}
+.hand .card:hover{transform:translateY(8%)}                                           /* hover: a carta sobe */
+.side{position:fixed;top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column;gap:6px}  /* outros jogadores nas laterais */
+.sideL{left:0}
+.sideR{right:0;align-items:flex-end}
+.tab{min-width:84px;max-width:150px;padding:6px 10px;background:var(--box);border:2px solid var(--line);cursor:pointer;transition:transform .2s;font-size:.8rem}
+.sideL .tab{border-left:0;border-radius:0 8px 8px 0}
+.sideR .tab{border-right:0;border-radius:8px 0 0 8px}
+.sideL .tab:hover{transform:translateX(14px)}
+.sideR .tab:hover{transform:translateX(-14px)}
+.tab small{display:block;opacity:.85}
+.tab.vis{max-width:300px}
+.vw{grid-template-columns:repeat(auto-fill,170px)}                                    /* janela das fazendas de um jogador */
+.pickmsg{margin-left:8px}
+
+/* ---------- 5. CARTAS ---------- */
+.card{position:relative;display:flex;flex-direction:column;aspect-ratio:var(--ratio-carta);width:150px;min-height:0;margin:4px;padding:8px;border:1px solid var(--line);border-radius:8px;background:var(--bg) center/cover;font-size:.75rem;cursor:zoom-in}
+.card.campo{aspect-ratio:var(--ratio-campo)}
+.card b{display:block;margin-bottom:4px}
+.card small{display:block;opacity:.85}
+.card .ex{margin-top:2px;padding:0;background:none;border-radius:6px;font-size:.75rem}   /* bloco dos botões/infos dentro da carta */
+.card .ex button{width:100%;padding:6px 8px;margin:0;font-size:.75rem;border-radius:5px}   /* botões de preço/ação */
+
+/* ---------- 6. GRADES DE CARTAS ---------- */
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(100px,130px));gap:4px;justify-content:start}
+.cards .card{width:100%;min-width:0;margin:0;overflow:hidden}
+.center .cards{justify-content:center}
+.fs{display:flex;flex-direction:column;gap:4px}                                       /* campo à venda: carta + botão de compra ABAIXO dela */
+.fs button{width:100%;margin:0;padding:6px}                                                    /* colunas definidas pelo fit() */
+
+/* ---------- 7. SPRITES E ESTADOS ---------- */
+.card.sp{justify-content:flex-end;border:0;border-radius:0;background-color:transparent;background-size:100% 100%;background-repeat:no-repeat}  /* carta com PNG: sem fundo nem cantos cinza */
+.circ{position:absolute;right:6px;bottom:6px;display:flex;gap:3px}                    /* culturas que o campo aceita: canto inferior direito */
+.fv{position:absolute;left:8px;bottom:4px;font-size:1.05rem;font-weight:800;line-height:1;color:#000;pointer-events:none;
+  text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff}                      /* vagas livres: preto, negrito, contorno branco fino */
+.dot{display:flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:#d8d4c8 center/cover;border:2px solid #fff;font-size:.6rem;color:#333;box-shadow:0 1px 3px #0006}
+.card.night{filter:brightness(.55)}                                                       /* campo de noite sem sprite noturna */
+.card.chrome::after{content:"";position:absolute;inset:0;border-radius:inherit;padding:3px;pointer-events:none;  /* borda cromada sem sprite */
+  background:linear-gradient(135deg,#fff,#8e99a4 25%,#eef2f6 50%,#6f7b86 75%,#fff);
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);-webkit-mask-composite:xor;mask-composite:exclude}
+.dot.big{width:34px;height:34px;font-size:.8rem}                                  /* símbolos da barra de recursos */
+.dot.ic{position:relative;width:18px;height:18px;font-size:.7rem;border-width:1px}   /* ícones pequenos (moeda e recursos em textos) */
+.dot.s{background-color:transparent;background-size:contain;background-repeat:no-repeat;border:0;box-shadow:none}   /* sprite PNG: sem contorno nem fundo */
+.mo{display:inline-flex;align-items:center;gap:4px;white-space:nowrap}
+.sep{margin:0 6px;opacity:.6}
+.inf{margin-top:3px;font-size:.8rem}
+.inf div{display:flex;flex-wrap:wrap;align-items:center;margin-top:2px}
+.card.pick{box-shadow:0 0 0 3px #f2c200,0 0 12px #f2c200;cursor:pointer}              /* campo que aceita o plantio (carta sem imagem) */
+.card.sp.pick{box-shadow:none;filter:drop-shadow(0 0 3px #f2c200) drop-shadow(0 0 7px #f2c200)}   /* com PNG: o brilho segue o contorno da arte */
+.card.sp.pick.night{filter:brightness(.55) drop-shadow(0 0 3px #f2c200) drop-shadow(0 0 7px #f2c200)}
+.card.gray{filter:grayscale(1)}                                                       /* campo que NÃO aceita */
+.card.night.gray{filter:brightness(.55) grayscale(1)}
+
+/* ---------- 8. ZOOM, MODAL E EVENTOS ---------- */
+#zoom{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#000b;cursor:zoom-out}
+#zoom .card{margin:0;padding:12px;font-size:min(3vw,1.4rem);cursor:default;animation:zin .25s ease}
+#zoom .card.campo{width:min(86vw,720px)}                  /* zoom de campo (horizontal): limite pela largura */
+#zoom .card:not(.campo){width:auto;height:min(88vh,860px)}  /* zoom das demais cartas (vertical): limite pela altura */
+#zoom .dot{width:66px;height:66px;font-size:1.35rem}   /* símbolo da cultura no zoom (antes 44px; 66px = 150%) */
+@keyframes zin{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
+#modal{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;overflow:auto;background:#0008}
+#modal .box{flex:none;max-width:900px;max-height:90vh;overflow:auto}
+#modal .box.wide{width:min(1500px,96vw);max-width:none}                  /* janela do Mercado: larga e baixa */
+.mk{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin-top:8px}
+.mk section{min-width:0}
+.mk h4{margin:4px 0 8px}
+.mkc{display:flex;flex-wrap:wrap;gap:10px;align-items:flex-start}                    /* sem esticar: cada carta mantém a própria proporção */
+.of{display:flex;flex-direction:column;gap:4px}                                      /* oferta: cabeçalho (vendedor, preço, botão) acima da carta */
+.of{min-width:170px}                                                    /* o cabeçalho tem espaço mesmo com a carta estreita */
+.of.rv{width:210px}
+.of.h .card{width:150px;margin:0}
+.of.v .card{width:120px;margin:0}
+.oh{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:.8rem}
+.oh .ot{font-weight:700;color:#000;text-shadow:-1px -1px 0 #fff,1px -1px 0 #fff,-1px 1px 0 #fff,1px 1px 0 #fff}
+.oh input{width:72px;margin:0}
+.oh button{margin:0;padding:4px 8px}
+.gal{display:flex;flex-wrap:wrap;gap:8px;align-items:flex-start}                   /* recursos plantados de outro jogador, lado a lado */
+.gal .card{width:130px;margin:0}
+#evb{position:fixed;right:8px;bottom:8px;z-index:5;width:240px;padding:8px;background:var(--box);border:2px solid var(--line);border-radius:8px;font-size:.75rem}
+#evb b{display:block;margin-top:4px}
+#zoom .zp{max-width:300px;margin-left:16px;padding:12px;background:var(--box);border-radius:8px;font-size:.9rem;cursor:default}
+#zoom .zp div{margin-top:6px}
+.rbox{display:inline-block;vertical-align:top;min-width:200px;margin:4px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:.85rem}
+.rl{display:grid;grid-template-columns:1fr 1fr auto;gap:4px;align-items:center;margin:6px 0}   /* venda de recurso: nome numa linha, campos na outra */
+.rl span{grid-column:1/-1}
+.rl input{width:100%;margin:0}
+.rl button{margin:0}
+.dvr{margin:8px 0;padding-top:8px;border-top:1px solid var(--line)}
+.dvr button,.dvr select{margin:2px}
+#zoom .fv{font-size:2.2rem;left:16px;bottom:10px}
+#zoom .pr{margin-top:8px;padding-top:6px;border-top:1px solid var(--line)}
+#zoom .pr button{margin:4px 4px 0 0}
+#zoom.anim{cursor:wait}
+#zoom .stk{display:grid}                                                              /* melhoria: carta antiga vira a nova (duração em UPGRADE_MS no zoom.js) */
+#zoom .stk>div{grid-area:1/1}
+#zoom .stk .o{animation:upOld 2s forwards}
+#zoom .stk .n{animation:upNew 2s forwards}
+@keyframes upOld{0%,25%{opacity:1;transform:scale(1)}60%,100%{opacity:0;transform:scale(1.08)}}
+@keyframes upNew{0%,25%{opacity:0;transform:scale(.94)}60%{opacity:1;transform:scale(1.08)}80%,100%{opacity:1;transform:scale(1)}}
