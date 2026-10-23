@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// menu.js: Tela inicial (Novo jogo): escolher número de jogadores, nomes, quem começa e o painel Dev da próxima partida.
+// menu.js: Tela inicial (Novo jogo): escolher número de jogadores, nomes, humano ou bot (select .bt), quem começa e o painel Dev da próxima partida.
 // (Celular: o bloco fica dentro de <div class="menu">, que o style.css usa para campos em largura total.)
 // ========================
 
@@ -12,7 +12,7 @@ function menu() {
 }
 function names() {
   const n = Math.min(REG.maxJogadores, Math.max(REG.minJogadores, +$('#n').value || REG.minJogadores)), r = [...Array(n)];
-  $('#nl').innerHTML = r.map((_, i) => `<input class="nm" placeholder="Jogador ${i + 1}">`).join('');
+  $('#nl').innerHTML = r.map((_, i) => `<div class="nmrow"><input class="nm" placeholder="Jogador ${i + 1}"><select class="bt"><option value="">Humano</option><option value="facil">🤖 Bot fácil</option><option value="normal">🤖 Bot normal</option></select></div>`).join('');
   $('#f').innerHTML = r.map((_, i) => `<option value="${i}">Jogador ${i + 1}</option>`).join('');
   if ($('#dvObjs')) $('#dvObjs').innerHTML = r.map((_, i) => `Objetivo do Jogador ${i + 1}: <select id="dvObj${i}"><option value="">aleatório</option>${CARDS.objetivo.map(c => `<option value="${c.id}">${nm(c)}</option>`).join('')}</select><br>`).join('');
 }

@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// tela.js: Desenha a tela principal do jogo (render): barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
+// tela.js: Desenha a tela principal do jogo (render; na vez de um bot mostra a tela do bot e chama Bot.agenda()): barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
 // Celular: .top = .st (texto) + .acts (botões); .seats agrupa as abas; .board agrupa campos à venda + seus campos; #evb é recolhível (EVB_OPEN). No PC esses grupos não mudam nada (display:contents).
 // ========================
 
@@ -14,6 +14,7 @@ function render() {
   const evb = `<div id="evb"${EVB_OPEN ? ' class="open"' : ''}><div class="evh" onclick="EVB_OPEN=!EVB_OPEN;this.parentNode.classList.toggle('open',EVB_OPEN)"><span>📅 ${S.ev.map(e => nm(e.c)).join(' · ') || 'Sem evento geral ativo'}</span><span class="car">▾</span></div>
     <div class="evc"><b>Evento Geral Ativo</b>${S.ev.map(e => `<div>${nm(e.c)}: ${evDesc(e)} (${e.left} rod.)</div>`).join('')}
     <b>Evento Individual Ativo</b><div>${!S.hide && p.ind ? nm(p.ind) + ': ' + desc(p.ind) : '—'}</div></div></div>`;
+  if (p.bot) { Bot.agenda(); return m.innerHTML = Bot.tela(p, evb); } // vez de um bot (bot.js): ele joga sozinho; nada de "Passe o dispositivo"
   if (S.hide) return m.innerHTML = `<h2>Vez do jogador ${p.n}</h2><p>Rodada ${S.round}. Passe o dispositivo e clique quando estiver pronto.</p>
     <button onclick="A.go()">Estou pronto</button><button onclick="A.modal('mkt')">🤝 Mercado</button>${REG.devAtivo ? '<button onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<p class="log">${S.log.join('<br>')}</p>${evb}${modal()}`;
   const ring = S.players.map((q, i) => i).filter(i => !S.players[i].out), ci = ring.indexOf(S.order[S.t]);
