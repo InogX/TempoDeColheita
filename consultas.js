@@ -1,8 +1,12 @@
 // ===== FICHA TÉCNICA =====
-// consultas.js: Pequenas perguntas rápidas sobre a partida: quem joga agora, quem ainda está vivo, comprar carta do baralho, a carta cabe no campo, registro (log), achar item do mercado e as consultas dos eventos gerais ativos (manutenção, produção bloqueada, preço do Governo, juros, taxa, campo grátis, Feira).
+// consultas.js: Pequenas perguntas rápidas sobre a partida: quem joga agora (cur), quem sou eu neste aparelho (eu/me; EU fica null no jogo local e será fixo no online), quem ainda está vivo, comprar carta do baralho, a carta cabe no campo, registro (log), achar item do mercado e as consultas dos eventos gerais ativos (manutenção, produção bloqueada, preço do Governo, juros, taxa, campo grátis, Feira).
 // ========================
 
-const cur = () => S.players[S.order[S.t]];
+const cur = () => S.players[S.order[S.t]]; // o jogador da VEZ
+let EU = null; // índice do jogador DESTE aparelho. null = jogo local (passa o aparelho): acompanha a vez. No online será fixo.
+const eu = () => EU != null ? EU : S.order[S.t]; // quem sou eu (índice)
+const me = () => S.players[eu()]; // quem sou eu (jogador): é o que a tela, as janelas e o zoom mostram
+const peekPend = () => S.peekPend != null && S.peekPend === eu(); // tenho que escolher quem espiar? (evento individual "espiar")
 const alive = () => S.players.filter(p => !p.out);
 const log = t => { S.log.push(t); S.log = S.log.slice(-6); };
 const pull = k => { if (!S.dk[k].length) S.dk[k] = sh(CARDS[k]); return { ...S.dk[k].pop(), uid: ++S.uid }; };

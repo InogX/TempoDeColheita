@@ -24,9 +24,9 @@ const Bot = {
     if (k !== this.chave) { this.chave = k; this.n = 0; this.negados = new Set(); this.cancelou = false; } // vez nova: zera os controles
     try {
       if (S.hide) A.go();
-      else if (S.modal === 'peek') { const o = alive().filter(q => q !== p); if (o.length) A.peek(S.players.indexOf(o[Math.floor(Math.random() * o.length)])); else { S.modal = null; } }
+      else if (S.peekPend != null) { const o = alive().filter(q => q !== p); if (o.length) A.peek(S.players.indexOf(o[Math.floor(Math.random() * o.length)])); else { S.peekPend = null; } }
       else if (++this.n > 80 || !this.decide(p)) A.end(); // limite de ações por turno; sem mais o que fazer: encerra
-    } catch (e) { console.error('Bot: erro, encerrando o turno', e); this.erros++; try { S.modal = null; A.end(); } catch (e2) { console.error('Bot: falha ao encerrar o turno', e2); this.erros += 10; } } },
+    } catch (e) { console.error('Bot: erro, encerrando o turno', e); this.erros++; try { S.peekPend = null; UI.modal = null; A.end(); } catch (e2) { console.error('Bot: falha ao encerrar o turno', e2); this.erros += 10; } } },
   tela(p, evb) { return `<h2>🤖 ${p.n} está jogando...</h2><p>Rodada ${S.round}. <button onclick="Bot.delay = Bot.delay > 300 ? 100 : 700">⏩ Velocidade</button><button onclick="A.quit()">Sair</button></p>
     <p class="log">${S.log.join('<br>')}</p>${evb || `<div id="evb"><b>Evento Geral Ativo</b>${S.ev.map(e => `<div>${nm(e.c)}: ${evDesc(e)} (${e.left} rod.)</div>`).join('')}</div>`}`; }, // evb = caixa de eventos que o tela.js já monta (recolhível no celular)
 
@@ -107,7 +107,7 @@ const Bot = {
     return false; },
 
   // ---------- a decisão: devolve true se fez UMA ação, false se não há mais o que fazer (aí o turno encerra) ----------
-  decide(p) { const pf = this.pf(p), o = p.obj, id = this.eu(p), R = this.reserva(p), min = this.piso(p) + 5, rnd = Math.random; S.actor = id; // S.actor: o Mercado atua pelo jogador da vez
+  decide(p) { const pf = this.pf(p), o = p.obj, id = this.eu(p), R = this.reserva(p), min = this.piso(p) + 5, rnd = Math.random; UI.actor = id; // UI.actor: o Mercado atua pelo jogador da vez
     // 1. recolhe as próprias ofertas antigas do Mercado (devolve o estoque), uma vez por turno
     if (!this.cancelou) { const l = S.mk.find(x => x.s === id); if (l && this.tenta('cancel:' + l.id, () => A.cancel(l.id))) return true; this.cancelou = true; }
     // 2. sobreviver: abaixo do mínimo, vende tudo e, se preciso, pega empréstimo
@@ -119,7 +119,7 @@ const Bot = {
     if (this.fecharia(p)) { if (this.vender(p, Infinity, true)) return true; if (o.t === 'clean' && p.debt && p.coins > 0 && this.tenta('pay', () => A.pay(), 'pagou da dívida')) return true; }
     // 5. planta
     const B = this.plantio(p);
-    if (B) { const ok = this.tenta(`plant:${B.h}:${B.fi}`, () => { A.pick(B.h); A.plantIn(B.fi); }); S.plantSel = null; if (ok) return true; }
+    if (B) { if (this.tenta(`plant:${B.h}:${B.fi}`, () => A.plantIn(B.fi, B.h))) return true; }
     // 6. evolui
     const U = this.melhorUp(p);
     if (U && p.coins >= min + 20 && (pf.up === 1 || rnd() < pf.up) && this.tenta(`up:${U.fi}:${U.pi}:${U.L}`, () => A.up(U.fi, U.pi))) return true;

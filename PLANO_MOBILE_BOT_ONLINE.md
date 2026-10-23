@@ -1,4 +1,4 @@
-# Tempo de Colheita — Plano (versão 4): o que falta
+# Tempo de Colheita — Plano (versão 5): o que falta
 
 **Como usar numa conversa nova:** envie este arquivo + o `FICHAS_TECNICAS.md` atualizado + os arquivos da lista da etapa. **Uma etapa por conversa.** Sempre envie a versão mais recente dos arquivos.
 
@@ -33,7 +33,7 @@
 | Fase | Status |
 |---|---|
 | 0 — Decisões e inventário | ✅ |
-| 1 — Identidade local e estado de interface | 🔄 |
+| 1 — Identidade local e estado de interface | 🔄 entregue nesta conversa (9 arquivos), testada em Node (60/60 execuções); vira ✅ depois que você conferir no navegador. `janelas.js` e `qa.html` NÃO foram alterados: funcionam pela ponte `ligaUI()`. |
 | 2 — Resultado das ações | 🔄 |
 | 3 — Visão filtrada | ⬜ |
 | 4 — Camada de comandos | ⬜ |
@@ -61,7 +61,7 @@
 
 Nada disso trava o online, mas é melhor achar agora do que misturado com a rede. (Ainda **não confirmado** como feito.)
 
-1. **Rodar o `qa.html`.** Ele não foi rodado depois das mudanças de celular, do bot e dos menus. Atenção: `menu()` agora abre o **menu principal**; se o QA precisava do formulário, ele deve chamar `Menu.ir('novo')` (ou `A.new({ nomes, bots, first })`). Se o QA quebrar, envie o `qa.html` para ajuste.
+1. **Rodar o `qa.html`.** Ele não foi rodado depois das mudanças de celular, do bot, dos menus e da Fase 1 (o QA continua lendo `S.modal` etc. pela ponte `ligaUI()`; se algo falhar, me avise). Atenção: `menu()` agora abre o **menu principal**; se o QA precisava do formulário, ele deve chamar `Menu.ir('novo')` (ou `A.new({ nomes, bots, first })`). Se o QA quebrar, envie o `qa.html` para ajuste.
 2. **Testar o bot de verdade:** no menu marque um jogador como bot, inicie, e veja se ele joga sozinho, se "Continuar" retoma a vez dele e se a tela do bot fica legível no celular. Teste também `Bot.simular(20, 3, ['normal'])` no console (F12).
 3. **Menus:** o CSS já está no `style.css` entregue. Confira no celular se os botões grandes e a linha nome + humano/bot ficaram bons.
 4. **Decisão pendente:** a tela do bot mostra a caixa de eventos que inclui o **evento individual do bot**. Se quiser esconder isso de quem está olhando, é um ajuste pequeno em `tela.js` e `bot.js`.
@@ -81,6 +81,7 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 | Gancho `if (p.bot) ...` em `tela.js` | É o mesmo ponto onde entra "Aguardando [jogador]". |
 
 ### O que ainda atrapalha (ainda não foi tratado, salvo se a fase correspondente for entregue)
+> **Tratado pela Fase 1 (aguardando conferência):** jogador da vez → `me()`/`eu()`; estado de interface → `UI`; `Z.field/card/up` e `D.i()` → `me()`/`eu()`; "atuar como" e Dev → `UI.actor`/`UI.devP`. **Continuam abertos:** `alert()` nas ações (Fase 2), `S.hide` e `render()` gravando em `localStorage` (Fases 7/9), `sees()` (Fase 3), `janelas.js` (Fase 8) e `Z.up` síncrono (Fases 4/7).
 | Problema | Onde |
 |---|---|
 | Tudo depende do jogador da vez (`cur()` = `S.order[S.t]`), inclusive visões, janelas e zoom. | `consultas.js`, `acoes-*.js`, `tela.js`, `janelas.js`, `zoom.js`, `bot.js` |
@@ -104,6 +105,17 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 - **Fase 9 deve:** fechar/limpar salas (host que sai, salas antigas), reconexão com uid novo, e conferir sala cheia/partida iniciada no servidor, se desejado.
 - **Login:** persistência padrão `'local'`: duas abas do mesmo navegador são o MESMO jogador. Para testar dois jogadores: `teste-rede.html` (uid por aba), outro navegador ou janela anônima.
 - **Custos conferidos de novo (23/10/2026):** Spark = 100 conexões, 1 GB, 10 GB/mês de download (≈360 MB/dia na página oficial).
+
+### Fase 1 entregue — o que mudou para as próximas fases
+- **Arquivos alterados (9):** `estado.js`, `consultas.js`, `acoes-turno.js`, `acoes-plantio.js`, `acoes-mercado.js`, `bot.js`, `dev.js`, `tela.js`, `zoom.js`. **Não alterados:** `janelas.js`, `qa.html`, `menu.js`, `iniciar.js`, `index.html`, `rede.js`.
+- **Quem sou eu:** `EU` (null no jogo local), `eu()` (índice) e `me()` (jogador) em `consultas.js`. Telas, zoom e (por enquanto só no código novo) janelas usam `me()`; as ações continuam em `cur()`. **No online, a Fase 6/7 só precisa fazer `EU = idx` ao entrar na sala.**
+- **Interface fora de `S`:** o objeto `UI` (em `estado.js`) guarda `modal`, `plantSel`, `viewing`, `viewRes`, `actor`, `devP`, `dv`. O save (`tc_save`) não leva mais esses campos; `A.cont()` limpa saves antigos.
+- **Espiar:** a escolha pendente agora é do jogo (`S.peekPend`), não da interface; a janela aparece só para quem é `eu()`.
+- **`A.plantIn(fi, h)`:** a carta da mão pode ser passada direto (sem `A.pick`), o que já serve de comando de rede.
+- **Ponte provisória `ligaUI()`:** `S.modal`, `S.plantSel`, `S.actor` etc. continuam existindo como atalhos para `UI` (não enumeráveis, não vão ao save). Assim `janelas.js` e `qa.html` funcionam sem mudança. **Remover a ponte quando os dois usarem `UI` direto.**
+- **Pendente em `janelas.js`:** o `style.css` tem o botão flutuante `.mx` (✕, só celular), mas o `janelas.js` que eu recebi (versão do início da conversa) não o desenha; ou a Parte 1 alterou o arquivo e a versão atual não chegou a mim, ou o botão nunca foi ligado. Antes da Fase 8, **envie o `janelas.js` atual** para eu migrá-lo para `UI`/`me()` sem perder o que a Parte 1 fez.
+- **Atenção para a Fase 7:** `tela.js` chama `Bot.agenda()` para qualquer aparelho quando a vez é de um bot. No online, só o anfitrião pode rodar os bots (`Rede.ehHost`).
+- **Ainda aberto:** `Z.up` confere o resultado na hora (síncrono); no online a resposta vem depois (Fases 4/7).
 
 ### Decisões já tomadas (Fase 0)
 - **Arquitetura:** o navegador de um jogador (**anfitrião**) roda o jogo e os bots; os outros enviam ações e recebem uma visão filtrada. Não precisa de servidor próprio.

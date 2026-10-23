@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// tela.js: Desenha a tela principal do jogo (render; na vez de um bot mostra a tela do bot e chama Bot.agenda()): barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
+// tela.js: Desenha a tela principal do jogo (render; mostra o jogador deste aparelho, me(), e quem está na vez, cur(); na vez de um bot mostra a tela do bot e chama Bot.agenda()): barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
 // Celular: .top = .st (texto) + .acts (botões); .seats agrupa as abas; .board agrupa campos à venda + seus campos; #evb é recolhível (EVB_OPEN). No PC esses grupos não mudam nada (display:contents).
 // ========================
 
@@ -10,23 +10,23 @@ function render() {
   if (S.win) { localStorage.removeItem('tc_save');
     return m.innerHTML = `<h2>🏆 ${S.win.n} venceu!</h2><p>${S.win.why}</p><button onclick="A.quit()">Voltar ao menu</button>`; }
   localStorage.setItem('tc_save', JSON.stringify(S));
-  const p = cur();
+  const vez = cur(), p = me(); // vez = quem joga agora; p = quem sou eu (no jogo local é o mesmo jogador)
   const evb = `<div id="evb"${EVB_OPEN ? ' class="open"' : ''}><div class="evh" onclick="EVB_OPEN=!EVB_OPEN;this.parentNode.classList.toggle('open',EVB_OPEN)"><span>📅 ${S.ev.map(e => nm(e.c)).join(' · ') || 'Sem evento geral ativo'}</span><span class="car">▾</span></div>
     <div class="evc"><b>Evento Geral Ativo</b>${S.ev.map(e => `<div>${nm(e.c)}: ${evDesc(e)} (${e.left} rod.)</div>`).join('')}
     <b>Evento Individual Ativo</b><div>${!S.hide && p.ind ? nm(p.ind) + ': ' + desc(p.ind) : '—'}</div></div></div>`;
-  if (p.bot) { Bot.agenda(); return m.innerHTML = Bot.tela(p, evb); } // vez de um bot (bot.js): ele joga sozinho; nada de "Passe o dispositivo"
-  if (S.hide) return m.innerHTML = `<h2>Vez do jogador ${p.n}</h2><p>Rodada ${S.round}. Passe o dispositivo e clique quando estiver pronto.</p>
+  if (vez.bot) { Bot.agenda(); return m.innerHTML = Bot.tela(vez, evb); } // vez de um bot (bot.js): ele joga sozinho; nada de "Passe o dispositivo"
+  if (S.hide) return m.innerHTML = `<h2>Vez do jogador ${vez.n}</h2><p>Rodada ${S.round}. Passe o dispositivo e clique quando estiver pronto.</p>
     <button onclick="A.go()">Estou pronto</button><button onclick="A.modal('mkt')">🤝 Mercado</button>${REG.devAtivo ? '<button onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<p class="log">${S.log.join('<br>')}</p>${evb}${modal()}`;
-  const ring = S.players.map((q, i) => i).filter(i => !S.players[i].out), ci = ring.indexOf(S.order[S.t]);
+  const ring = S.players.map((q, i) => i).filter(i => !S.players[i].out), ci = ring.indexOf(eu());
   const oth = ring.slice(ci + 1).concat(ring.slice(0, ci)), half = Math.ceil(oth.length / 2);
   const tabs = ids => ids.map(i => sideTab(S.players[i], i, p)).join('');
-  const sel = S.plantSel != null ? p.hand[S.plantSel] : null;
+  const sel = UI.plantSel != null ? p.hand[UI.plantSel] : null;
   const hud = `<div id="hud">${K.map(k => `<span class="hi">${hudDot(ASSETS.cultura[k], CROPS[k].slice(0, 2), 'big')}<b>${p.res[k] || 0}</b></span>`).join('')}<span class="hi">${hudDot(ASSETS.ouro, '$', 'big')}<b>${p.coins}</b></span></div>`;
   const mine = p.fields.map((f, i) => { const ok = sel && fits(f, sel) && free(f) >= NV(sel).espacos;
     return cardHTML(f.c, '', isNight(p, f), sel ? (ok ? `onclick="A.plantIn(${i})"` : '') : `data-field="${i}"`, sel ? (ok ? 'pick' : 'gray') : '', `${free(f)}/${f.c.slots}`); }).join('');
   const pode = c => p.fields.some(f => fits(f, c) && free(f) >= NV(c).espacos); // a carta só fica colorida se existir campo que a receba
   const hand = p.hand.map((c, h) => cardHTML(c, '', false, `data-plant="${h}" data-ok="${pode(c) ? 1 : 0}"`, (sel === c ? 'pick ' : '') + (pode(c) ? '' : 'gray'))).join('');
-  m.innerHTML = `${hud}<div class="top"><span class="st">Rodada ${S.round} · Vez de <b>${p.n}</b> · Dívida ${p.debt}${done(p) ? ' · ✔ objetivo cumprido (vale no fim da rodada)' : ''}${S.ev.some(e => e.c.reveal == 'all') ? ' · Cofre do governo: ' + moeda(S.gov) : ''}</span>
+  m.innerHTML = `${hud}<div class="top"><span class="st">Rodada ${S.round} · Vez de <b>${vez.n}</b> · Dívida ${p.debt}${done(p) ? ' · ✔ objetivo cumprido (vale no fim da rodada)' : ''}${S.ev.some(e => e.c.reveal == 'all') ? ' · Cofre do governo: ' + moeda(S.gov) : ''}</span>
     <span class="acts"><button onclick="A.modal('gov')">🏛 Acionar Governo</button><button onclick="A.modal('mkt')">🤝 Mercado</button><button onclick="A.modal('obj')">🎯 Objetivo</button>${REG.devAtivo ? '<button class="dev" onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<button class="end" onclick="A.end()">Encerrar turno ➜</button><button class="quit" onclick="A.quit()">Sair</button></span>
     ${sel ? `<b class="pickmsg">Escolha o campo para plantar ${CROPS[sel.crop]} <button onclick="A.cancelPick()">Cancelar</button></b>` : ''}</div>
     <div class="seats"><div class="side sideL">${tabs(oth.slice(0, half))}</div><div class="side sideR">${tabs(oth.slice(half))}</div></div>

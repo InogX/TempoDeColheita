@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// acoes-mercado.js: Ações do Mercado entre jogadores: ofertar recursos, ofertar cartas, cancelar oferta, comprar de outro jogador (com a Taxa do Mercado e o Embargo) e registrar os números das negociações (para os objetivos). A.listRes(k, qtd, preco) e A.list(kind, uid, preco) aceitam os valores como parâmetros opcionais (o bot usa); sem eles, leem os campos da tela como sempre.
+// acoes-mercado.js: Ações do Mercado entre jogadores: ofertar recursos, ofertar cartas, cancelar oferta, comprar de outro jogador (com a Taxa do Mercado e o Embargo) e registrar os números das negociações (para os objetivos). Quem atua é `UI.actor` ("atuar como" da janela do Mercado). A.listRes(k, qtd, preco) e A.list(kind, uid, preco) aceitam os valores como parâmetros opcionais (o bot usa); sem eles, leem os campos da tela como sempre.
 // ========================
 
 const negocio = (s, b, valor, un) => { const si = S.players.indexOf(s), bi = S.players.indexOf(b); // contadores de negociação entre jogadores
@@ -8,16 +8,16 @@ const negocio = (s, b, valor, un) => { const si = S.players.indexOf(s), bi = S.p
   if (!s.st.partners.includes(bi)) s.st.partners.push(bi); if (!b.st.partners.includes(si)) b.st.partners.push(si); if (!s.st.buyers.includes(bi)) s.st.buyers.push(bi); };
 
 Object.assign(A, {
-  listRes(k, q, pr) { if (mercadoFechado()) return alert('Mercado fechado (Embargo)'); const a = S.players[S.actor], qty = Math.floor(q !== undefined ? +q : +$('#rq' + k).value), price = Math.floor(pr !== undefined ? +pr : +$('#rp' + k).value);
+  listRes(k, q, pr) { if (mercadoFechado()) return alert('Mercado fechado (Embargo)'); const a = S.players[UI.actor], qty = Math.floor(q !== undefined ? +q : +$('#rq' + k).value), price = Math.floor(pr !== undefined ? +pr : +$('#rp' + k).value);
     if (!(qty > 0 && price > 0)) return alert('Informe quantidade e preço por unidade');
     if (qty > (a.res[k] || 0)) return alert('Estoque insuficiente');
-    if (S.mk.some(l => l.kind == 'res' && l.s == S.actor && l.crop == k)) return alert(`Você já tem uma oferta de ${CROPS[k]} no Mercado. Cancele a anterior antes.`);
-    a.res[k] -= qty; S.mk.push({ id: ++S.uid, s: S.actor, kind: 'res', crop: k, qty, price }); render(); },
+    if (S.mk.some(l => l.kind == 'res' && l.s == UI.actor && l.crop == k)) return alert(`Você já tem uma oferta de ${CROPS[k]} no Mercado. Cancele a anterior antes.`);
+    a.res[k] -= qty; S.mk.push({ id: ++S.uid, s: UI.actor, kind: 'res', crop: k, qty, price }); render(); },
   list(kind, uid, pr) { if (mercadoFechado()) return alert('Mercado fechado (Embargo)'); const price = pr !== undefined ? +pr : +$('#pr' + uid).value;
     if (S.mk.some(l => l.kind == kind && l.uid == uid)) return alert('Este item já está à venda. Cancele a oferta anterior antes.');
-    if (price > 0) S.mk.push({ id: ++S.uid, s: S.actor, kind, uid, price }); render(); },
+    if (price > 0) S.mk.push({ id: ++S.uid, s: UI.actor, kind, uid, price }); render(); },
   cancel(id) { const l = S.mk.find(x => x.id == id); if (l && l.kind == 'res') S.players[l.s].res[l.crop] += l.qty; S.mk = S.mk.filter(x => x.id != id); render(); },
-  buyM(id) { if (mercadoFechado()) return alert('Mercado fechado (Embargo)'); const l = S.mk.find(x => x.id == id), it = find(l), b = S.players[S.actor], s = S.players[l.s];
+  buyM(id) { if (mercadoFechado()) return alert('Mercado fechado (Embargo)'); const l = S.mk.find(x => x.id == id), it = find(l), b = S.players[UI.actor], s = S.players[l.s];
     if (l.kind == 'res') { const t = l.qty * l.price, fee = taxaMercado(t); if (b.coins < t) return alert('Moedas insuficientes');
       b.coins -= t; s.coins += t - fee; S.gov += fee; b.res[l.crop] = (b.res[l.crop] || 0) + l.qty; negocio(s, b, t - fee, l.qty); S.mk = S.mk.filter(x => x != l);
       log(`${b.n} comprou ${l.qty} ${CROPS[l.crop]} de ${s.n} por ${t}${fee ? ` (taxa de ${fee} ao Governo)` : ''}`); return after(); }
