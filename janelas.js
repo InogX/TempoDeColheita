@@ -1,5 +1,6 @@
 // ===== FICHA TÉCNICA =====
 // janelas.js: Monta as janelas (modais): Governo, Mercado, Objetivo secreto, Espiar, Ver jogador e painel Dev.
+// (Celular: o botão redondo ✕ (.mx) fica no fim do HTML para não mudar a ordem dos botões; o CSS o fixa no canto da tela.)
 // ========================
 
 function modal() {
@@ -32,7 +33,7 @@ function modal() {
     <button onclick="A.loan()">Pegar empréstimo (${LOAN})</button><button onclick="A.pay()">Pagar (${LOAN})</button><br>
     <button onclick="A.extra()">Comprar carta de recurso nível 1 (${EXTRA}) — mão ${p.hand.length}/5</button>
     <h4>Vender recursos ao Governo <small>(${evOn('govPaga') ? 'Governo paga +100% nesta rodada' : 'preço fixo por unidade'})</small></h4>${K.map(k => `<button onclick="A.sell('${k}')">${CROPS[k]}: ${p.res[k] || 0} un. × ${govPreco(k)}</button>`).join('')}
-    ${(fe => fe ? `<h4>🎪 Feira Regional <small>(${moeda(fe.c.preco)} por unidade · até ${fe.c.limite} de cada por jogador)</small></h4>${K.map(k => `<div class="rl"><span>${rec(k, p.res[k] || 0)} ${CROPS[k]}</span> estoque do Governo: ${fe.stock[k]} · você pode comprar: ${feiraMax(fe, p, k)}
+    ${(fe => fe ? `<h4>🎪 Feira Regional <small>(${moeda(fe.c.preco)} por unidade · até ${fe.c.limite} de cada por jogador)</small></h4>${K.map(k => `<div class="rl f"><span>${rec(k, p.res[k] || 0)} ${CROPS[k]}</span><span class="rt">estoque do Governo: ${fe.stock[k]} · você pode comprar: ${feiraMax(fe, p, k)}</span>
       <input id="fq${k}" type="number" min="1" placeholder="qtd"><button onclick="A.buyFeira('${k}')">Comprar</button></div>`).join('')}` : '')(evFind('feira'))}`;
   } else { const a = S.players[S.actor]; S.mk = S.mk.filter(find);
     const opts = S.players.map((q, i) => q.out ? '' : `<option value="${i}"${i == S.actor ? ' selected' : ''}>${q.n}</option>`).join('');
@@ -48,6 +49,6 @@ function modal() {
     <section><h4>Lançar oferta de carta (${a.n})</h4><b>Terrenos</b><div class="mkc">${a.fields.map(f => lancar('field', f.c)).join('') || 'Sem terrenos'}</div>
       <br><b>Recursos</b><div class="mkc">${a.hand.map(c => lancar('hand', c)).join('') || 'Sem cartas'}</div></section></div>`;
   }
-  return `<div id="modal"><div class="box${S.modal == 'mkt' ? ' wide' : ''}">${h}<br><br><button onclick="A.modal(null)">Fechar</button></div></div>`;
+  return `<div id="modal"><div class="box${S.modal == 'mkt' ? ' wide' : ''}">${h}<br><br><button onclick="A.modal(null)">Fechar</button><div class="mx" role="button" aria-label="Fechar" onclick="A.modal(null)">✕</div></div></div>`;
 }
 

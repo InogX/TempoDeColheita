@@ -2,7 +2,8 @@
    FICHA TÉCNICA: style.css cuida só da APARÊNCIA (cores, tamanhos, posições, zoom, animação). Não tem regra do jogo.
    TEMPO DE COLHEITA - style.css
    Seções: 1 Variáveis · 2 Base · 3 Layout · 4 Tela do jogo · 5 Cartas ·
-           6 Grades de cartas · 7 Sprites e estados · 8 Zoom, modal e eventos
+           6 Grades de cartas · 7 Sprites e estados · 8 Zoom, modal e eventos ·
+           9 Celular e telas pequenas (media queries; PC = tudo acima)
    ===================================================================== */
 
 /* ---------- 1. VARIÁVEIS ---------- */
@@ -15,6 +16,7 @@
 
 /* ---------- 2. BASE ---------- */
 *{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%;touch-action:manipulation}   /* sem zoom acidental por toque duplo */
 body{margin:0;font-family:system-ui,sans-serif;background:var(--bg);color:var(--ink)}
 header{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid var(--line)}
 h1{font-size:1.2rem;margin:0}
@@ -34,23 +36,23 @@ input,select{padding:5px;margin:2px;background:var(--box);color:var(--ink);borde
 
 /* ---------- 4. TELA DO JOGO ---------- */
 /* área de compra (campos à venda): as cartas se ajustam sozinhas pela função fit() do tela.js */
-.center{position:relative;width:60%;min-width:200px;height:34vh;min-height:230px;margin:8px auto;overflow:auto;border:2px dashed var(--line);border-radius:8px;padding:8px;text-align:center}
+.center{position:relative;width:60%;min-width:200px;height:34vh;height:34dvh;min-height:230px;margin:8px auto;overflow:auto;border:2px dashed var(--line);border-radius:8px;padding:8px;text-align:center}
 .center h3{margin:0 0 6px}
 #hud{position:sticky;top:0;z-index:4;display:flex;flex-wrap:wrap;gap:6px 22px;align-items:center;justify-content:center;padding:6px;background:var(--box);border-bottom:2px solid var(--line)}  /* barra de recursos */
 .hi{display:flex;align-items:center;gap:6px;font-size:1.15rem}
 .cards.mine{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin:8px 0}   /* seus campos */
 .cards.mine .card{width:170px}
 .hand{position:fixed;left:0;right:0;bottom:0;z-index:6;display:flex;justify-content:center;gap:6px;pointer-events:none}   /* sua mão: metade escondida */
-.hand .card{width:130px;margin:0;transform:translateY(50%);transition:transform .2s;pointer-events:auto}
-.hand .card:hover{transform:translateY(8%)}                                           /* hover: a carta sobe */
+.hand .card{width:130px;margin:0;transform:translateY(calc((1 - var(--hs,.5)) * 100%));transition:transform .2s;pointer-events:auto}
+@media(hover:hover){.hand .card:hover{transform:translateY(8%)}}                                           /* hover: a carta sobe */
 .side{position:fixed;top:50%;transform:translateY(-50%);z-index:3;display:flex;flex-direction:column;gap:6px}  /* outros jogadores nas laterais */
 .sideL{left:0}
 .sideR{right:0;align-items:flex-end}
 .tab{min-width:84px;max-width:150px;padding:6px 10px;background:var(--box);border:2px solid var(--line);cursor:pointer;transition:transform .2s;font-size:.8rem}
 .sideL .tab{border-left:0;border-radius:0 8px 8px 0}
 .sideR .tab{border-right:0;border-radius:8px 0 0 8px}
-.sideL .tab:hover{transform:translateX(14px)}
-.sideR .tab:hover{transform:translateX(-14px)}
+@media(hover:hover){.sideL .tab:hover{transform:translateX(14px)}
+.sideR .tab:hover{transform:translateX(-14px)}}
 .tab small{display:block;opacity:.85}
 .tab.vis{max-width:300px}
 .vw{grid-template-columns:repeat(auto-fill,170px)}                                    /* janela das fazendas de um jogador */
@@ -98,11 +100,11 @@ input,select{padding:5px;margin:2px;background:var(--box);color:var(--ink);borde
 #zoom{position:fixed;inset:0;z-index:30;display:flex;align-items:center;justify-content:center;background:#000b;cursor:zoom-out}
 #zoom .card{margin:0;padding:12px;font-size:min(3vw,1.4rem);cursor:default;animation:zin .25s ease}
 #zoom .card.campo{width:min(86vw,720px)}                  /* zoom de campo (horizontal): limite pela largura */
-#zoom .card:not(.campo){width:auto;height:min(88vh,860px)}  /* zoom das demais cartas (vertical): limite pela altura */
+#zoom .card:not(.campo){width:auto;height:min(88vh,860px);height:min(88dvh,860px)}  /* zoom das demais cartas (vertical): limite pela altura */
 #zoom .dot{width:66px;height:66px;font-size:1.35rem}   /* símbolo da cultura no zoom (antes 44px; 66px = 150%) */
 @keyframes zin{from{transform:scale(.4);opacity:0}to{transform:scale(1);opacity:1}}
 #modal{position:fixed;inset:0;z-index:8;display:flex;align-items:center;justify-content:center;overflow:auto;background:#0008}
-#modal .box{flex:none;max-width:900px;max-height:90vh;overflow:auto}
+#modal .box{flex:none;max-width:900px;max-height:90vh;max-height:90dvh;overflow:auto}
 #modal .box.wide{width:min(1500px,96vw);max-width:none}                  /* janela do Mercado: larga e baixa */
 .mk{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:18px;margin-top:8px}
 .mk section{min-width:0}
@@ -121,7 +123,7 @@ input,select{padding:5px;margin:2px;background:var(--box);color:var(--ink);borde
 .gal .card{width:130px;margin:0}
 #evb{position:fixed;right:8px;bottom:8px;z-index:5;width:240px;padding:8px;background:var(--box);border:2px solid var(--line);border-radius:8px;font-size:.75rem}
 #evb b{display:block;margin-top:4px}
-#zoom .zp{max-width:300px;margin-left:16px;padding:12px;background:var(--box);border-radius:8px;font-size:.9rem;cursor:default}
+#zoom .zp{max-width:300px;margin-left:16px;padding:12px;background:var(--box);border-radius:8px;font-size:.9rem;cursor:default;overflow:auto;max-height:88vh;max-height:88dvh}
 #zoom .zp div{margin-top:6px}
 .rbox{display:inline-block;vertical-align:top;min-width:200px;margin:4px;padding:8px;border:1px solid var(--line);border-radius:8px;font-size:.85rem}
 .rl{display:grid;grid-template-columns:1fr 1fr auto;gap:4px;align-items:center;margin:6px 0}   /* venda de recurso: nome numa linha, campos na outra */
@@ -140,3 +142,102 @@ input,select{padding:5px;margin:2px;background:var(--box);color:var(--ink);borde
 #zoom .stk .n{animation:upNew 2s forwards}
 @keyframes upOld{0%,25%{opacity:1;transform:scale(1)}60%,100%{opacity:0;transform:scale(1.08)}}
 @keyframes upNew{0%,25%{opacity:0;transform:scale(.94)}60%{opacity:1;transform:scale(1.08)}80%,100%{opacity:1;transform:scale(1)}}
+
+/* ---------- 9. CELULAR E TELAS PEQUENAS ----------
+   Três critérios (o mesmo COMPACT_Q está em tela.js):
+   A) compacto = largura até 700px OU altura até 520px · B) estreito = largura até 700px · C) baixo = altura até 520px (celular deitado)
+   No PC os grupos novos (.seats .board .acts) são display:contents e não mudam nada. */
+.seats,.board,.acts{display:contents}
+.evh,.mx{display:none}
+.rl.f{grid-template-columns:1fr auto}                                      /* Feira: nome, texto do estoque, e só depois campo + botão */
+.rl .rt{font-size:.8rem;opacity:.9}
+
+/* A) compacto */
+@media (max-width:700px),(max-height:520px){
+  :root{--tap:44px;--hs:.6;--hw:min(130px,calc((100vw - 28px) / 5))}   /* --hs = fração da carta da mão que aparece · --hw = largura da carta da mão */
+  html,body{overflow-x:hidden}
+  header{padding:6px max(12px,env(safe-area-inset-right)) 6px max(12px,env(safe-area-inset-left))}
+  h1{font-size:1rem}
+  main{padding:8px max(10px,env(safe-area-inset-right)) calc(var(--hw) * 1.8 * var(--hs) + 28px + env(safe-area-inset-bottom)) max(10px,env(safe-area-inset-left))}
+  button{min-height:var(--tap);padding:8px 12px;font-size:.95rem}
+  input,select{font-size:16px;min-height:var(--tap)}                        /* 16px: o iPhone não dá zoom ao tocar no campo */
+  input[type=checkbox]{min-height:0;width:22px;height:22px}
+  /* barra de recursos */
+  #hud{display:grid;grid-template-columns:repeat(auto-fit,minmax(48px,1fr));gap:4px;padding:6px max(6px,env(safe-area-inset-right)) 6px max(6px,env(safe-area-inset-left))}
+  .hi{flex-direction:column;gap:2px;font-size:1rem}
+  .dot.big{width:30px;height:30px}
+  /* mão: cartas em largura relativa, sem hover */
+  .hand{bottom:env(safe-area-inset-bottom);gap:4px;padding:0 6px}
+  .hand .card{flex:0 1 var(--hw);width:var(--hw);min-width:0;padding:3px;font-size:.6rem}
+  /* abas dos jogadores viram uma faixa de botões */
+  .seats{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0}
+  .side{display:contents}                                                      /* as abas dos dois lados formam uma só faixa */
+  .tab,.tab.vis,.sideL .tab,.sideR .tab{display:flex;flex-direction:column;justify-content:center;flex:1 1 110px;min-width:0;max-width:none;min-height:var(--tap);border:2px solid var(--line);border-radius:8px}
+  .tab.vis{flex-basis:100%}
+  .sideL .tab:hover,.sideR .tab:hover{transform:none}
+  /* eventos ativos: barra recolhível */
+  #evb{position:static;width:auto;margin:4px 0 8px;padding:0}
+  .evh{display:flex;justify-content:space-between;align-items:center;gap:8px;min-height:var(--tap);padding:0 12px;font-size:.85rem;font-weight:700;cursor:pointer}
+  .evc{display:none;padding:0 12px 10px;font-size:.8rem}
+  #evb.open .evc{display:block}
+  #evb .car{transition:transform .2s}
+  #evb.open .car{transform:rotate(180deg)}
+  /* campos à venda e seus campos */
+  .center{width:auto;min-width:0;height:auto;min-height:0;overflow:visible;margin:6px 0;padding:8px 4px}
+  .cards.mine{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin:8px 0}
+  .cards.mine .card{width:100%;margin:0}
+  /* janelas em tela cheia + botão ✕ fixo no canto */
+  #modal{align-items:stretch;justify-content:stretch;overflow:hidden;background:var(--box)}
+  #modal .box,#modal .box.wide{width:100%;max-width:none;height:100%;max-height:none;margin:0;border:0;border-radius:0;
+    padding:calc(14px + env(safe-area-inset-top)) max(14px,env(safe-area-inset-right)) calc(28px + env(safe-area-inset-bottom)) max(14px,env(safe-area-inset-left))}
+  #modal .box h3{min-height:var(--tap);margin:0 0 8px;padding-right:56px;font-size:1.05rem}
+  .mx{display:flex;position:fixed;top:calc(8px + env(safe-area-inset-top));right:max(10px,env(safe-area-inset-right));z-index:9;width:var(--tap);height:var(--tap);align-items:center;justify-content:center;border-radius:50%;background:var(--acc);color:#fff;font-size:1.2rem;box-shadow:0 2px 6px #0005;cursor:pointer}
+  .of{min-width:0}
+  .rbox{min-width:0}
+  .menu{max-width:520px;margin:0 auto}
+  .menu label{display:block;margin:8px 0}
+  .menu .nm,.menu #n,.menu #f{display:block;width:100%}
+}
+
+/* B) estreito (celular em pé) */
+@media (max-width:700px){
+  .top{flex-direction:column;align-items:stretch;gap:8px;padding:8px 0}
+  .st{font-size:1rem;line-height:1.35}
+  .acts{display:grid;grid-template-columns:repeat(3,1fr);gap:6px}
+  .acts button{margin:0;white-space:normal;line-height:1.15}
+  .acts .end{order:4;grid-column:span 2;background:#4f8a3c;font-weight:700;font-size:1.05rem}   /* botão principal */
+  .acts .quit{order:5;background:#8a6a5a}                                                       /* longe do principal, cor diferente */
+  .acts .dev{order:6;grid-column:1/-1}
+  .pickmsg{margin:0;padding:8px;background:var(--box);border:2px solid #f2c200;border-radius:8px}
+  .mk{grid-template-columns:1fr;gap:14px}
+  .of.rv{width:100%}
+  .vw{grid-template-columns:repeat(2,1fr)}
+  .gal .card{width:calc(50% - 4px)}
+}
+
+/* C) baixo (celular deitado): sem cabeçalho, recursos e botões compactos, campos lado a lado */
+@media (max-height:520px){
+  :root{--hs:.55;--hw:min(84px,calc((100vw - 28px) / 5))}
+  header{display:none}
+  #hud{display:flex;flex-wrap:nowrap;justify-content:center;gap:4px 14px;padding:4px 6px}
+  .hi{flex-direction:row;gap:5px}
+  .dot.big{width:26px;height:26px}
+  .top{flex-direction:row;flex-wrap:wrap;align-items:center;gap:6px 10px;padding:6px 0}
+  .acts{display:flex;flex-wrap:wrap;gap:6px}
+  .acts .end,.acts .quit,.acts .dev{order:0;grid-column:auto}
+  .board{display:flex;gap:10px;align-items:flex-start}
+  .board .center{flex:1 1 0;min-width:0}
+  .board .cards.mine{flex:1 1 0;min-width:0;margin:6px 0}
+  .seats,#evb{display:inline-flex;vertical-align:top;width:calc(50% - 12px);margin:4px 0}   /* abas e eventos lado a lado, para economizar altura */
+  #evb{display:inline-block;margin-left:8px}
+}
+
+/* zoom da carta em celular em pé: carta em cima, painel .zp embaixo, rolagem se não couber */
+@media (max-width:700px) and (orientation:portrait){
+  #zoom{flex-direction:column;justify-content:flex-start;align-items:center;gap:12px;overflow:auto;padding:max(12px,env(safe-area-inset-top)) 12px max(12px,env(safe-area-inset-bottom))}
+  #zoom>:first-child{margin-top:auto}
+  #zoom>:last-child{margin-bottom:auto}
+  #zoom .card:not(.campo){height:auto;width:min(86vw,calc(66vh * 576 / 1032));width:min(86vw,calc(66dvh * 576 / 1032))}
+  #zoom .card.campo{width:min(92vw,720px)}
+  #zoom .zp{max-width:none;width:min(92vw,420px);margin:0;max-height:none}
+}
