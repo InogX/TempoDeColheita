@@ -13,7 +13,7 @@
 | **1. Mobile (visual)** | Entregue: `tela.js`, `menu.js` e `index.html` já vieram adaptados (`viewport-fit`, `#evb` recolhível, grupos `.st/.acts/.seats/.board`, modo compacto em `fit()`). **Não revisei** o `style.css`, `janelas.js`, `zoom.js` e `cartas-visual.js` dessa parte: confirme as etapas 4 e 5 do PROMPT 1 (janelas em tela cheia, zoom, toque) olhando no celular. |
 | **2. Bot** | Pronto e ligado: `bot.js` (fácil e normal), `A.new(cfg)` com `p.bot`, ações com parâmetros (`A.sell`, `A.buyFeira`, `A.listRes`, `A.list`) e `Bot.simular()`. Testado em Node (190 partidas sem erro de estado), mas **ainda não** no navegador de verdade. |
 | **2,5. Menus** | Pronto: Jogar Online / Jogar Local, com Criar Sala, Achar Sala, Buscar Partida (aviso "em implementação"), Continuar, Novo Jogo, Tutorial (aviso) e Configurações (antigo Dev). Arquivos: `menu.js`, `acoes-turno.js`, `style.css`. As telas Criar Sala e Achar Sala existem, mas a conexão ainda não está ligada. |
-| **3. Online** | **Fase 0 feita; Fase 5 entregue (falta teste real).** Infraestrutura do lado do dono pronta (ver quadro abaixo). Os arquivos estão sendo trabalhados em outra conversa (🔄), mas **nenhuma das Fases 1 a 11 está confirmada como entregue**. |
+| **3. Online** | **Fases 0 e 5 feitas e confirmadas.** Infraestrutura do lado do dono pronta (ver quadro abaixo). Os arquivos estão sendo trabalhados em outra conversa (🔄), mas **nenhuma das Fases 1 a 11 está confirmada como entregue**. |
 
 ---
 
@@ -27,7 +27,7 @@
 | **Jogo publicado no GitHub Pages, online e funcionando** | ✅ (confirmado pelo dono) |
 | Realtime Database criado + app Web registrado + `firebaseConfig` em mãos | ✅ o dono tem o `firebaseConfig` e vai colá-lo direto na conversa da Fase 5 (não vai neste arquivo) |
 | Domínio do GitHub Pages (`usuario.github.io`) adicionado em *Authentication › Configurações › Domínios autorizados* | ✅ confirmado por captura de tela: `inogx.github.io` está em Domínios autorizados (tipo Custom) |
-| Regras do banco trocadas do modo de teste (o modo de teste **expira**, em geral em 30 dias) | 🔄 texto das regras simples entregue na Fase 5; **falta o dono colar e publicar** no console. Regras restritivas no **Apêndice A**, para a Fase 9 |
+| Regras do banco trocadas do modo de teste (o modo de teste **expira**, em geral em 30 dias) | ✅ regras simples publicadas (confirmado pelo dono). Regras restritivas no **Apêndice A**, para a Fase 9 (as simples NÃO protegem segredos) |
 
 ### Fases do código
 | Fase | Status |
@@ -37,7 +37,7 @@
 | 2 — Resultado das ações | 🔄 |
 | 3 — Visão filtrada | ⬜ |
 | 4 — Camada de comandos | ⬜ |
-| 5 — Rede (`rede.js`) | 🔄 entregue: `rede.js`, `teste-rede.html`, `teste-rede-node.js`, `index.html` e `iniciar.js` ajustados. Testada só em Node com SDK simulado (53 verificações). **Falta o teste real com duas abas** (e publicar as regras simples) para virar ✅ |
+| 5 — Rede (`rede.js`) | ✅ entregue e testada no Firebase real pelo dono: duas abas de `teste-rede.html` no GitHub Pages criaram/entraram na sala e trocaram mensagem, e a aba *Uso* do Realtime Database mostrou as duas conexões. (Não foi testado ainda: dois aparelhos diferentes, 4G/5G, nem a parte de privacidade, que só vale após a Fase 9.) |
 | 6 — Lobby | ⬜ (próxima; usa `Rede.criar/entrar/aoJogadores/definirEstado` e `Rede.convite`) |
 | 7 — Sincronização e vez | ⬜ |
 | 8 — Janelas | ⬜ |
@@ -121,8 +121,8 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 3. ✅ GitHub Pages no ar.
 4. ✅ Domínio `inogx.github.io` em *Authentication › Configurações › Domínios autorizados*.
 5. ✅ `firebaseConfig` entregue e já gravado em `rede.js` (não coloque nada de pagamento).
-6. ⬜ Publicar as regras simples da Fase 5 (texto na Ficha/conversa) antes de o modo de teste expirar; restritivas na Fase 9.
-7. ⬜ Subir para o GitHub `rede.js`, `teste-rede.html`, `index.html` e `iniciar.js` novos e rodar o teste com duas abas.
+6. ✅ Regras simples publicadas; restritivas ficam para a Fase 9.
+7. ✅ `rede.js`, `teste-rede.html`, `index.html` e `iniciar.js` no GitHub Pages e teste de duas abas feito.
 
 ### Arquivos a enviar
 | Arquivo | Por quê |
