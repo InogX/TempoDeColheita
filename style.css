@@ -241,3 +241,15 @@ input,select{padding:5px;margin:2px;background:var(--box);color:var(--ink);borde
   #zoom .card.campo{width:min(92vw,720px)}
   #zoom .zp{max-width:none;width:min(92vw,420px);margin:0;max-height:none}
 }
+
+/* ===== Menus iniciais (menu.js: Menu.tela main / local / online / novo / criar / achar / config) ===== */
+.menu .mb{display:block;width:100%;min-height:48px;margin:8px 0;font-size:1.05rem}   /* botões grandes de menu */
+.menu .mb.sec{background:var(--line);color:var(--ink)}                              /* Voltar */
+.menu .mb small{opacity:.8;font-weight:400}
+.menu .mavs{min-height:1.4em;margin:10px 0;font-weight:600}                          /* aviso: "Essa função encontra-se em implementação ainda" */
+.menu .sala{border:2px dashed var(--line);border-radius:8px;padding:8px 10px;margin:8px 0;background:var(--box)}
+.menu .cod{font-size:1.4rem;letter-spacing:.2em;font-weight:700}
+.menu .nmrow{display:flex;gap:6px;margin:4px 0}                                      /* linha: nome + humano/bot */
+.menu .nmrow .nm{flex:1;min-width:0;width:auto}
+.menu .nmrow .bt{flex:none;width:auto;min-height:44px}
+.menu .cfg input[type=number],.menu .cfg select,.menu #cod,.menu #nomeSala{display:block;width:100%}
