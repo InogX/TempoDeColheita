@@ -1,7 +1,7 @@
 // ===== FICHA TÉCNICA =====
 // bot.js: Jogador controlado pelo computador (bot), níveis 'facil' e 'normal' (p.bot). Joga SÓ pelas ações do jogador (A.*), como um humano: planta, evolui, vende ao Governo, compra campos e cartas, usa Feira, Mercado e empréstimos e persegue o próprio objetivo, sem trapacear (não lê mão nem objetivo dos outros). Também tem a tela "Bot X está jogando..." (Bot.tela) e o teste Bot.simular(), que roda partidas só com bots e confere erros.
 // Como entra no jogo: tela.js chama Bot.agenda() quando a vez é de um bot; menu.js marca quem é bot (select .bt); A.new (acoes-turno.js) grava p.bot.
-// Depende de (em outros arquivos): A.*, cur, alive, log, plotsOf, lvOf, fits, evFind, evOn, govPreco, jurosPct, manutOf, feiraMax, mercadoFechado, buyPrice (consultas.js); done (objetivos.js); free, NV, vef, nm, evDesc (cartas-visual.js); ASSETS, REG, LOAN, EXTRA, K (cartas.js / config.js / estado.js).
+// Depende de (em outros arquivos): A.*, exec, cur, alive, log, plotsOf, lvOf, fits, evFind, evOn, govPreco, jurosPct, manutOf, feiraMax, mercadoFechado, buyPrice (consultas.js); done (objetivos.js); free, NV, vef, nm, evDesc (cartas-visual.js); ASSETS, REG, LOAN, EXTRA, K (cartas.js / config.js / estado.js).
 // ========================
 
 const Bot = {
@@ -34,11 +34,10 @@ const Bot = {
   pf(p) { return this.PF[p.bot] || this.PF.normal; },
   eu(p) { return S.players.indexOf(p); },
   sig() { const p = cur(); return [p.coins, p.debt, p.hand.length, p.fields.length, plotsOf(p).length, plotsOf(p).reduce((a, x) => a + lvOf(x), 0), K.map(k => p.res[k] || 0).join(), S.mk.length, S.mk.reduce((a, l) => a + (l.qty || 0), 0), S.gov, S.center.length].join('|'); }, // "foto" do que uma ação pode mudar
-  // Executa uma ação do jogo SEM deixar o alert() travar. Se a ação foi recusada (alert) ou nada mudou, anota a chave em 'negados' e não tenta de novo neste turno.
+  // Executa uma ação do jogo em silêncio (exec, acoes-turno.js: sem alert) e confere o resultado. Se a ação foi recusada ou nada mudou, anota a chave em 'negados' e não tenta de novo neste turno.
   tenta(chave, fn, txt) { if (this.negados.has(chave)) return false;
-    const antes = this.sig(), al = window.alert; let negou = false; window.alert = () => { negou = true; };
-    try { fn(); } catch (e) { negou = true; console.error('Bot:', chave, e); } finally { window.alert = al; }
-    if (negou || this.sig() === antes) { this.negados.add(chave); return false; }
+    const antes = this.sig(), r = exec(fn);
+    if (!r.ok || this.sig() === antes) { this.negados.add(chave); return false; }
     if (txt) log(`${cur().n}: ${txt}`);
     return true; },
   manut(p) { return plotsOf(p).reduce((a, x) => a + manutOf(x), 0); },

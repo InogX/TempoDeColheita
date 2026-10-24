@@ -1,11 +1,21 @@
 // ===== FICHA TÉCNICA =====
-// acoes-turno.js: Ações do fluxo da partida: novo jogo (A.new lê o menu da tela, ou recebe { nomes, bots, first } como parâmetro; cada jogador pode ser humano ou bot; os campos Dev vêm da tela ou de Menu.cfg, a tela Configurações), continuar, sair (volta ao menu principal), abrir janelas (UI.modal), espiar (S.peekPend / S.peek), iniciar o turno (produção, manutenção, evento individual, cartas), abrir janelas, espiar, ver jogador e encerrar o turno.
+// acoes-turno.js: Resultado das ações (recusa, exec e A.tentar: devolvem { ok, msg } sem alert) e ações do fluxo da partida: novo jogo (A.new lê o menu da tela, ou recebe { nomes, bots, first } como parâmetro; cada jogador pode ser humano ou bot; os campos Dev vêm da tela ou de Menu.cfg, a tela Configurações), continuar, sair (volta ao menu principal), abrir janelas (UI.modal), espiar (S.peekPend / S.peek), iniciar o turno (produção, manutenção, evento individual, cartas), abrir janelas, espiar, ver jogador e encerrar o turno.
 // ========================
 
 function after() { render(); } // a vitória só é decidida no fim da rodada (A.end)
 
+// ===== RESULTADO DAS AÇÕES (Fase 2) =====
+// Toda recusa de uma ação passa por recusa(msg): guarda a mensagem em RESP.msg, mostra o alert (como sempre) e devolve false. Se RESP.mudo estiver ligado, não mostra o alert.
+// exec(fn) roda uma ação em silêncio e devolve { ok, msg }: é como bots, testes e (no online) comandos da rede executam ações e sabem se deu certo.
+const RESP = { msg: null, mudo: false };
+const recusa = msg => { RESP.msg = msg; if (!RESP.mudo) alert(msg); return false; };
+function exec(fn) { const mudo = RESP.mudo; let r; RESP.mudo = true; RESP.msg = null;
+  try { r = fn(); } catch (e) { RESP.msg = 'Erro: ' + e.message; console.error('exec:', e); } finally { RESP.mudo = mudo; }
+  return { ok: RESP.msg === null && r !== false, msg: RESP.msg }; }
+
 // A é o conjunto de ações do jogador. As outras acoes-*.js acrescentam mais ações a ele.
 const A = {
+  tentar(nome, ...args) { if (typeof A[nome] !== 'function') return { ok: false, msg: 'Ação desconhecida: ' + nome }; return exec(() => A[nome](...args)); }, // roda A[nome](...args) em silêncio e devolve { ok, msg } (a lista de ações permitidas pela rede é da Fase 4)
   new(cfg) { UIreset(); // cfg opcional: { nomes: [...], bots: ['', 'facil', 'normal'...], first: 0 } cria a partida sem a tela do menu (bot, testes)
     const dv = id => { const e = document.getElementById(id); return e ? e.value : (typeof Menu !== 'undefined' && Menu.cfg[id] != null ? String(Menu.cfg[id]) : ''); }; // campos Dev: da tela, ou da tela Configurações (Menu.cfg)
     const nomes = cfg ? cfg.nomes : [...document.querySelectorAll('.nm')].map(e => e.value), bots = cfg ? cfg.bots || [] : [...document.querySelectorAll('.bt')].map(e => e.value);

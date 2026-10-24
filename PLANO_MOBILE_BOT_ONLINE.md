@@ -33,8 +33,8 @@
 | Fase | Status |
 |---|---|
 | 0 — Decisões e inventário | ✅ |
-| 1 — Identidade local e estado de interface | 🔄 entregue nesta conversa (9 arquivos), testada em Node (60/60 execuções); vira ✅ depois que você conferir no navegador. `janelas.js` e `qa.html` NÃO foram alterados: funcionam pela ponte `ligaUI()`. |
-| 2 — Resultado das ações | 🔄 |
+| 1 — Identidade local e estado de interface | ✅ entregue (9 arquivos), testada em Node e **conferida no navegador pelo dono** (abriu normal). `janelas.js` e `qa.html` NÃO foram alterados: funcionam pela ponte `ligaUI()`. |
+| 2 — Resultado das ações | 🔄 entregue nesta conversa (5 arquivos), testada em Node; vira ✅ depois que o dono conferir no navegador (jogar, Mercado, Governo, evoluir, bots) e rodar o `qa.html`. |
 | 3 — Visão filtrada | ⬜ |
 | 4 — Camada de comandos | ⬜ |
 | 5 — Rede (`rede.js`) | ✅ entregue e testada no Firebase real pelo dono: duas abas de `teste-rede.html` no GitHub Pages criaram/entraram na sala e trocaram mensagem, e a aba *Uso* do Realtime Database mostrou as duas conexões. (Não foi testado ainda: dois aparelhos diferentes, 4G/5G, nem a parte de privacidade, que só vale após a Fase 9.) |
@@ -81,7 +81,7 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 | Gancho `if (p.bot) ...` em `tela.js` | É o mesmo ponto onde entra "Aguardando [jogador]". |
 
 ### O que ainda atrapalha (ainda não foi tratado, salvo se a fase correspondente for entregue)
-> **Tratado pela Fase 1 (aguardando conferência):** jogador da vez → `me()`/`eu()`; estado de interface → `UI`; `Z.field/card/up` e `D.i()` → `me()`/`eu()`; "atuar como" e Dev → `UI.actor`/`UI.devP`. **Continuam abertos:** `alert()` nas ações (Fase 2), `S.hide` e `render()` gravando em `localStorage` (Fases 7/9), `sees()` (Fase 3), `janelas.js` (Fase 8) e `Z.up` síncrono (Fases 4/7).
+> **Tratado pela Fase 1 (aguardando conferência):** jogador da vez → `me()`/`eu()`; estado de interface → `UI`; `Z.field/card/up` e `D.i()` → `me()`/`eu()`; "atuar como" e Dev → `UI.actor`/`UI.devP`. **Tratado pela Fase 2 (aguardando conferência):** ações devolvem sucesso ou erro (`A.tentar`). **Continuam abertos:** `S.hide` e `render()` gravando em `localStorage` (Fases 7/9), `sees()` (Fase 3), `janelas.js` (Fase 8) e `Z.up` síncrono (Fases 4/7).
 | Problema | Onde |
 |---|---|
 | Tudo depende do jogador da vez (`cur()` = `S.order[S.t]`), inclusive visões, janelas e zoom. | `consultas.js`, `acoes-*.js`, `tela.js`, `janelas.js`, `zoom.js`, `bot.js` |
@@ -116,6 +116,16 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 - **Pendente em `janelas.js`:** o `style.css` tem o botão flutuante `.mx` (✕, só celular), mas o `janelas.js` que eu recebi (versão do início da conversa) não o desenha; ou a Parte 1 alterou o arquivo e a versão atual não chegou a mim, ou o botão nunca foi ligado. Antes da Fase 8, **envie o `janelas.js` atual** para eu migrá-lo para `UI`/`me()` sem perder o que a Parte 1 fez.
 - **Atenção para a Fase 7:** `tela.js` chama `Bot.agenda()` para qualquer aparelho quando a vez é de um bot. No online, só o anfitrião pode rodar os bots (`Rede.ehHost`).
 - **Ainda aberto:** `Z.up` confere o resultado na hora (síncrono); no online a resposta vem depois (Fases 4/7).
+
+### Fase 2 entregue — o que mudou para as próximas fases
+- **Arquivos alterados (5):** `acoes-turno.js`, `acoes-economia.js`, `acoes-plantio.js`, `acoes-mercado.js`, `bot.js`.
+- **Mecanismo:** `recusa(msg)` (mostra o `alert` e devolve `false`), `exec(fn)` (roda em silêncio e devolve `{ ok, msg }`) e `A.tentar(nome, ...args)`. Chamadas diretas (botões da tela) continuam com `alert`.
+- **Toda recusa tem motivo**, inclusive as que antes eram silenciosas (plantar onde não cabe, pagar sem dívida, comprar campo inexistente, plantio inexistente etc.).
+- **Validações novas no Mercado:** só se oferta item que é seu (`A.list`), só se cancela oferta sua (`A.cancel`), não se compra a própria oferta (`A.buyM`) e oferta inexistente não gera mais erro. Quem atua é `ator()` = `UI.actor` ou, se vazio, `eu()`.
+- **Bot:** `Bot.tenta` usa `exec` e não mexe mais em `window.alert`.
+- **Para a Fase 4:** `A.tentar` aceita QUALQUER ação de `A` (inclusive `new`, `quit`, `cont`, `modal`); a camada de comandos precisa de uma **lista permitida** e conferir quem enviou e se é a vez. `A.go` e `A.end` ainda não conferem a fase do turno (`go` duas vezes produziria duas vezes).
+- **Ainda com `alert` direto:** `dev.js` (só existe no jogo local) e o que for de interface.
+- **Atenção ao rodar o `qa.html`:** como recusas antes silenciosas agora chamam `alert`, o QA pode registrar mais alertas; se algo parecer errado, envie o `qa.html`.
 
 ### Decisões já tomadas (Fase 0)
 - **Arquitetura:** o navegador de um jogador (**anfitrião**) roda o jogo e os bots; os outros enviam ações e recebem uma visão filtrada. Não precisa de servidor próprio.
