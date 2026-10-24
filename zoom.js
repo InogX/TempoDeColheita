@@ -15,9 +15,9 @@ const Z = {
         (nx ? `<button onclick="Z.up(${fi},${i})">Melhorar (${a.evolucao} ${CROPS[x.c.crop]})</button>` : '<button disabled>Nível máximo</button>') + '</div>'; }).join('') || '<div>Nenhum plantio</div>')); },
   card(fi, pi) { const p = me(), x = p.fields[fi] && p.fields[fi].plots[pi]; if (!x) return; const L = x.c.nivel || 1, a = ASSETS.niveis[L];
     Z.open(cardHTML(x.c), `<b>${nm(x.c)} · ${CROPS[x.c.crop]}</b><div>Nível ${L} · ocupa ${a.espacos} vaga(s)</div><div>Produz +${a.producao}/rodada · manutenção ${a.manut}</div><button onclick="Z.close()">Voltar</button>`, { back: fi }); },
-  up(fi, pi) { const p = me(), x = p.fields[fi] && p.fields[fi].plots[pi]; if (!x) return; const L0 = x.c.nivel || 1, antes = { ...x.c };
-    A.up(fi, pi);                                       // aplica a regra na hora (a animação é só visual)
-    if ((x.c.nivel || 1) === L0) return Z.field(fi);    // regra recusou (o alerta já avisou)
+  up(fi, pi) { const p = me(), x = p.fields[fi] && p.fields[fi].plots[pi]; if (!x) return; const antes = { ...x.c };
+    const r = Cmd.up(fi, pi);                           // pede ao ponto único de comandos (no jogo local a resposta vem na hora; no online virá depois: Fase 7)
+    if (!r.ok) return Z.field(fi);                      // recusado (o alerta já avisou)
     if (S.win) return;
     const d = Z.open(`<div class="stk"><div class="o" style="animation-duration:${UPGRADE_MS}ms">${cardHTML(antes)}</div><div class="n" style="animation-duration:${UPGRADE_MS}ms">${cardHTML(x.c)}</div></div>`, '', { anim: 1, back: fi });
     d.classList.add('anim'); Z.fx(d); Z.t = setTimeout(() => { if (zoomEl() === d) Z.close(); }, UPGRADE_MS); },

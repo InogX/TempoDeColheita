@@ -1,11 +1,11 @@
 // ===== FICHA TÉCNICA =====
-// janelas.js: Monta as janelas (modais): Governo, Mercado, Objetivo secreto, Espiar, Ver jogador e painel Dev.
+// janelas.js: Monta as janelas (modais): Governo, Mercado, Objetivo secreto, Espiar, Ver jogador e painel Dev. Os botões de jogo (espiar, empréstimo, vender, Feira, Mercado) chamam Cmd.* (comandos.js); abrir/fechar janelas e "atuar como" são interface (A.modal, A.act).
 // (Celular: o botão redondo ✕ (.mx) fica no fim do HTML para não mudar a ordem dos botões; o CSS o fixa no canto da tela.)
 // ========================
 
 function modal() {
   if (!S.modal) return ''; let h;
-  if (S.modal == 'peek') h = `<h3>👁 Escolha quem espiar</h3>${alive().filter(q => q != cur()).map(q => `<button onclick="A.peek(${S.players.indexOf(q)})">${q.n}</button>`).join('')}`;
+  if (S.modal == 'peek') h = `<h3>👁 Escolha quem espiar</h3>${alive().filter(q => q != cur()).map(q => `<button onclick="Cmd.peek(${S.players.indexOf(q)})">${q.n}</button>`).join('')}`;
   else if (S.modal == 'obj') h = `<h3>🎯 Seu objetivo (secreto)</h3>${cardHTML(cur().obj)}`;
   else if (S.modal == 'view') { const q = S.players[S.viewing], v = sees(cur(), q), plantados = q.fields.flatMap(f => f.plots.map(x => x.c));
     if (S.viewRes && v) h = `<h3>${q.n} — recursos plantados</h3><div class="gal">${plantados.map(c => cardHTML(c)).join('') || 'Nenhum plantio'}</div><br><button onclick="S.viewRes=false;render()">Voltar às fazendas</button>`;
@@ -30,22 +30,22 @@ function modal() {
     ${row('Partida', `Rodada ${S.round} <button onclick="D.round()">Definir rodada</button><button onclick="D.next()">Avançar rodada</button><button onclick="D.rebuy()">Zerar compras de campo do turno</button><button onclick="D.clearMk()">Limpar Mercado</button><button onclick="D.all()">Ver tudo: ${S.devAll ? 'ligado' : 'desligado'}</button><button onclick="D.win()">Declarar vitória</button>`)}`;
   } else if (S.modal == 'gov') { const p = cur();
     h = `<h3>🏛 Governo</h3>Suas moedas: ${moeda(p.coins)} · Dívida: ${p.debt} <small>(+${jurosPct()}% por rodada)</small><br>
-    <button onclick="A.loan()">Pegar empréstimo (${LOAN})</button><button onclick="A.pay()">Pagar (${LOAN})</button><br>
-    <button onclick="A.extra()">Comprar carta de recurso nível 1 (${EXTRA}) — mão ${p.hand.length}/5</button>
-    <h4>Vender recursos ao Governo <small>(${evOn('govPaga') ? 'Governo paga +100% nesta rodada' : 'preço fixo por unidade'})</small></h4>${K.map(k => `<button onclick="A.sell('${k}')">${CROPS[k]}: ${p.res[k] || 0} un. × ${govPreco(k)}</button>`).join('')}
+    <button onclick="Cmd.loan()">Pegar empréstimo (${LOAN})</button><button onclick="Cmd.pay()">Pagar (${LOAN})</button><br>
+    <button onclick="Cmd.extra()">Comprar carta de recurso nível 1 (${EXTRA}) — mão ${p.hand.length}/5</button>
+    <h4>Vender recursos ao Governo <small>(${evOn('govPaga') ? 'Governo paga +100% nesta rodada' : 'preço fixo por unidade'})</small></h4>${K.map(k => `<button onclick="Cmd.sell('${k}')">${CROPS[k]}: ${p.res[k] || 0} un. × ${govPreco(k)}</button>`).join('')}
     ${(fe => fe ? `<h4>🎪 Feira Regional <small>(${moeda(fe.c.preco)} por unidade · até ${fe.c.limite} de cada por jogador)</small></h4>${K.map(k => `<div class="rl f"><span>${rec(k, p.res[k] || 0)} ${CROPS[k]}</span><span class="rt">estoque do Governo: ${fe.stock[k]} · você pode comprar: ${feiraMax(fe, p, k)}</span>
-      <input id="fq${k}" type="number" min="1" placeholder="qtd"><button onclick="A.buyFeira('${k}')">Comprar</button></div>`).join('')}` : '')(evFind('feira'))}`;
+      <input id="fq${k}" type="number" min="1" placeholder="qtd"><button onclick="Cmd.buyFeira('${k}')">Comprar</button></div>`).join('')}` : '')(evFind('feira'))}`;
   } else { const a = S.players[S.actor]; S.mk = S.mk.filter(find);
     const opts = S.players.map((q, i) => q.out ? '' : `<option value="${i}"${i == S.actor ? ' selected' : ''}>${q.n}</option>`).join('');
-    const nmv = l => S.players[l.s].n, btn = l => l.s == S.actor ? `<button onclick="A.cancel(${l.id})">Cancelar</button>` : `<button onclick="A.buyM(${l.id})">Comprar</button>`;
+    const nmv = l => S.players[l.s].n, btn = l => l.s == S.actor ? `<button onclick="Cmd.cancel(${l.id})">Cancelar</button>` : `<button onclick="Cmd.buyM(${l.id})">Comprar</button>`;
     const oferta = l => { if (l.kind == 'res') return `<div class="of rv"><div class="oh"><span class="ot">Vendedor: ${nmv(l)} · ${moeda(l.price)} cada · total ${moeda(l.qty * l.price)}</span>${btn(l)}</div><div class="rbox"><b>${rec(l.crop, l.qty)} ${CROPS[l.crop]}</b></div></div>`;
       const c = l.kind == 'hand' ? find(l) : find(l).c; return `<div class="of ${c.slots ? 'h' : 'v'}"><div class="oh"><span class="ot">Vendedor: ${nmv(l)} · ${moeda(l.price)}</span>${btn(l)}</div>${cardHTML(c)}</div>`; };
-    const lancar = (k, c) => `<div class="of ${k == 'field' ? 'h' : 'v'}"><div class="oh"><input id="pr${c.uid}" type="number" min="1" placeholder="preço"><button onclick="A.list('${k}',${c.uid})">Ofertar</button></div>${cardHTML(c)}</div>`;
+    const lancar = (k, c) => `<div class="of ${k == 'field' ? 'h' : 'v'}"><div class="oh"><input id="pr${c.uid}" type="number" min="1" placeholder="preço"><button onclick="Cmd.list('${k}',${c.uid})">Ofertar</button></div>${cardHTML(c)}</div>`;
     h = mercadoFechado() ? '<h3>🤝 Mercado entre jogadores</h3><b>🚫 Mercado fechado pelo Embargo.</b> Volte na próxima rodada.' : `<h3>🤝 Mercado entre jogadores</h3>Atuar como: <select onchange="A.act(this.value)">${opts}</select> · ${moeda(a.coins)}
     <div class="mk"><section><h4>Terrenos à venda</h4><div class="mkc">${S.mk.filter(l => l.kind == 'field').map(oferta).join('') || 'Nenhum'}</div></section>
     <section><h4>Recursos à venda</h4><div class="mkc">${S.mk.filter(l => l.kind != 'field').map(oferta).join('') || 'Nenhum'}</div></section>
     <section><h4>Vender recursos (${a.n}) <small>quantidade e preço por unidade</small></h4>${K.map(k => `<div class="rl"><span>${rec(k, a.res[k] || 0)} ${CROPS[k]}</span>
-      <input id="rq${k}" type="number" min="1" placeholder="qtd"><input id="rp${k}" type="number" min="1" placeholder="preço/un."><button onclick="A.listRes('${k}')">Ofertar</button></div>`).join('')}</section>
+      <input id="rq${k}" type="number" min="1" placeholder="qtd"><input id="rp${k}" type="number" min="1" placeholder="preço/un."><button onclick="Cmd.listRes('${k}')">Ofertar</button></div>`).join('')}</section>
     <section><h4>Lançar oferta de carta (${a.n})</h4><b>Terrenos</b><div class="mkc">${a.fields.map(f => lancar('field', f.c)).join('') || 'Sem terrenos'}</div>
       <br><b>Recursos</b><div class="mkc">${a.hand.map(c => lancar('hand', c)).join('') || 'Sem cartas'}</div></section></div>`;
   }

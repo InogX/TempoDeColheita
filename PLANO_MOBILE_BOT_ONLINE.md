@@ -1,4 +1,4 @@
-# Tempo de Colheita — Plano (versão 5): o que falta
+# Tempo de Colheita — Plano (versão 6): o que falta
 
 **Como usar numa conversa nova:** envie este arquivo + o `FICHAS_TECNICAS.md` atualizado + os arquivos da lista da etapa. **Uma etapa por conversa.** Sempre envie a versão mais recente dos arquivos.
 
@@ -10,10 +10,12 @@
 
 | Parte | Situação |
 |---|---|
-| **1. Mobile (visual)** | Entregue: `tela.js`, `menu.js` e `index.html` já vieram adaptados (`viewport-fit`, `#evb` recolhível, grupos `.st/.acts/.seats/.board`, modo compacto em `fit()`). **Não revisei** o `style.css`, `janelas.js`, `zoom.js` e `cartas-visual.js` dessa parte: confirme as etapas 4 e 5 do PROMPT 1 (janelas em tela cheia, zoom, toque) olhando no celular. |
-| **2. Bot** | Pronto e ligado: `bot.js` (fácil e normal), `A.new(cfg)` com `p.bot`, ações com parâmetros (`A.sell`, `A.buyFeira`, `A.listRes`, `A.list`) e `Bot.simular()`. Testado em Node (190 partidas sem erro de estado), mas **ainda não** no navegador de verdade. |
-| **2,5. Menus** | Pronto: Jogar Online / Jogar Local, com Criar Sala, Achar Sala, Buscar Partida (aviso "em implementação"), Continuar, Novo Jogo, Tutorial (aviso) e Configurações (antigo Dev). Arquivos: `menu.js`, `acoes-turno.js`, `style.css`. As telas Criar Sala e Achar Sala existem, mas a conexão ainda não está ligada. |
-| **3. Online** | **Fases 0 e 5 feitas e confirmadas.** Infraestrutura do lado do dono pronta (ver quadro abaixo). Os arquivos estão sendo trabalhados em outra conversa (🔄), mas **nenhuma das Fases 1 a 11 está confirmada como entregue**. |
+| **1. Mobile (visual)** | ✅ Testado pelo dono em **iOS e Android**: o jogo roda tranquilo até a fase atual. O `janelas.js` atual já desenha o ✕ `.mx` (a dúvida antiga está resolvida). Ficam para a Fase 8 só as janelas passarem a usar `me()`. |
+| **2. Bot** | ✅ Pronto, ligado e **testado no navegador pelo dono**. Desde a Fase 4 ele pede tudo pelos comandos (`Cmd`). |
+| **2,5. Menus** | ✅ Conferidos no celular pelo dono. Criar Sala e Achar Sala existem como tela, mas a conexão só será ligada na Fase 6. |
+| **3. Online** | **Fases 0, 1, 2, 3 e 5 ✅ feitas.** **Fase 4 entregue (🔄 até o dono conferir no navegador).** Fases 6 a 11 ainda não iniciadas. Infraestrutura do lado do dono pronta (quadro abaixo). |
+
+> **Conferido nos arquivos (23/10/2026):** a Fase 1 está no código (`UI`, `UIreset`, `ligaUI` em `estado.js`; `EU`/`eu()`/`me()` em `consultas.js`; `A.plantIn(fi, h)`); a Fase 2 também (`recusa`, `exec`, `A.tentar` em `acoes-turno.js`; as quatro `acoes-*.js` recusando com motivo); da Fase 3, o `index.html` carrega o `visao.js` (o arquivo não veio nesta rodada: vale a confirmação do dono de que o jogo abre normal e a conferência feita antes).
 
 ---
 
@@ -33,12 +35,12 @@
 | Fase | Status |
 |---|---|
 | 0 — Decisões e inventário | ✅ |
-| 1 — Identidade local e estado de interface | ✅ entregue (9 arquivos), testada em Node e **conferida no navegador pelo dono** (abriu normal). `janelas.js` e `qa.html` NÃO foram alterados: funcionam pela ponte `ligaUI()`. |
-| 2 — Resultado das ações | ✅ entregue (5 arquivos), testada em Node; o dono testou no navegador e confirmou que os alerts aparecem nos botões (esperado). O `qa.html` ainda não foi conferido com a Fase 2. |
-| 3 — Visão filtrada | 🔄 entregue nesta conversa (`visao.js` novo + `index.html`), testada em Node; vira ✅ depois que o dono conferir que o jogo local abre normal. Ainda não é usada pelo jogo (a Fase 7 liga). |
-| 4 — Camada de comandos | ⬜ |
+| 1 — Identidade local e estado de interface | ✅ entregue (9 arquivos), testada em Node, conferida no navegador e **confirmada nos arquivos** |
+| 2 — Resultado das ações | ✅ entregue (5 arquivos), testada em Node, conferida no navegador e **confirmada nos arquivos** (o `qa.html` ainda não foi conferido com ela: adiado pelo dono) |
+| 3 — Visão filtrada | ✅ `visao.js` + `index.html`; o dono confirmou que o jogo local abre normal. Ainda não é usada pelo jogo (a Fase 7 liga). |
+| 4 — Camada de comandos | 🔄 **entregue nesta conversa** (`comandos.js` novo + `bot.js`, `tela.js`, `janelas.js`, `zoom.js`, `index.html`). Testada em Node (115 conferências, 5 defeitos plantados detectados). Vira ✅ depois que o dono conferir no navegador (roteiro na seção "Fase 4 entregue"). |
 | 5 — Rede (`rede.js`) | ✅ entregue e testada no Firebase real pelo dono: duas abas de `teste-rede.html` no GitHub Pages criaram/entraram na sala e trocaram mensagem, e a aba *Uso* do Realtime Database mostrou as duas conexões. (Não foi testado ainda: dois aparelhos diferentes, 4G/5G, nem a parte de privacidade, que só vale após a Fase 9.) |
-| 6 — Lobby | ⬜ (próxima; usa `Rede.criar/entrar/aoJogadores/definirEstado` e `Rede.convite`) |
+| 6 — Lobby | ⬜ **próxima** (usa `Rede.criar/entrar/aoJogadores/definirEstado` e `Rede.convite`) |
 | 7 — Sincronização e vez | ⬜ |
 | 8 — Janelas | ⬜ |
 | 9 — Robustez + regras de segurança | ⬜ (regras prontas no Apêndice A) |
@@ -57,15 +59,15 @@
 
 ---
 
-## Antes do online: conferir no navegador (30 minutos)
+## Pendências fora do online
 
-Nada disso trava o online, mas é melhor achar agora do que misturado com a rede. (Ainda **não confirmado** como feito.)
-
-1. **Rodar o `qa.html`.** Ele não foi rodado depois das mudanças de celular, do bot, dos menus e da Fase 1 (o QA continua lendo `S.modal` etc. pela ponte `ligaUI()`; se algo falhar, me avise). Atenção: `menu()` agora abre o **menu principal**; se o QA precisava do formulário, ele deve chamar `Menu.ir('novo')` (ou `A.new({ nomes, bots, first })`). Se o QA quebrar, envie o `qa.html` para ajuste.
-2. **Testar o bot de verdade:** no menu marque um jogador como bot, inicie, e veja se ele joga sozinho, se "Continuar" retoma a vez dele e se a tela do bot fica legível no celular. Teste também `Bot.simular(20, 3, ['normal'])` no console (F12).
-3. **Menus:** o CSS já está no `style.css` entregue. Confira no celular se os botões grandes e a linha nome + humano/bot ficaram bons.
-4. **Decisão pendente:** a tela do bot mostra a caixa de eventos que inclui o **evento individual do bot**. Se quiser esconder isso de quem está olhando, é um ajuste pequeno em `tela.js` e `bot.js`.
-5. **Balanceamento (opcional):** com 2 jogadores, estes objetivos raramente fecham: `noLoan`, `allLvl`, `clean`, `mUnits`, `mProfit`, `noites`, `floorUntil`. O motivo provável é o cofre do Governo ser finito e esses objetivos pedirem muitas moedas ou negociação.
+| # | Item | Situação |
+|---|---|---|
+| 1 | **`qa.html`** | ⏸ **Adiado pelo dono** (será ajustado em alguns dias). Lembretes: `menu()` abre o menu principal (use `Menu.ir('novo')` ou `A.new({ nomes, bots, first })`); recusas antes silenciosas agora chamam `alert`; o QA chama `A.*` direto, então **não testa a camada de comandos**. Quando for ajustar, envie o arquivo. |
+| 2 | Bot no navegador | ✅ testado pelo dono. |
+| 3 | Menus no celular | ✅ conferidos pelo dono (iOS e Android). |
+| 4 | Evento individual do bot | ✅ **decidido: fica VISÍVEL.** No jogo local já era assim; a Fase 4 deixou isso explícito em `tela.js` (na vez de um bot mostra o evento dele, com o nome do bot). **Falta só no online:** o `visao.js` hoje esconde o `ind` de quem não é o dono; para jogadores bot ele precisa ser público (uma linha em `viewFor`). Mande o `visao.js` na Fase 7 (ou antes, se quiser). |
+| 5 | **Balanceamento com 2 jogadores** | ⬜ **a fazer (dono aprovou).** Objetivos que raramente fecham: `noLoan`, `allLvl`, `clean`, `mUnits`, `mProfit`, `noites`, `floorUntil`. Provável causa: o cofre do Governo é finito. Fazer em **conversa própria**; enviar `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`, `cartas-visual.js`, `bot.js`, `comandos.js` + as `acoes-*.js` + `estado.js`, `consultas.js` (para testar com `Bot.simular` de verdade). Pode ser feito antes ou depois do online; não trava nada. |
 
 ---
 
@@ -80,21 +82,41 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 | `Bot.tenta()` (executa uma ação com o `alert()` silenciado e detecta recusa) | É a mesma técnica que a camada de comandos do online precisa para não travar com `alert()`. |
 | Gancho `if (p.bot) ...` em `tela.js` | É o mesmo ponto onde entra "Aguardando [jogador]". |
 
-### O que ainda atrapalha (ainda não foi tratado, salvo se a fase correspondente for entregue)
-> **Tratado pela Fase 1 (aguardando conferência):** jogador da vez → `me()`/`eu()`; estado de interface → `UI`; `Z.field/card/up` e `D.i()` → `me()`/`eu()`; "atuar como" e Dev → `UI.actor`/`UI.devP`. **Tratado pela Fase 2 (aguardando conferência):** ações devolvem sucesso ou erro (`A.tentar`). **Continuam abertos:** `S.hide` e `render()` gravando em `localStorage` (Fases 7/9), `sees()` (Fase 3), `janelas.js` (Fase 8) e `Z.up` síncrono (Fases 4/7).
-| Problema | Onde |
-|---|---|
-| Tudo depende do jogador da vez (`cur()` = `S.order[S.t]`), inclusive visões, janelas e zoom. | `consultas.js`, `acoes-*.js`, `tela.js`, `janelas.js`, `zoom.js`, `bot.js` |
-| Mercado e Dev têm "atuar como" outro jogador (`S.actor`, `S.devP`). | `janelas.js`, `acoes-turno.js`, `dev.js` |
-| As ações ainda usam `alert()` ao recusar, e não devolvem "ok/erro". | `acoes-*.js` |
-| `zoom.js`: `Z.field`, `Z.card` e `Z.up` leem `cur()` (os campos do jogador da vez); `Z.up` chama `A.up` e confere NA HORA se o nível subiu para decidir a animação (no online a resposta vem depois); os cliques e o `Esc` usam `S.hide`, `S.modal`, `S.viewRes` e `S.plantSel`. | `zoom.js` |
-| `dev.js`: `D.i()` e todas as ferramentas mexem em `S` direto, sem passar pelas ações, e leem `S.devP` e campos da tela. | `dev.js` (desligar no online) |
-| `iniciar.js` só chama `render()`: é ali que entra a leitura de `?sala=` e a ligação da rede. | `iniciar.js` |
-| `style.css`: o modo compacto usa `(max-width:700px),(max-height:520px)`; `.menu` já estica `.nm`, `#n` e `#f` a 100%; o lobby pode reaproveitar `.menu`. | `style.css` |
-| O estado de interface mora dentro de `S` (`S.modal`, `S.plantSel`, `S.viewing`, `S.viewRes`, `S.actor`, `S.devP`, `S.dv`) e iria junto no save e na rede. | `acoes-*.js`, `tela.js`, `janelas.js`, `dev.js` |
-| A tela "Passe o dispositivo / Estou pronto" (`S.hide`) esconde informação num aparelho só. | `tela.js`, `acoes-turno.js` |
-| `render()` grava o estado inteiro em `localStorage` (`tc_save`). | `tela.js` |
-| `sees()` decide o que cada jogador vê, mas hoje só filtra o desenho, não os dados enviados. | `pecas-tela.js` |
+### O que ainda atrapalha para o online
+> **Resolvido:** jogador da vez → `me()`/`eu()` (Fase 1); estado de interface → `UI` (Fase 1); `Z.field/card/up`, `D.i()`, "atuar como" e Dev → `me()`/`eu()`/`UI` (Fase 1); ações devolvem sucesso ou erro (`A.tentar`, Fase 2); quem pode agir, na vez e na fase certa, e lista permitida (`Cmd`, Fase 4); o `zoom.js` e o bot passam pelo ponto único (Fase 4).
+
+| Problema que continua aberto | Onde | Fase |
+|---|---|---|
+| A tela "Passe o dispositivo / Estou pronto" (`S.hide`) esconde informação num aparelho só. | `tela.js`, `acoes-turno.js` | 7 |
+| `render()` grava o estado inteiro em `localStorage` (`tc_save`). | `tela.js` | 7 / 9 |
+| `tela.js` chama `Bot.agenda()` para qualquer aparelho quando a vez é de um bot (no online só o anfitrião roda os bots). | `tela.js`, `bot.js` | 7 |
+| `Z.up` já pede por `Cmd.up` e usa `r.ok`, mas no online a resposta chega depois (a animação precisa esperar a visão nova). | `zoom.js` | 7 |
+| `sees()` filtra o desenho; `viewFor` filtra os dados (pronto), mas o jogo ainda não usa a visão. | `pecas-tela.js`, `visao.js` | 7 |
+| `janelas.js` ainda lê `cur()` (Governo, Objetivo, Espiar) e o "atuar como" (`UI.actor`). | `janelas.js` | 8 |
+| `dev.js` mexe em `S` direto e lê campos da tela (desligar no online). | `dev.js` | 8 |
+| `A.go`/`A.end` em si não conferem fase (quem confere é o `Cmd`; o `qa.html` ainda os chama direto). | `acoes-turno.js` | — |
+| `iniciar.js` só lê `?sala=`; falta ligar a rede (criar/entrar, `EU = idx`). | `iniciar.js`, `menu.js` | 6 / 7 |
+| `style.css`: o modo compacto usa `(max-width:700px),(max-height:520px)`; `.menu` já estica `.nm`, `#n` e `#f` a 100%; o lobby pode reaproveitar `.menu`. | `style.css` | 6 |
+
+### Fase 4 entregue — o que mudou para as próximas fases
+- **Arquivos:** `comandos.js` (novo) · alterados `bot.js`, `tela.js`, `janelas.js`, `zoom.js`, `index.html` (`<script src="comandos.js">` logo depois de `acoes-mercado.js`). **Não alterados:** `estado.js`, `consultas.js`, as quatro `acoes-*.js`. Também vai `teste_fase4.js` (teste em Node).
+- **O que é:** `Cmd.run(quem, 'sell', ['soja', 5])` → `{ ok, msg }`. Confere quem pediu, se é a vez, a fase do turno (`go` só antes de começar; o resto só depois, sem "espiar" pendente; `peek` só para quem tem a pendência; Mercado em qualquer hora, pelo REMETENTE) e limpa os argumentos. Recusa sem mexer em nada. Os botões usam os atalhos `Cmd.sell('soja')`, `Cmd.buyF(0)`, `Cmd.end()` (jogador deste aparelho, com `alert`, completando carta escolhida e campos da tela).
+- **15 comandos de jogo** (`Cmd.nomes`): `go end buyF loan pay extra sell buyFeira plantIn up peek listRes list cancel buyM`. **Interface** (fica em `A.*`, nunca vai pela rede): `modal act view pick cancelPick new cont quit`.
+- **Argumentos sempre explícitos** na rede: `plantIn(fi, h)` com a posição da carta na mão; `listRes(k, qtd, preco)`; `list(tipo, uid, preco)`. Em `sell` e `buyFeira` a quantidade é opcional (tudo / máximo).
+- **Para a Fase 7 (o gancho já existe):** se `EU != null` e o remetente não é este aparelho, o `Cmd` guarda e devolve a `UI` do anfitrião e manda redesenhar. Basta fazer `EU = idx` do anfitrião ao entrar na sala e chamar `Cmd.run(uidDoRemetente→idx, tipo, args)` com o que chegar de `Rede.aoAcao` (o `tipo` precisa estar em `Cmd.nomes`; ignore `id` repetido). O bot do anfitrião usa o mesmo `Cmd.run`.
+- **Efeitos novos no jogo local (esperados):** `go` duas vezes e `end` antes de começar o turno são recusados com motivo; com "espiar" pendente só `peek` vale (a janela já bloqueava a tela). `A.go`/`A.end` chamados direto (pelo `qa.html`) continuam funcionando como antes.
+- **Bot:** `Bot.tenta(chave, 'nome', [args], texto)` e `Bot.cmd(p, nome, args)`; não mexe mais em `UI.actor`. Único `A.*` direto: um `A.end()` de emergência no tratamento de erro.
+- **O que foi testado em Node (arquivos reais + peças falsas):** vez e fase; argumentos estranhos (texto, `NaN`, `Infinity`, negativos, `constructor`, `__proto__`); Mercado fora da vez e remetente; espiar; botões locais com `alert` e leitura dos campos; o caminho "remoto" com `EU` definido (a `UI` do anfitrião não muda); 12 partidas de bots pela camada, sem erros e **sem uma única recusa de validação** (só as recusas normais das regras). Estraguei a camada de 5 jeitos e o teste pegou os 5.
+- **O que NÃO foi testado:** o desenho real da tela (`tela.js`, `janelas.js`, `zoom.js` com DOM de verdade), o `cartas.js`/`rodada.js`/`objetivos.js` reais (não recebi; entraram peças falsas) e o `Bot.simular` com o jogo completo.
+
+**Roteiro para o dono conferir no navegador (10 minutos, jogo local, 3 jogadores):**
+1. Começar uma partida e jogar um turno inteiro só com botões: Estou pronto → comprar campo → escolher carta e plantar → melhorar (animação do zoom) → Governo (empréstimo, pagar, carta extra, vender) → Encerrar turno.
+2. Mercado: ofertar recurso (campos qtd e preço), ofertar carta, cancelar, comprar; "atuar como" outro jogador e ofertar por ele; abrir o Mercado na tela "Passe o dispositivo" e ofertar.
+3. Feira Regional (se sair) comprando com a quantidade digitada e com o campo vazio (deve comprar o máximo).
+4. Evento "espiar": escolher quem espiar na janela; tentar fechar a janela (não deve fechar).
+5. Recusas: vender sem estoque, plantar sem carta escolhida, ofertar sem preço → cada uma deve mostrar o mesmo aviso de antes.
+6. Bot: uma partida com 1 humano + 2 bots; e no console `Bot.simular(20, 3, ['normal'])` e `Bot.simular(20, 4, ['normal', 'facil'])` (deve continuar sem erros de estado).
+7. "Continuar" no meio de uma partida salva.
 
 ### Fase 5 entregue (rede.js) — o que mudou para as próximas fases
 - **SDK:** Firebase JS 12.19.0 fixa, via `import()` de gstatic.com (13.x ficou de fora por ser muito nova/versão principal nova). Só baixa ao chamar `Rede.iniciar()`.
@@ -113,7 +135,7 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 - **Espiar:** a escolha pendente agora é do jogo (`S.peekPend`), não da interface; a janela aparece só para quem é `eu()`.
 - **`A.plantIn(fi, h)`:** a carta da mão pode ser passada direto (sem `A.pick`), o que já serve de comando de rede.
 - **Ponte provisória `ligaUI()`:** `S.modal`, `S.plantSel`, `S.actor` etc. continuam existindo como atalhos para `UI` (não enumeráveis, não vão ao save). Assim `janelas.js` e `qa.html` funcionam sem mudança. **Remover a ponte quando os dois usarem `UI` direto.**
-- **Pendente em `janelas.js`:** o `style.css` tem o botão flutuante `.mx` (✕, só celular), mas o `janelas.js` que eu recebi (versão do início da conversa) não o desenha; ou a Parte 1 alterou o arquivo e a versão atual não chegou a mim, ou o botão nunca foi ligado. Antes da Fase 8, **envie o `janelas.js` atual** para eu migrá-lo para `UI`/`me()` sem perder o que a Parte 1 fez.
+- **`janelas.js` (resolvido na Fase 4):** o arquivo atual já desenha o botão ✕ `.mx` da Parte 1; foi recebido e agora usa `Cmd.*` nos botões de jogo. Falta só migrá-lo de `cur()` para `me()`/`UI` (Fase 8).
 - **Atenção para a Fase 7:** `tela.js` chama `Bot.agenda()` para qualquer aparelho quando a vez é de um bot. No online, só o anfitrião pode rodar os bots (`Rede.ehHost`).
 - **Ainda aberto:** `Z.up` confere o resultado na hora (síncrono); no online a resposta vem depois (Fases 4/7).
 
@@ -134,7 +156,7 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 - **Teste:** conferência automática de privacidade (1000+ verificações em partidas de bots, para cada jogador e para o espectador), cenários de "Tudo à vista", "Revelar-se" e "Espiar", e a tela desenhando com a visão de cada jogador. Também **testei a própria bateria**: ao estragar o `visao.js` de 5 jeitos (vazar moedas, objetivo, mão, cofre, baralhos), ela detectou todos.
 - **Tamanho:** cerca de 5 KB por visão (mediana), máximo medido 12 KB. Cada ação do jogo manda uma visão por jogador; confira o consumo na aba *Uso* do Realtime Database depois da Fase 7.
 - **Para a Fase 7 (cliente):** ao receber a visão, o aparelho faz `S = visão`, `ligaUI()`, `EU = índice` e `render()`. O `sees()` calculado no cliente dá o mesmo resultado do anfitrião. Bots, `A.*` e `Bot.agenda()` só rodam no anfitrião (com o `S` completo).
-- **Bloqueio para a Fase 8:** o `janelas.js` atual ainda lê `cur()` (o jogador da vez). Com a visão filtrada isso quebra para quem não é o da vez (ex.: janelas de Governo e Objetivo). Precisa da migração para `me()` (a transformação já está pronta e testada; falta o `janelas.js` atual do dono, com o botão ✕ `.mx` da Parte 1).
+- **Bloqueio para a Fase 8:** o `janelas.js` atual (já recebido, com o ✕ `.mx`) ainda lê `cur()` (o jogador da vez). Com a visão filtrada isso quebra para quem não é o da vez (ex.: janelas de Governo e Objetivo). Precisa da migração para `me()`; a transformação já está pronta e testada.
 - **O registro (`log`) é público e já mostra o nome do evento individual de cada jogador** (isso já era assim no jogo local); se quiser esconder, é decisão de regra do jogo.
 - **Regra para o futuro:** ao criar um campo novo em `S` ou em um jogador, decida em `viewFor` se é público, condicional, só do dono ou secreto. A bateria avisa se algum campo de `S` não foi tratado.
 
@@ -157,73 +179,66 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 6. ✅ Regras simples publicadas; restritivas ficam para a Fase 9.
 7. ✅ `rede.js`, `teste-rede.html`, `index.html` e `iniciar.js` no GitHub Pages e teste de duas abas feito.
 
-### Arquivos a enviar
+### Arquivos a enviar (para a Fase 6)
 | Arquivo | Por quê |
 |---|---|
-| **estado.js, consultas.js** | O estado `S` e `cur()` (quem joga) são a base de "quem sou eu". |
-| **acoes-turno.js, acoes-economia.js, acoes-plantio.js, acoes-mercado.js** | As ações viram comandos validados. |
-| **rodada.js, objetivos.js** | A virada de rodada e a vitória são decididas pelo anfitrião. |
-| **pecas-tela.js** | `sees()` vira o filtro do que cada jogador recebe. |
-| **tela.js, janelas.js, menu.js** | "Passe o dispositivo" vira "Aguardando"; o menu ganha criar/entrar na sala; as janelas deixam de permitir "atuar como" outro jogador. |
-| **zoom.js** | Usa `cur()`: precisa usar o jogador local. |
-| **iniciar.js, index.html** | `iniciar.js` é onde se lê o link `?sala=` (já feito: `Rede.lerConvite()`); o `index.html` já carrega o `rede.js` depois do `bot.js`. |
-| **rede.js** (Fase 5, já entregue) | Enviar nas fases seguintes junto com a Ficha. |
-| **bot.js** | O anfitrião roda os bots; o gancho de vez do bot precisa conviver com "Aguardando". |
-| **dev.js** | Precisa ser desligado no online. |
-| **config.js, cartas.js** | Regras e baralhos (embaralhados só no anfitrião). |
-| **style.css** (só os trechos de menu/botões, ou inteiro) | As telas novas (sala e lobby) devem aproveitar o visual de celular que já existe. |
+| **FICHAS_TECNICAS.md** e este plano | Sempre a versão mais recente. |
+| **rede.js** | O lobby usa `Rede.criar/entrar/aoJogadores/definirEstado/convite`. |
+| **menu.js** | As telas `criar` e `achar` já existem e serão ligadas à rede. |
+| **iniciar.js, index.html** | Onde se lê `?sala=` e se carrega o lobby. |
+| **acoes-turno.js** | `A.new({ nomes, bots, first })` que o anfitrião chama ao iniciar. |
+| **estado.js, consultas.js** | `EU`, `eu()`, `me()`, `UI`. |
+| **style.css** | As telas de sala e lobby reaproveitam o visual do menu (ou só os trechos de menu/botões). |
+| **comandos.js** | Só leitura (a Fase 6 não mexe; a 7 usa). |
 
-Não enviar: `cartas-visual.js` (visual puro), `editor.html` e `qa.html` (ferramentas; o online é testado com duas abas abertas).
+Fases seguintes: **Fase 7** pede também `tela.js`, `bot.js`, `zoom.js`, `visao.js`, `pecas-tela.js`, `comandos.js`; **Fase 8** pede `janelas.js`, `dev.js`, `zoom.js`, `tela.js`; **Fase 9** pede `rede.js` e o Apêndice A. Não enviar: `cartas-visual.js` (visual puro, exceto se for mexer em `free/NV/vef/nm/evDesc`), `editor.html`, `qa.html`.
 
-### PROMPT 3 — Preparação do online
+### PROMPT 3 — Preparação do online (para colar numa conversa nova; hoje a próxima é a FASE 6)
 
 ```
-Estou enviando a Ficha Técnica e os arquivos do meu jogo "Tempo de Colheita" (HTML + JS puro): estado.js, consultas.js, acoes-turno.js, acoes-economia.js, acoes-plantio.js, acoes-mercado.js, rodada.js, objetivos.js, pecas-tela.js, tela.js, janelas.js, menu.js, zoom.js, iniciar.js, index.html, config.js, cartas.js, dev.js, bot.js e style.css.
+Estou enviando a Ficha Técnica, o plano e os arquivos do meu jogo "Tempo de Colheita" (HTML + JS puro), mais os arquivos da etapa.
 
 OBJETIVO
-Preparar o jogo para ser jogado ONLINE, eu contra um amigo (depois, mais jogadores), entrando por código de sala e link de convite, SEM gastar dinheiro (somente serviços gratuitos e seguros). Hoje o jogo é "passe o aparelho": um navegador guarda todo o estado (S) e esconde as informações com a tela "Estou pronto". O jogo já funciona no celular (visual responsivo) e já tem bots (p.bot, bot.js).
+Preparar o jogo para ser jogado ONLINE, eu contra um amigo (depois, mais jogadores), entrando por código de sala e link de convite, SEM gastar dinheiro (somente serviços gratuitos e seguros). Hoje o jogo é "passe o aparelho" (um navegador guarda todo o estado S e esconde informação com a tela "Estou pronto"), funciona no celular e tem bots.
 
-JÁ DECIDIDO E PRONTO NO MEU LADO (não refaça)
-- Transporte: Firebase Realtime Database, plano Spark (gratuito, SEM cartão; não usar Blaze, Storage, Functions nem Hosting).
-- Autenticação anônima do Firebase já está ATIVA no projeto.
-- O jogo já está publicado e funcionando no GitHub Pages.
-- A.sell, A.buyFeira, A.listRes, A.list aceitam parâmetros opcionais, e A.new aceita { nomes, bots, first }. Sem parâmetro, leem a tela como antes.
-- Cada jogador tem p.bot ('', 'facil' ou 'normal'). bot.js joga pelas ações A.* e usa Bot.tenta() para silenciar o alert(). tela.js tem o gancho "if (p.bot) { Bot.agenda(); ... }".
-
-O QUE AINDA DEPENDE DO JOGADOR DA VEZ
-- cur() (S.order[S.t]), S.actor (Mercado "atuar como"), S.devP (Dev), S.hide e sees() são usados em consultas.js, acoes-*.js, tela.js, janelas.js, zoom.js, pecas-tela.js e bot.js.
-- As ações usam alert() ao recusar e não devolvem sucesso/erro.
-- render() grava o estado inteiro em localStorage (tc_save) a cada desenho.
+JÁ DECIDIDO E PRONTO (não refaça)
+- Transporte: Firebase Realtime Database, plano Spark (gratuito, SEM cartão; não usar Blaze, Storage, Functions nem Hosting). Autenticação anônima ativa. Jogo no GitHub Pages. rede.js pronto e testado (Fase 5).
+- Arquitetura: o navegador do anfitrião roda o jogo e os bots; os outros enviam comandos e recebem uma visão filtrada.
+- FASE 1 ✅: quem sou eu (EU, eu(), me()) e estado de interface fora de S (objeto UI; ponte provisória ligaUI() para janelas.js e qa.html).
+- FASE 2 ✅: ações recusam por recusa(msg); exec(fn) e A.tentar devolvem { ok, msg }.
+- FASE 3 ✅: viewFor(i) em visao.js é a ÚNICA saída do estado para outros jogadores (testada, com bateria de privacidade).
+- FASE 4 ✅ (confirmar no quadro do plano): camada de comandos em comandos.js. Cmd.run(quem, nome, args) → { ok, msg }; lista permitida em Cmd.nomes (15 comandos); confere vez, fase do turno e argumentos; se EU != null e o remetente não é este aparelho, guarda e devolve a UI do anfitrião. Botões, janelas, zoom e bots já passam por ele.
+- FASE 5 ✅: rede.js (criar, entrar, enviar, aoAcao, aoVisao, aoJogadores, aoMeta, darVisao, gravarEstado/lerEstado, definirEstado, sair, lerConvite, linkConvite; args/visao/estado gravados como texto JSON).
+- Decisão do dono: o evento individual de um BOT é público (na vez do bot todos o veem). Falta só tornar o `ind` de jogadores bot público em viewFor (visao.js), na Fase 7.
+- qa.html está adiado (o dono ajusta depois): não depende dele.
 
 REGRAS DE TRABALHO
-1. Trabalhe por FASES. Ao fim de cada fase o jogo OFFLINE (passe o aparelho, com e sem bots) deve continuar funcionando igual. Entregue uma fase por vez e espere meu OK.
-2. Não reescreva o jogo: mudanças pequenas e localizadas, listadas por arquivo.
-3. Mantenha o cabeçalho "FICHA TÉCNICA" e atualize a Ficha.
-4. Nada de bibliotecas pagas ou que peçam cartão. Antes de recomendar um serviço, CONFIRA os limites gratuitos ATUAIS (pesquise) e me diga.
-5. Informações secretas (mão, objetivo, estoque e dívida de outros, conforme sees()) NUNCA podem ser enviadas a quem não pode vê-las.
-6. Preserve os ids e classes da tela, inclusive .nm e .bt do menu (meu teste automático e o bot dependem deles).
-7. Se rodar código para testar, teste em Node com os arquivos reais; não diga que testou o que não testou.
+1. Uma FASE por conversa; ao fim de cada fase o jogo OFFLINE (passe o aparelho, com e sem bots) deve continuar funcionando igual. Entregue e espere meu OK.
+2. Mudanças pequenas e localizadas, listadas por arquivo. Não reescreva o jogo. Entregue os arquivos inteiros alterados.
+3. Mantenha o cabeçalho "FICHA TÉCNICA" de cada arquivo e atualize a Ficha e o plano.
+4. Nada de bibliotecas pagas ou que peçam cartão. Antes de recomendar um serviço, CONFIRA os limites gratuitos atuais.
+5. Informação secreta (mão, objetivo, estoque e dívida de outros, conforme sees()) NUNCA vai a quem não pode vê-la.
+6. Preserve os ids e classes da tela (.nm e .bt do menu, #rq…, #rp…, #pr…, #fq…, etc., ver Ficha).
+7. Toda ação de jogo passa por Cmd; não chame A.* de jogo direto. Se criar ação nova, acrescente a linha na tabela CMD.
+8. Se rodar código para testar, teste em Node com os arquivos reais; diga claramente o que foi e o que não foi testado.
 
 ROTEIRO (status no quadro do plano)
-FASE 0 — FEITA.
-FASE 1 — Identidade local e estado de interface. (a) Criar "quem sou eu" neste navegador (índice do jogador local); offline, ele acompanha o jogador da vez. (b) Separar o estado de INTERFACE do estado do JOGO: hoje S.modal, S.plantSel, S.viewing, S.viewRes, S.actor, S.devP e S.dv moram dentro de S; no online cada jogador tem os seus, então passam para um objeto local (UI) que não é compartilhado nem salvo junto com a partida.
-FASE 2 — Resultado das ações. Fazer as ações devolverem sucesso/erro (sem alert quando vêm da rede), reaproveitando a ideia de Bot.tenta(). Sem mudar o jogo offline.
-FASE 3 — Visão filtrada. Criar viewFor(i): o estado como o jogador i pode vê-lo (mão e objetivo só do próprio; moedas, dívida e estoque dos outros só se sees() permitir).
-FASE 4 — Camada de comandos. Toda ação passa por um único ponto que valida "quem enviou" e "é a vez dele" (ou é permitida fora da vez, como o Mercado). Offline e bots passam pelo mesmo ponto; nada muda.
-FASE 5 — Rede (rede.js novo), com Firebase Realtime Database + autenticação anônima. Criar sala, código de sala e link ?sala=CODIGO (lido no iniciar.js), entrar, enviar e receber mensagens, e trocar as regras do modo de teste por regras simples (autenticado). Confira os limites gratuitos atuais e a versão atual do SDK. Teste simples entre duas abas.
-FASE 6 — Lobby. As telas 'criar' (código + formulário + "Jogadores conectados") e 'achar' (nome + código + Conectar) JÁ EXISTEM em menu.js, só com o aviso de "em implementação"; ligá-las à rede: gerar e mostrar o código, listar quem conectou, vagas de bot (fácil/normal), botão "Iniciar" (só o anfitrião), usando A.new({ nomes, bots, first }). Buscar Partida e Tutorial continuam como aviso.
-FASE 7 — Sincronização e vez. O anfitrião aplica as ações e envia a cada jogador a sua visão. Trocar "Passe o dispositivo" por "Aguardando [jogador]" (no mesmo ponto do gancho do bot em tela.js). Só quem está na vez joga. Só o anfitrião grava o estado completo em localStorage.
-FASE 8 — Janelas. Mercado e Governo atuam só pelo jogador local (sem "atuar como" outros). Dev desligado no online. Ver jogador e zoom respeitam sees() e usam o jogador local, não cur().
-FASE 9 — Robustez e segurança. Desconexão e reconexão, retomar a partida da sala, mensagens duplicadas ou fora de ordem, anfitrião que sai (os bots param). Publicar as regras restritivas do Apêndice A (ajustando os nomes dos nós ao que o rede.js realmente grava) e testá-las no Rules Playground do console.
-FASE 10 — Testes. Roteiro com duas abas e depois dois aparelhos, e uma conferência de que nenhuma informação secreta aparece nas mensagens.
-FASE 11 — Publicação. O jogo JÁ está no GitHub Pages; documentar como o convite (?sala=CODIGO) funciona na prática e o que conferir (domínio autorizado no Firebase Authentication).
+FASES 0 a 5 — FEITAS (a 4 aguarda minha conferência no navegador).
+FASE 6 — Lobby. As telas 'criar' (código + formulário + "Jogadores conectados") e 'achar' (nome + código + Conectar) JÁ EXISTEM em menu.js, só com o aviso "em implementação": ligá-las à rede: gerar e mostrar o código, listar quem conectou, vagas de bot (fácil/normal), botão "Iniciar" (só o anfitrião), usando A.new({ nomes, bots, first }). Reatribuir idx ao iniciar; criar bots como `jogadores` com chave própria; ler Rede.convite na tela 'achar'. Buscar Partida e Tutorial continuam como aviso.
+FASE 7 — Sincronização e vez. O anfitrião faz EU = seu idx, recebe cada Rede.aoAcao, valida e executa por Cmd.run (ignorando `id` repetido), e envia a cada jogador a sua viewFor(i). Clientes: S = visão, ligaUI(), EU = índice, render(). Trocar "Passe o dispositivo" por "Aguardando [jogador]" (no mesmo ponto do gancho do bot em tela.js). Só o anfitrião roda Bot.agenda() e grava o estado completo em localStorage. Z.up precisa esperar a resposta (assíncrona). Tornar público o `ind` de jogadores bot em viewFor.
+FASE 8 — Janelas. Migrar janelas.js para me()/UI (hoje lê cur()). Mercado e Governo atuam só pelo jogador local (sem "atuar como" outros). Dev desligado no online. Ver jogador e zoom respeitam sees() e usam o jogador local. Remover a ponte ligaUI() quando janelas.js e qa.html usarem UI direto.
+FASE 9 — Robustez e segurança. Desconexão e reconexão (uid novo), retomar a partida da sala, mensagens duplicadas ou fora de ordem, anfitrião que sai (os bots param), limpar salas antigas. Publicar as regras restritivas do Apêndice A e testá-las no Rules Playground.
+FASE 10 — Testes. Roteiro com duas abas e depois dois aparelhos; conferência de que nenhuma informação secreta aparece nas mensagens.
+FASE 11 — Publicação. Documentar o convite (?sala=CODIGO) e o que conferir (domínio autorizado no Firebase Authentication).
 ```
 
 ---
 
 ## Ordem sugerida
-1. **Conferir no navegador** (a lista de 30 minutos acima), principalmente o `qa.html` e o bot no celular.
-2. **Online** (Parte 3), por fases, uma por conversa quando for grande. Envie sempre o `FICHAS_TECNICAS.md` mais recente.
+1. **Conferir a Fase 4 no navegador** (roteiro de 10 minutos na seção "Fase 4 entregue"). Se algo falhar, me avise antes de seguir.
+2. **Fase 6 — Lobby** (conversa nova, com o PROMPT 3 e os arquivos da lista).
+3. Fases 7, 8, 9, 10 e 11, uma por conversa.
+4. Em qualquer momento, em conversa própria: **balanceamento com 2 jogadores** e o ajuste do `qa.html`.
 
 ---
 

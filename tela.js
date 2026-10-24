@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// tela.js: Desenha a tela principal do jogo (render; mostra o jogador deste aparelho, me(), e quem está na vez, cur(); na vez de um bot mostra a tela do bot e chama Bot.agenda()): barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
+// tela.js: Desenha a tela principal do jogo (render; mostra o jogador deste aparelho, me(), e quem está na vez, cur(); na vez de um bot mostra a tela do bot e chama Bot.agenda(); na vez de um bot o evento individual mostrado é o DELE, é público). Os botões de jogo chamam Cmd.* (comandos.js), nunca A.* direto: barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
 // Celular: .top = .st (texto) + .acts (botões); .seats agrupa as abas; .board agrupa campos à venda + seus campos; #evb é recolhível (EVB_OPEN). No PC esses grupos não mudam nada (display:contents).
 // ========================
 
@@ -10,28 +10,28 @@ function render() {
   if (S.win) { localStorage.removeItem('tc_save');
     return m.innerHTML = `<h2>🏆 ${S.win.n} venceu!</h2><p>${S.win.why}</p><button onclick="A.quit()">Voltar ao menu</button>`; }
   localStorage.setItem('tc_save', JSON.stringify(S));
-  const vez = cur(), p = me(); // vez = quem joga agora; p = quem sou eu (no jogo local é o mesmo jogador)
+  const vez = cur(), p = me(), ie = vez.bot ? vez : p; // vez = quem joga agora; p = quem sou eu (no jogo local é o mesmo jogador); ie = de quem é o evento individual mostrado (na vez de um bot é o do bot, visível a todos)
   const evb = `<div id="evb"${EVB_OPEN ? ' class="open"' : ''}><div class="evh" onclick="EVB_OPEN=!EVB_OPEN;this.parentNode.classList.toggle('open',EVB_OPEN)"><span>📅 ${S.ev.map(e => nm(e.c)).join(' · ') || 'Sem evento geral ativo'}</span><span class="car">▾</span></div>
     <div class="evc"><b>Evento Geral Ativo</b>${S.ev.map(e => `<div>${nm(e.c)}: ${evDesc(e)} (${e.left} rod.)</div>`).join('')}
-    <b>Evento Individual Ativo</b><div>${!S.hide && p.ind ? nm(p.ind) + ': ' + desc(p.ind) : '—'}</div></div></div>`;
+    <b>Evento Individual Ativo${vez.bot ? ' (' + vez.n + ')' : ''}</b><div>${!S.hide && ie.ind ? nm(ie.ind) + ': ' + desc(ie.ind) : '—'}</div></div></div>`;
   if (vez.bot) { Bot.agenda(); return m.innerHTML = Bot.tela(vez, evb); } // vez de um bot (bot.js): ele joga sozinho; nada de "Passe o dispositivo"
   if (S.hide) return m.innerHTML = `<h2>Vez do jogador ${vez.n}</h2><p>Rodada ${S.round}. Passe o dispositivo e clique quando estiver pronto.</p>
-    <button onclick="A.go()">Estou pronto</button><button onclick="A.modal('mkt')">🤝 Mercado</button>${REG.devAtivo ? '<button onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<p class="log">${S.log.join('<br>')}</p>${evb}${modal()}`;
+    <button onclick="Cmd.go()">Estou pronto</button><button onclick="A.modal('mkt')">🤝 Mercado</button>${REG.devAtivo ? '<button onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<p class="log">${S.log.join('<br>')}</p>${evb}${modal()}`;
   const ring = S.players.map((q, i) => i).filter(i => !S.players[i].out), ci = ring.indexOf(eu());
   const oth = ring.slice(ci + 1).concat(ring.slice(0, ci)), half = Math.ceil(oth.length / 2);
   const tabs = ids => ids.map(i => sideTab(S.players[i], i, p)).join('');
   const sel = UI.plantSel != null ? p.hand[UI.plantSel] : null;
   const hud = `<div id="hud">${K.map(k => `<span class="hi">${hudDot(ASSETS.cultura[k], CROPS[k].slice(0, 2), 'big')}<b>${p.res[k] || 0}</b></span>`).join('')}<span class="hi">${hudDot(ASSETS.ouro, '$', 'big')}<b>${p.coins}</b></span></div>`;
   const mine = p.fields.map((f, i) => { const ok = sel && fits(f, sel) && free(f) >= NV(sel).espacos;
-    return cardHTML(f.c, '', isNight(p, f), sel ? (ok ? `onclick="A.plantIn(${i})"` : '') : `data-field="${i}"`, sel ? (ok ? 'pick' : 'gray') : '', `${free(f)}/${f.c.slots}`); }).join('');
+    return cardHTML(f.c, '', isNight(p, f), sel ? (ok ? `onclick="Cmd.plantIn(${i})"` : '') : `data-field="${i}"`, sel ? (ok ? 'pick' : 'gray') : '', `${free(f)}/${f.c.slots}`); }).join('');
   const pode = c => p.fields.some(f => fits(f, c) && free(f) >= NV(c).espacos); // a carta só fica colorida se existir campo que a receba
   const hand = p.hand.map((c, h) => cardHTML(c, '', false, `data-plant="${h}" data-ok="${pode(c) ? 1 : 0}"`, (sel === c ? 'pick ' : '') + (pode(c) ? '' : 'gray'))).join('');
   m.innerHTML = `${hud}<div class="top"><span class="st">Rodada ${S.round} · Vez de <b>${vez.n}</b> · Dívida ${p.debt}${done(p) ? ' · ✔ objetivo cumprido (vale no fim da rodada)' : ''}${S.ev.some(e => e.c.reveal == 'all') ? ' · Cofre do governo: ' + moeda(S.gov) : ''}</span>
-    <span class="acts"><button onclick="A.modal('gov')">🏛 Acionar Governo</button><button onclick="A.modal('mkt')">🤝 Mercado</button><button onclick="A.modal('obj')">🎯 Objetivo</button>${REG.devAtivo ? '<button class="dev" onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<button class="end" onclick="A.end()">Encerrar turno ➜</button><button class="quit" onclick="A.quit()">Sair</button></span>
+    <span class="acts"><button onclick="A.modal('gov')">🏛 Acionar Governo</button><button onclick="A.modal('mkt')">🤝 Mercado</button><button onclick="A.modal('obj')">🎯 Objetivo</button>${REG.devAtivo ? '<button class="dev" onclick="A.modal(\'dev\')">🛠 Dev</button>' : ''}<button class="end" onclick="Cmd.end()">Encerrar turno ➜</button><button class="quit" onclick="A.quit()">Sair</button></span>
     ${sel ? `<b class="pickmsg">Escolha o campo para plantar ${CROPS[sel.crop]} <button onclick="A.cancelPick()">Cancelar</button></b>` : ''}</div>
     <div class="seats"><div class="side sideL">${tabs(oth.slice(0, half))}</div><div class="side sideR">${tabs(oth.slice(half))}</div></div>
     ${evb}
-    <div class="board"><div class="center"><h3>Campos sendo vendidos</h3><div class="cards">${S.center.map((c, i) => `<div class="fs">${cardHTML(c)}<button class="${p.coins >= buyPrice(p, c) ? 'ok' : 'no'}" onclick="A.buyF(${i})">${buyPrice(p, c) || 'Grátis'}</button></div>`).join('') || 'Nenhum'}</div></div>
+    <div class="board"><div class="center"><h3>Campos sendo vendidos</h3><div class="cards">${S.center.map((c, i) => `<div class="fs">${cardHTML(c)}<button class="${p.coins >= buyPrice(p, c) ? 'ok' : 'no'}" onclick="Cmd.buyF(${i})">${buyPrice(p, c) || 'Grátis'}</button></div>`).join('') || 'Nenhum'}</div></div>
     <div class="cards mine">${mine || '<i>Você ainda não tem campos</i>'}</div></div>
     <div class="hand">${hand}</div>
     <p class="log">${S.log.join('<br>')}</p>${modal()}`;

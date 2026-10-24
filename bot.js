@@ -1,7 +1,7 @@
 // ===== FICHA TÉCNICA =====
-// bot.js: Jogador controlado pelo computador (bot), níveis 'facil' e 'normal' (p.bot). Joga SÓ pelas ações do jogador (A.*), como um humano: planta, evolui, vende ao Governo, compra campos e cartas, usa Feira, Mercado e empréstimos e persegue o próprio objetivo, sem trapacear (não lê mão nem objetivo dos outros). Também tem a tela "Bot X está jogando..." (Bot.tela) e o teste Bot.simular(), que roda partidas só com bots e confere erros.
+// bot.js: Jogador controlado pelo computador (bot), níveis 'facil' e 'normal' (p.bot). Joga SÓ pelos comandos do jogador (Cmd.run, comandos.js: as mesmas regras de vez e de fase de um humano), como um humano: planta, evolui, vende ao Governo, compra campos e cartas, usa Feira, Mercado e empréstimos e persegue o próprio objetivo, sem trapacear (não lê mão nem objetivo dos outros). Também tem a tela "Bot X está jogando..." (Bot.tela) e o teste Bot.simular(), que roda partidas só com bots e confere erros.
 // Como entra no jogo: tela.js chama Bot.agenda() quando a vez é de um bot; menu.js marca quem é bot (select .bt); A.new (acoes-turno.js) grava p.bot.
-// Depende de (em outros arquivos): A.*, exec, cur, alive, log, plotsOf, lvOf, fits, evFind, evOn, govPreco, jurosPct, manutOf, feiraMax, mercadoFechado, buyPrice (consultas.js); done (objetivos.js); free, NV, vef, nm, evDesc (cartas-visual.js); ASSETS, REG, LOAN, EXTRA, K (cartas.js / config.js / estado.js).
+// Depende de (em outros arquivos): Cmd (comandos.js), A.quit/A.new, exec, cur, alive, log, plotsOf, lvOf, fits, evFind, evOn, govPreco, jurosPct, manutOf, feiraMax, mercadoFechado, buyPrice (consultas.js); done (objetivos.js); free, NV, vef, nm, evDesc (cartas-visual.js); ASSETS, REG, LOAN, EXTRA, K (cartas.js / config.js / estado.js).
 // ========================
 
 const Bot = {
@@ -23,10 +23,10 @@ const Bot = {
   acao() { const p = cur(), k = S.round + ':' + S.t; // UMA ação do bot da vez
     if (k !== this.chave) { this.chave = k; this.n = 0; this.negados = new Set(); this.cancelou = false; } // vez nova: zera os controles
     try {
-      if (S.hide) A.go();
-      else if (S.peekPend != null) { const o = alive().filter(q => q !== p); if (o.length) A.peek(S.players.indexOf(o[Math.floor(Math.random() * o.length)])); else { S.peekPend = null; } }
-      else if (++this.n > 80 || !this.decide(p)) A.end(); // limite de ações por turno; sem mais o que fazer: encerra
-    } catch (e) { console.error('Bot: erro, encerrando o turno', e); this.erros++; try { S.peekPend = null; UI.modal = null; A.end(); } catch (e2) { console.error('Bot: falha ao encerrar o turno', e2); this.erros += 10; } } },
+      if (S.hide) this.cmd(p, 'go');
+      else if (S.peekPend != null) { const o = alive().filter(q => q !== p); if (o.length) this.cmd(p, 'peek', [S.players.indexOf(o[Math.floor(Math.random() * o.length)])]); else { S.peekPend = null; } }
+      else if (++this.n > 80 || !this.decide(p)) this.cmd(p, 'end'); // limite de ações por turno; sem mais o que fazer: encerra
+    } catch (e) { console.error('Bot: erro, encerrando o turno', e); this.erros++; try { S.peekPend = null; UI.modal = null; A.end(); /* emergência: o único A.* direto do bot, para o jogo não travar */ } catch (e2) { console.error('Bot: falha ao encerrar o turno', e2); this.erros += 10; } } },
   tela(p, evb) { return `<h2>🤖 ${p.n} está jogando...</h2><p>Rodada ${S.round}. <button onclick="Bot.delay = Bot.delay > 300 ? 100 : 700">⏩ Velocidade</button><button onclick="A.quit()">Sair</button></p>
     <p class="log">${S.log.join('<br>')}</p>${evb || `<div id="evb"><b>Evento Geral Ativo</b>${S.ev.map(e => `<div>${nm(e.c)}: ${evDesc(e)} (${e.left} rod.)</div>`).join('')}</div>`}`; }, // evb = caixa de eventos que o tela.js já monta (recolhível no celular)
 
@@ -34,9 +34,11 @@ const Bot = {
   pf(p) { return this.PF[p.bot] || this.PF.normal; },
   eu(p) { return S.players.indexOf(p); },
   sig() { const p = cur(); return [p.coins, p.debt, p.hand.length, p.fields.length, plotsOf(p).length, plotsOf(p).reduce((a, x) => a + lvOf(x), 0), K.map(k => p.res[k] || 0).join(), S.mk.length, S.mk.reduce((a, l) => a + (l.qty || 0), 0), S.gov, S.center.length].join('|'); }, // "foto" do que uma ação pode mudar
-  // Executa uma ação do jogo em silêncio (exec, acoes-turno.js: sem alert) e confere o resultado. Se a ação foi recusada ou nada mudou, anota a chave em 'negados' e não tenta de novo neste turno.
-  tenta(chave, fn, txt) { if (this.negados.has(chave)) return false;
-    const antes = this.sig(), r = exec(fn);
+  // Pede um comando como o jogador p (Cmd.run, em silêncio). Se for recusado, lança erro (acao() trata e destrava o turno).
+  cmd(p, nome, args = []) { const r = Cmd.run(this.eu(p), nome, args); if (!r.ok) throw new Error(`comando ${nome} recusado: ${r.msg}`); return r; },
+  // Pede um comando em silêncio e confere o resultado. Se foi recusado ou nada mudou, anota a chave em 'negados' e não tenta de novo neste turno.
+  tenta(chave, nome, args, txt) { if (this.negados.has(chave)) return false;
+    const antes = this.sig(), r = Cmd.run(this.eu(cur()), nome, args);
     if (!r.ok || this.sig() === antes) { this.negados.add(chave); return false; }
     if (txt) log(`${cur().n}: ${txt}`);
     return true; },
@@ -82,9 +84,9 @@ const Bot = {
   vender(p, alvo, todo) { const kp = todo ? {} : this.keep(p);
     const ks = K.map(k => ({ k, q: Math.max(0, (p.res[k] || 0) - (kp[k] || 0)), v: govPreco(k) })).filter(x => x.q > 0).sort((a, b) => b.v - a.v || b.q - a.q);
     for (const x of ks) { if (p.coins >= alvo) break;
-      if (this.tenta('sell:' + x.k, () => A.sell(x.k, Math.min(x.q, Math.ceil((alvo - p.coins) / x.v))))) return true; }
+      if (this.tenta('sell:' + x.k, 'sell', [x.k, Math.min(x.q, Math.ceil((alvo - p.coins) / x.v))])) return true; }
     return false; },
-  emprestar(p) { if (p.obj.t === 'noLoan' || p.debt + LOAN > REG.limiteDivida * 0.6) return false; return this.tenta('loan', () => A.loan(), 'pegou um empréstimo'); },
+  emprestar(p) { if (p.obj.t === 'noLoan' || p.debt + LOAN > REG.limiteDivida * 0.6) return false; return this.tenta('loan', 'loan', [], 'pegou um empréstimo'); },
   // vendendo todo o estoque (e pagando a dívida, no 'clean') o objetivo de moedas fecha? Testa em "faz de conta" e devolve o estado.
   fecharia(p) { const o = p.obj; if (!this.MOEDAS.includes(o.t)) return false;
     const val = K.reduce((a, k) => a + (p.res[k] || 0) * govPreco(k), 0), c0 = p.coins, d0 = p.debt, limpa = o.t === 'clean'; let r = false;
@@ -95,38 +97,38 @@ const Bot = {
   mercado(p) { const o = p.obj, id = this.eu(p), kp = this.keep(p), mk = this.MERC.includes(o.t), R = this.reserva(p);
     for (const l of S.mk) { if (l.kind !== 'res' || l.s === id || !S.players[l.s] || S.players[l.s].out) continue; // compra: só o que lhe serve e não é caro
       const t = l.qty * l.price, serve = (kp[l.crop] || 0) > (p.res[l.crop] || 0) || o.t === 'mBuys' || o.t === 'mAll';
-      if (serve && l.price <= govPreco(l.crop) + (mk ? 1 : 0) && t <= (mk ? 150 : 1e9) && p.coins - t >= R && this.tenta('buyM:' + l.id, () => A.buyM(l.id))) return true; }
+      if (serve && l.price <= govPreco(l.crop) + (mk ? 1 : 0) && t <= (mk ? 150 : 1e9) && p.coins - t >= R && this.tenta('buyM:' + l.id, 'buyM', [l.id])) return true; }
     const de = evFind('demanda');
     for (const k of K) { if (S.mk.some(l => l.s === id && l.kind === 'res' && l.crop === k)) continue; // vende: 1 oferta por cultura
       const sobra = Math.max(0, (p.res[k] || 0) - (kp[k] || 0)); if (sobra < 5) continue;
       let pr = 0, q = sobra;
       if (de && de.crop === k) pr = de.c.teto; // Alta demanda: o Governo compra a oferta mais barata até o teto
       else if (mk) { pr = o.t === 'mProfit' ? govPreco(k) + 1 : govPreco(k); if (o.t === 'mSales') q = Math.min(sobra, 10); }
-      if (pr > 0 && this.tenta('listRes:' + k, () => A.listRes(k, q, pr), `ofereceu ${q} ${CROPS[k]} no Mercado a ${pr}`)) return true; }
+      if (pr > 0 && this.tenta('listRes:' + k, 'listRes', [k, q, pr], `ofereceu ${q} ${CROPS[k]} no Mercado a ${pr}`)) return true; }
     return false; },
 
   // ---------- a decisão: devolve true se fez UMA ação, false se não há mais o que fazer (aí o turno encerra) ----------
-  decide(p) { const pf = this.pf(p), o = p.obj, id = this.eu(p), R = this.reserva(p), min = this.piso(p) + 5, rnd = Math.random; UI.actor = id; // UI.actor: o Mercado atua pelo jogador da vez
+  decide(p) { const pf = this.pf(p), o = p.obj, id = this.eu(p), R = this.reserva(p), min = this.piso(p) + 5, rnd = Math.random; // (o Mercado atua pelo remetente do comando: Cmd.run cuida disso)
     // 1. recolhe as próprias ofertas antigas do Mercado (devolve o estoque), uma vez por turno
-    if (!this.cancelou) { const l = S.mk.find(x => x.s === id); if (l && this.tenta('cancel:' + l.id, () => A.cancel(l.id))) return true; this.cancelou = true; }
+    if (!this.cancelou) { const l = S.mk.find(x => x.s === id); if (l && this.tenta('cancel:' + l.id, 'cancel', [l.id])) return true; this.cancelou = true; }
     // 2. sobreviver: abaixo do mínimo, vende tudo e, se preciso, pega empréstimo
     if (p.coins < min && (this.vender(p, min + 20, true) || this.emprestar(p))) return true;
     // 3. objetivo já cumprido: só vende a sobra (desempate por moedas) e encerra, sem arriscar nada
     if (done(p)) return this.vender(p, Infinity);
     if (rnd() < pf.erra * 0.15) return false; // descuido do nível fácil: encerra o turno cedo
     // 4. objetivo de moedas: se vendendo tudo ele fecha, vende e quita
-    if (this.fecharia(p)) { if (this.vender(p, Infinity, true)) return true; if (o.t === 'clean' && p.debt && p.coins > 0 && this.tenta('pay', () => A.pay(), 'pagou da dívida')) return true; }
+    if (this.fecharia(p)) { if (this.vender(p, Infinity, true)) return true; if (o.t === 'clean' && p.debt && p.coins > 0 && this.tenta('pay', 'pay', [], 'pagou da dívida')) return true; }
     // 5. planta
     const B = this.plantio(p);
-    if (B) { if (this.tenta(`plant:${B.h}:${B.fi}`, () => A.plantIn(B.fi, B.h))) return true; }
+    if (B) { if (this.tenta(`plant:${B.h}:${B.fi}`, 'plantIn', [B.fi, B.h])) return true; }
     // 6. evolui
     const U = this.melhorUp(p);
-    if (U && p.coins >= min + 20 && (pf.up === 1 || rnd() < pf.up) && this.tenta(`up:${U.fi}:${U.pi}:${U.L}`, () => A.up(U.fi, U.pi))) return true;
+    if (U && p.coins >= min + 20 && (pf.up === 1 || rnd() < pf.up) && this.tenta(`up:${U.fi}:${U.pi}:${U.L}`, 'up', [U.fi, U.pi])) return true;
     // 7. Feira Regional: compra o que falta para evoluir / para o objetivo de estoque
     const fe = evFind('feira');
     if (fe) { const kp = this.keep(p);
       for (const k of K) { const q = Math.min(Math.max(0, (kp[k] || 0) - (p.res[k] || 0)), feiraMax(fe, p, k));
-        if (q > 0 && p.coins - q * fe.c.preco >= R && this.tenta('feira:' + k, () => A.buyFeira(k, q))) return true; } }
+        if (q > 0 && p.coins - q * fe.c.preco >= R && this.tenta('feira:' + k, 'buyFeira', [k, q])) return true; } }
     // 8. Mercado entre jogadores (fechado no Embargo)
     if (!mercadoFechado() && (pf.mkt === 1 || rnd() < pf.mkt) && this.mercado(p)) return true;
     // 9. converte a sobra do estoque em moedas (objetivo de moedas, pouco caixa ou Governo pagando o dobro)
@@ -134,14 +136,14 @@ const Bot = {
     // 10. compra campo
     const C = this.melhorCampo(p);
     if (C && (pf.buy === 1 || rnd() < pf.buy)) { const c = S.center[C.i];
-      if (C.pr === 0 || p.coins - C.pr >= R) { if (this.tenta('buyF:' + c.uid, () => A.buyF(C.i), `comprou o campo ${nm(c)}${C.pr ? ' por ' + C.pr : ' (grátis)'}`)) return true; }
+      if (C.pr === 0 || p.coins - C.pr >= R) { if (this.tenta('buyF:' + c.uid, 'buyF', [C.i], `comprou o campo ${nm(c)}${C.pr ? ' por ' + C.pr : ' (grátis)'}`)) return true; }
       else if (this.vender(p, C.pr + R)) return true; }
     // 11. carta extra (só se há vaga para plantar)
     const vagas = p.fields.reduce((a, f) => a + free(f), 0);
-    if (p.hand.length < REG.maxMao && p.hand.length < Math.min(3, vagas) && p.coins - EXTRA >= R && (pf.buy === 1 || rnd() < pf.buy) && this.tenta('extra:' + p.hand.length, () => A.extra(), 'comprou uma carta extra')) return true;
+    if (p.hand.length < REG.maxMao && p.hand.length < Math.min(3, vagas) && p.coins - EXTRA >= R && (pf.buy === 1 || rnd() < pf.buy) && this.tenta('extra:' + p.hand.length, 'extra', [], 'comprou uma carta extra')) return true;
     // 12. paga dívida (com pressa se está perto do limite, os juros subiram ou o objetivo exige dívida zero)
     if (p.debt > 0) { const a = Math.min(LOAN, p.debt), urg = p.debt >= REG.limiteDivida * 0.7 || o.t === 'clean' || jurosPct() >= 10;
-      if (p.coins >= R + a + (urg ? 0 : 100) && (pf.pay === 1 || rnd() < pf.pay)) { if (this.tenta('pay', () => A.pay(), 'pagou da dívida')) return true; }
+      if (p.coins >= R + a + (urg ? 0 : 100) && (pf.pay === 1 || rnd() < pf.pay)) { if (this.tenta('pay', 'pay', [], 'pagou da dívida')) return true; }
       else if (urg && this.vender(p, R + a)) return true; }
     return false; },
 
