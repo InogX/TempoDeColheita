@@ -34,8 +34,8 @@
 |---|---|
 | 0 — Decisões e inventário | ✅ |
 | 1 — Identidade local e estado de interface | ✅ entregue (9 arquivos), testada em Node e **conferida no navegador pelo dono** (abriu normal). `janelas.js` e `qa.html` NÃO foram alterados: funcionam pela ponte `ligaUI()`. |
-| 2 — Resultado das ações | 🔄 entregue nesta conversa (5 arquivos), testada em Node; vira ✅ depois que o dono conferir no navegador (jogar, Mercado, Governo, evoluir, bots) e rodar o `qa.html`. |
-| 3 — Visão filtrada | ⬜ |
+| 2 — Resultado das ações | ✅ entregue (5 arquivos), testada em Node; o dono testou no navegador e confirmou que os alerts aparecem nos botões (esperado). O `qa.html` ainda não foi conferido com a Fase 2. |
+| 3 — Visão filtrada | 🔄 entregue nesta conversa (`visao.js` novo + `index.html`), testada em Node; vira ✅ depois que o dono conferir que o jogo local abre normal. Ainda não é usada pelo jogo (a Fase 7 liga). |
 | 4 — Camada de comandos | ⬜ |
 | 5 — Rede (`rede.js`) | ✅ entregue e testada no Firebase real pelo dono: duas abas de `teste-rede.html` no GitHub Pages criaram/entraram na sala e trocaram mensagem, e a aba *Uso* do Realtime Database mostrou as duas conexões. (Não foi testado ainda: dois aparelhos diferentes, 4G/5G, nem a parte de privacidade, que só vale após a Fase 9.) |
 | 6 — Lobby | ⬜ (próxima; usa `Rede.criar/entrar/aoJogadores/definirEstado` e `Rede.convite`) |
@@ -126,6 +126,17 @@ Nada disso trava o online, mas é melhor achar agora do que misturado com a rede
 - **Para a Fase 4:** `A.tentar` aceita QUALQUER ação de `A` (inclusive `new`, `quit`, `cont`, `modal`); a camada de comandos precisa de uma **lista permitida** e conferir quem enviou e se é a vez. `A.go` e `A.end` ainda não conferem a fase do turno (`go` duas vezes produziria duas vezes).
 - **Ainda com `alert` direto:** `dev.js` (só existe no jogo local) e o que for de interface.
 - **Atenção ao rodar o `qa.html`:** como recusas antes silenciosas agora chamam `alert`, o QA pode registrar mais alertas; se algo parecer errado, envie o `qa.html`.
+
+### Fase 3 entregue — o que mudou para as próximas fases
+- **Arquivos:** `visao.js` (novo) e `index.html` (uma linha: `<script src="visao.js">` depois de `pecas-tela.js`). Nenhum outro arquivo foi alterado.
+- **`viewFor(i)`**: cópia profunda e JSON puro do estado como o jogador `i` pode vê-lo; `viewFor(null)` = espectador. Segue `sees()`: moedas, dívida, estoque, plantios e contagem de cartas na mão só para quem pode ver; mão, objetivo, evento individual e estatísticas só do dono; baralhos, `uid` e `devAll` nunca; cofre só com "Tudo à vista". Cartas da mão postas à venda no Mercado ficam visíveis a todos (a janela precisa mostrá-las).
+- **Valores escondidos:** `coins`, `debt` e `res` ficam `null` (a tela nunca mostra um número falso); cartas ocultas da mão são `{ oculta: true }`.
+- **Teste:** conferência automática de privacidade (1000+ verificações em partidas de bots, para cada jogador e para o espectador), cenários de "Tudo à vista", "Revelar-se" e "Espiar", e a tela desenhando com a visão de cada jogador. Também **testei a própria bateria**: ao estragar o `visao.js` de 5 jeitos (vazar moedas, objetivo, mão, cofre, baralhos), ela detectou todos.
+- **Tamanho:** cerca de 5 KB por visão (mediana), máximo medido 12 KB. Cada ação do jogo manda uma visão por jogador; confira o consumo na aba *Uso* do Realtime Database depois da Fase 7.
+- **Para a Fase 7 (cliente):** ao receber a visão, o aparelho faz `S = visão`, `ligaUI()`, `EU = índice` e `render()`. O `sees()` calculado no cliente dá o mesmo resultado do anfitrião. Bots, `A.*` e `Bot.agenda()` só rodam no anfitrião (com o `S` completo).
+- **Bloqueio para a Fase 8:** o `janelas.js` atual ainda lê `cur()` (o jogador da vez). Com a visão filtrada isso quebra para quem não é o da vez (ex.: janelas de Governo e Objetivo). Precisa da migração para `me()` (a transformação já está pronta e testada; falta o `janelas.js` atual do dono, com o botão ✕ `.mx` da Parte 1).
+- **O registro (`log`) é público e já mostra o nome do evento individual de cada jogador** (isso já era assim no jogo local); se quiser esconder, é decisão de regra do jogo.
+- **Regra para o futuro:** ao criar um campo novo em `S` ou em um jogador, decida em `viewFor` se é público, condicional, só do dono ou secreto. A bateria avisa se algum campo de `S` não foi tratado.
 
 ### Decisões já tomadas (Fase 0)
 - **Arquitetura:** o navegador de um jogador (**anfitrião**) roda o jogo e os bots; os outros enviam ações e recebem uma visão filtrada. Não precisa de servidor próprio.

@@ -15,7 +15,7 @@ Se algo "se comporta errado" → use a tabela "Onde mexer" no fim deste arquivo.
 - **config.js** — Nomes das culturas, textos dos objetivos, **textos das regras dos eventos gerais (EVT)**, valores padrão, os baralhos novos (DECKS_V5 = eventos gerais) e a função que completa arquivos antigos (`migrate`).
 
 ## Páginas
-- **index.html** — A página do jogo. Só lista quais arquivos carregar (a ORDEM importa, não mude). Já tem as marcações para celular (`viewport-fit=cover` e `theme-color`). O `bot.js` entra logo depois de `acoes-mercado.js` e o `rede.js` logo depois do `bot.js`.
+- **index.html** — A página do jogo. Só lista quais arquivos carregar (a ORDEM importa, não mude). Já tem as marcações para celular (`viewport-fit=cover` e `theme-color`). O `bot.js` entra logo depois de `acoes-mercado.js` o `rede.js` logo depois do `bot.js` e o `visao.js` logo depois do `pecas-tela.js`.
 - **editor.html** — O editor de cartas e regras (use no Chrome/Edge). Não faz parte do jogo no celular.
 - **qa.html** — O robô de testes que joga sozinho e procura erros. (Atenção: `menu()` agora abre o menu principal, não mais o formulário; se o QA precisa do formulário, ele deve chamar `Menu.ir('novo')` ou usar `A.new({ nomes, bots, first })`.) Tem oráculos próprios dos eventos gerais (Greve, Praga, Feira, Embargo etc.) e um teste dirigido com valores calculados à mão para cada carta nova. **Ainda não foi rodado depois das mudanças de celular e do bot: rode-o antes da próxima etapa.**
 
@@ -37,10 +37,11 @@ Se algo "se comporta errado" → use a tabela "Onde mexer" no fim deste arquivo.
 12. **dev.js** — Ferramentas de teste (painel Dev; o alvo vem de `UI.devP`; ainda usa `alert` direto, pois só existe no jogo local): dar moedas, cartas, forçar eventos (o evento forçado também aplica os efeitos).
 13. **menu.js** — Os menus iniciais. `Menu.tela` escolhe a tela (`main`, `online`, `local`, `novo`, `criar`, `achar`, `config`); `Menu.ir('tela')` navega e `Menu.wip()` mostra o aviso de "em implementação". A tela `novo` tem número de jogadores, nomes, **escolha humano ou bot de cada jogador (`select.bt`)** e quem começa (`names()` mantém o digitado ao mudar o número de jogadores). A tela `config` guarda os valores em `Menu.cfg` (só na memória; não vão para o save). No celular tudo fica dentro de `<div class="menu">`.
 14. **pecas-tela.js** — Peças pequenas da tela: ícones de moeda/recurso, abas laterais, quem pode ver as informações de quem.
-15. **janelas.js** — As janelas de pop-up: Governo (inclui a Feira Regional), Mercado (mostra "fechado" no Embargo), Objetivo, Espiar, Ver jogador, Dev.
-16. **tela.js** — Desenha a tela principal (mostra os eventos ativos e o preço dos campos, "Grátis" no Incentivo) e ajusta o tamanho das cartas do centro. Mostra o jogador deste aparelho (`me()`) e, separado, quem está na vez (`cur()`). **Na vez de um bot mostra a tela do bot e chama `Bot.agenda()`** (no online, só o anfitrião deve rodar bots: ajuste da Fase 7). Estrutura para celular: `.top` = `.st` (texto) + `.acts` (botões); `.seats` agrupa as abas; `.board` agrupa campos à venda + seus campos; `#evb` é recolhível (`EVB_OPEN`). No PC esses grupos não mudam nada.
-17. **zoom.js** — (sempre mostra as cartas do jogador deste aparelho, `me()`) Ampliar carta, janela do campo, animação de melhoria, cliques e tecla Esc.
-18. **iniciar.js** — Liga o jogo (último a carregar): lê o link de convite (`?sala=CODIGO`, guardado em `Rede.convite`) e manda desenhar a primeira tela.
+15. **visao.js** — **Visão filtrada** (Fase 3). `viewFor(i)` devolve uma cópia do estado `S` como o jogador `i` pode vê-lo (`i = null`: espectador). É o que o anfitrião vai enviar a cada jogador no online; segredo não sai daqui. Público: nomes, bot/humano, quem saiu, campos (sem os plantios), noite/revelação, rodada, ordem, eventos, campos à venda, Mercado, registro e vencedor. Só quando `sees()` permite: moedas, dívida, estoque, plantios e quantas cartas há na mão (cartas ocultas viram `{ oculta: true }`). Só do próprio jogador: mão, objetivo, evento individual e estatísticas. Nunca vai: baralhos, `uid` e `devAll`; o cofre do Governo só com "Tudo à vista"; `peek` e `peekPend` só para quem deve ter. Valores escondidos viram `null`. Usa `sees()` de `pecas-tela.js`; não altera `S`.
+16. **janelas.js** — As janelas de pop-up: Governo (inclui a Feira Regional), Mercado (mostra "fechado" no Embargo), Objetivo, Espiar, Ver jogador, Dev.
+17. **tela.js** — Desenha a tela principal (mostra os eventos ativos e o preço dos campos, "Grátis" no Incentivo) e ajusta o tamanho das cartas do centro. Mostra o jogador deste aparelho (`me()`) e, separado, quem está na vez (`cur()`). **Na vez de um bot mostra a tela do bot e chama `Bot.agenda()`** (no online, só o anfitrião deve rodar bots: ajuste da Fase 7). Estrutura para celular: `.top` = `.st` (texto) + `.acts` (botões); `.seats` agrupa as abas; `.board` agrupa campos à venda + seus campos; `#evb` é recolhível (`EVB_OPEN`). No PC esses grupos não mudam nada.
+18. **zoom.js** — (sempre mostra as cartas do jogador deste aparelho, `me()`) Ampliar carta, janela do campo, animação de melhoria, cliques e tecla Esc.
+19. **iniciar.js** — Liga o jogo (último a carregar): lê o link de convite (`?sala=CODIGO`, guardado em `Rede.convite`) e manda desenhar a primeira tela.
 
 ## Bot (bot.js)
 - **Como joga:** cada passo escolhe UMA ação e a executa pelas mesmas ações do jogador (`A.go`, `A.pick/plantIn`, `A.up`, `A.sell`, `A.buyF`, `A.loan`, `A.pay`, `A.extra`, `A.buyFeira`, `A.listRes`, `A.buyM`, `A.cancel`, `A.end`). Ordem: recolhe ofertas antigas, sobrevive (vende tudo/empréstimo se faltar moeda), se o objetivo já está cumprido só vende a sobra, fecha objetivos de moedas, planta, evolui, usa a Feira, Mercado, converte estoque em moedas, compra campo, carta extra e paga dívida.
@@ -55,8 +56,11 @@ Se algo "se comporta errado" → use a tabela "Onde mexer" no fim deste arquivo.
 ## Resultado das ações (Fase 2)
 Toda ação do jogador (`A.*`) recusa por `recusa(msg)`: mostra o `alert` como sempre e devolve `false`. Quem precisa saber o resultado (bots, testes, a rede no online) chama `A.tentar('sell', 'soja', 5)` e recebe `{ ok, msg }`, sem `alert`. Recusas que antes eram silenciosas (plantar onde não cabe, pagar sem dívida, ofertar item que não é seu etc.) agora também dizem o motivo. `A.tentar` aceita qualquer ação de `A`; a lista do que a rede pode chamar é da Fase 4. `A.go` e `A.end` ainda não conferem fase nem turno (Fase 4).
 
+## Visão filtrada (Fase 3)
+`viewFor(i)` (visao.js) é a ÚNICA porta de saída do estado para outros jogadores: nada de `S` inteiro pela rede. Ao criar um campo novo em `S` ou em um jogador, decida se é público, só de quem `sees()` permite, só do dono ou nunca sai, e ajuste `viewFor`. O teste confere que todo campo de `S` foi tratado. Tamanho medido: cerca de 5 KB por visão (máximo 12 KB).
+
 ## Nomes que NÃO podem ser renomeados (o qa.html e o bot dependem deles)
-`UI`, `me()`, `eu()`, `cur()`, `S.peekPend`, `recusa`, `exec`, `A.tentar`, `#app`, `.menu`, `#mavs`, `#hud`, `.top`, `.center`, `.fs`, `.cards`, `.mine`, `.hand`, `.card`, `.side`, `.sideL`, `.sideR`, `.tab`, `#modal`, `.box`, `.wide`, `.mk`, `.gal`, `#evb`, `.log`, `#zoom`, `.zp`, `#n`, `#f`, `#nl`, **`.nm`** (um por jogador) e **`.bt`** (um por jogador, na mesma ordem de `.nm`). Também os campos de tela lidos pelas ações quando não há parâmetro: `#rq…`, `#rp…`, `#pr…`, `#fq…`. Pode ADICIONAR classes novas, não renomear as existentes.
+`UI`, `me()`, `eu()`, `cur()`, `S.peekPend`, `recusa`, `exec`, `A.tentar`, `viewFor`, `#app`, `.menu`, `#mavs`, `#hud`, `.top`, `.center`, `.fs`, `.cards`, `.mine`, `.hand`, `.card`, `.side`, `.sideL`, `.sideR`, `.tab`, `#modal`, `.box`, `.wide`, `.mk`, `.gal`, `#evb`, `.log`, `#zoom`, `.zp`, `#n`, `#f`, `#nl`, **`.nm`** (um por jogador) e **`.bt`** (um por jogador, na mesma ordem de `.nm`). Também os campos de tela lidos pelas ações quando não há parâmetro: `#rq…`, `#rp…`, `#pr…`, `#fq…`. Pode ADICIONAR classes novas, não renomear as existentes.
 
 ## Eventos gerais (20 cartas)
 Cada carta tem `dur` (rodadas) e, quando tem efeito especial, o campo `fx`. Os números (valor, %, limite...) são editáveis no editor.html e o texto da carta acompanha.
@@ -106,6 +110,7 @@ Regras de detalhe: o Auxílio só sai da rodada 10 em diante, uma vez por jogo e
 | Configurações (antigo Dev do menu inicial) | menu.js (`cfgHTML`, `Menu.cfg`) e acoes-turno.js (`A.new` lê `Menu.cfg`) |
 | Visual dos menus | style.css (bloco "Menus iniciais", no fim) |
 | Tela "Bot X está jogando..." | bot.js (`Bot.tela`) e o gancho em tela.js (`if (p.bot) ...`) |
+| O que cada jogador pode ver (privacidade, o que vai pela rede) | visao.js (`viewFor`) e pecas-tela.js (`sees`) |
 | Mensagem de recusa de uma ação / saber se a ação deu certo | acoes-*.js (`recusa`) e acoes-turno.js (`exec`, `A.tentar`) |
 | Quem sou eu / o que é só deste aparelho (janela aberta, carta escolhida) | consultas.js (`eu`, `me`) e estado.js (`UI`) |
 | Falar com o Firebase (criar/entrar na sala, enviar ações) | rede.js (só ele) |
