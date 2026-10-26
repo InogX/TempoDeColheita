@@ -13,7 +13,7 @@
 | **1. Mobile (visual)** | ✅ Testado pelo dono em **iOS e Android**: o jogo roda tranquilo até a fase atual. O `janelas.js` atual já desenha o ✕ `.mx` (a dúvida antiga está resolvida). Ficam para a Fase 8 só as janelas passarem a usar `me()`. |
 | **2. Bot** | ✅ Pronto, ligado e **testado no navegador pelo dono**. Desde a Fase 4 ele pede tudo pelos comandos (`Cmd`). |
 | **2,5. Menus** | ✅ Conferidos no celular pelo dono. Criar Sala e Achar Sala são do `lobby.js` (Fase 6), **testadas pelo dono com dois celulares conectados**. |
-| **3. Online** | **Fases 0 a 9 ✅ confirmadas pelo dono** (Fases 7 e 8 no essencial; ficam pendências menores, listadas em "Testes", que não travam a Fase 10). Regras de segurança **publicadas** e jogo funcionando sob elas. Testado até aqui só com **Android + PC (Windows) + 1 bot**. **Fase 10 ⬜ é a próxima** (4G/5G, sala lotada, iPhone, privacidade no console e as pendências menores). Fase 11 🔄 parcialmente pronta. |
+| **3. Online** | **Fases 0 a 9 ✅ confirmadas pelo dono** (Fases 7 e 8 no essencial; ficam pendências menores, listadas em "Testes", que não travam a Fase 10). Regras de segurança **publicadas** e jogo funcionando sob elas. Testado até aqui só com **Android + PC (Windows) + 1 bot**. **Fase 10 🔄 em andamento:** a bateria em Node passou (26/10/2026) e o roteiro do dono foi entregue (`ROTEIRO_FASE10.md`); falta o teste real (4G/5G, sala lotada, iPhone, privacidade no console, pendências menores). Fase 11 🔄 parcialmente pronta. |
 
 > **Conferido nos arquivos (23/10/2026):** a Fase 1 está no código (`UI`, `UIreset`, `ligaUI` em `estado.js`; `EU`/`eu()`/`me()` em `consultas.js`; `A.plantIn(fi, h)`); a Fase 2 também (`recusa`, `exec`, `A.tentar` em `acoes-turno.js`; as quatro `acoes-*.js` recusando com motivo); da Fase 3, o `index.html` carrega o `visao.js` (o arquivo não veio nesta rodada: vale a confirmação do dono de que o jogo abre normal e a conferência feita antes).
 
@@ -44,7 +44,7 @@
 | 7 — Sincronização e vez | ✅ **confirmada pelo dono** (Android + PC + bot): sincroniza, vez, transações, título da aba "🔔 Sua vez", eliminado segue assistindo. Pendências menores (espiar, recusa só do anfitrião, toque duplo) na seção "Testes". |
 | 8 — Janelas | ✅ **confirmada no essencial**: Mercado (vender, comprar, nomes corretos na tela) conferido. **Ainda não confirmados:** digitação preservada e teclado do celular no Mercado, Mercado na vez do bot, espiar, "Melhorar" como convidado (ver "Testes"). |
 | 9 — Robustez + regras de segurança | ✅ **confirmada pelo dono** (26/10/2026): convidado e anfitrião saindo pelo botão **e** perdendo a conexão, bot assumindo a vaga após ~30 s, reconexão devolvendo a vaga, convidado recarregando a página e voltando pelo código, link de convite, regras restritivas publicadas. Pendentes menores: retomada do anfitrião por F5, limpeza de salas antigas, conferência no console (ver "Testes"). |
-| 10 — Testes | ⬜ **próxima** (conversa nova, com o PROMPT 3). Agenda: **4G/5G** (dono não pôde testar ainda), **sala lotada** (consumo), **iPhone online** (nunca testado), privacidade no console com as regras publicadas, partida longa, e as pendências menores da seção "Testes". |
+| 10 — Testes | 🔄 **em andamento.** Bateria em Node ✅ (26/10/2026); **roteiro do dono entregue** (`ROTEIRO_FASE10.md`), aguardando os resultados. (Antes: conversa nova, com o PROMPT 3.) Agenda: **4G/5G** (dono não pôde testar ainda), **sala lotada** (consumo), **iPhone online** (nunca testado), privacidade no console com as regras publicadas, partida longa, e as pendências menores da seção "Testes". |
 | 11 — Publicação | 🔄 parte já pronta: o jogo está no GitHub Pages; falta só documentar o convite (`?sala=`) na prática |
 
 > Atualize este quadro quando cada fase for **entregue e testada**. Fases marcadas 🔄 só passam a ✅ depois que o arquivo novo for conferido.
@@ -97,6 +97,18 @@
 | ⬜ | Tela de espera fora da vez (conferência explícita) | Fora da vez: só registro, eventos e botões Mercado/Sair; loja, mão e "Encerrar turno" só na sua vez. Visto indiretamente na eliminação. |
 | ⬜ | Aviso "eliminado" | Conferir se a tela do eliminado mostra o aviso, além do registro. |
 
+
+**Fase 10 — bateria em Node (26/10/2026, arquivos reais + peças falsas para `cartas.js`/`config.js`/`rodada.js`/`objetivos.js`/`dev.js`; o harness usa `teste_comum.js`)**
+| Teste | Resultado |
+|---|---|
+| `teste_fase4.js` (comandos; 12 partidas de bots) | ✅ 115 certas, 0 falhas |
+| `teste_fase7.js` | ✅ 63 certas, 0 falhas (64 sob as regras) |
+| `teste_fase8.js` | ✅ 43 certas, 0 falhas (44 sob as regras) |
+| `teste_fase9.js` | ✅ 52 certas, 0 falhas (53 sob as regras) |
+| `teste_regras.js` (42 situações) | ✅ 42 certas, 0 erradas nas regras NOVAS. **A comparação com as antigas não rodou:** faltou o `regras_antigas.json`; usei uma cópia do teste que pula só essa coluna. |
+| **`teste_fase10_sala8.js` (novo)**: lobby REAL com 8 vagas (anfitrião + 1 convidado + 6 bots), um 9º não entra, 3 rodadas, privacidade do convidado, tamanhos | ✅ 11 certas, 0 falhas, 5 execuções seguidas (12 sob as regras). Estraguei o `visao.js` (vazar moedas, objetivo e mão) e o teste detectou. |
+| Medida: visões completas por convidado com 8 jogadores (6 bots, ação a ação) | ≈ **23 por rodada**. Cada ação (inclusive de bot) faz o anfitrião reenviar a visão inteira a **todos** os humanos. Tamanho no teste: visão ≈ 2,6 KB e estado ≈ 8 KB, com cartas simplificadas (**só um piso**). |
+**Não coberto pelo Node:** Firebase de verdade e o comportamento exato das regras (usar o Rules Playground), 4G/5G, iPhone, toque/teclado do celular, sala lotada com vários aparelhos humanos, partida longa de verdade, as cartas/rodada/objetivos reais. **Limites do Spark conferidos em 26/10/2026 (firebase.google.com/pricing):** 100 conexões simultâneas, 1 GB armazenado, 360 MB/dia de download (≈ 10 GB/mês).
 
 > **Nota (iPhone):** o Safari do iPhone não tem a função de vibrar, e um site não consegue avisar com o app fechado sem *push* (fora do plano gratuito simples). Com a página aberta o título da aba muda e a tela diz "Sua vez". Se isso incomodar, a próxima opção é um som curto quando chegar a sua vez (não foi feito).
 
@@ -292,7 +304,7 @@
 | **O resultado dos testes** | Este plano já traz o que o dono confirmou em 26/10/2026. Se fizer mais testes antes de abrir a conversa (4G/5G, sala lotada, iPhone), diga o que passou e o que falhou (passo, aparelho, o que apareceu). |
 | **online.js, rede.js, lobby.js, tela.js, regras_firebase.json** | O que a Fase 9 mexeu. |
 | **comandos.js, bot.js, janelas.js, zoom.js, visao.js, acoes-turno.js, acoes-economia.js, acoes-plantio.js, acoes-mercado.js, estado.js, consultas.js, menu.js, pecas-tela.js, index.html, iniciar.js** | Para os testes em Node com os arquivos reais. |
-| **teste_comum.js, teste_regras_motor.js, teste_fase4.js, teste_fase7.js, teste_fase8.js, teste_fase9.js, teste_regras.js** | Os testes. |
+| **teste_comum.js, teste_regras_motor.js, teste_fase4.js, teste_fase7.js, teste_fase8.js, teste_fase9.js, teste_fase10_sala8.js, teste_regras.js** e **regras_antigas.json** | Os testes (o `teste_regras.js` precisa do `regras_antigas.json` para a comparação). |
 | *(opcional)* **Prints** da aba *Uso* e dos dados do Realtime Database | Ajudam na conferência de consumo e de privacidade. |
 
 Não enviar: `cartas-visual.js` (visual puro, exceto se for mexer em `free/NV/vef/nm/evDesc`), `editor.html`, `qa.html`. O `firebaseConfig` já está no `rede.js`: não precisa colar de novo.
