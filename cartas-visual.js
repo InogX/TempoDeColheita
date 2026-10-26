@@ -8,10 +8,12 @@ const nm = c => c.slots ? (c.any ? fa(c).nomeCromada : fa(c).nome) || c.id : c.n
 const ex = c => (c.night ? ' · plantações de noite' : '') + ({ all: ' · todos veem tudo', self: ' · você revela suas informações', peek: ' · espie um jogador' }[c.reveal] || '');
 const vef = o => (o.t === 'mAll' || o.t === 'mSellTo') ? Math.max(1, Math.min(o.v, NJ() - 1)) : (o.esc ? Math.max(1, Math.ceil(o.v * Math.min(NJ() - 1, 4) / 4)) : o.v); // meta efetiva (escala com o nº de jogadores)
 const objTxt = o => (T[o.t] || o.t).replace('{v}', vef(o)).replace('{v2}', o.v2).replace('{n}', o.n).replace('{r}', o.r).replace('{floor}', o.floor).replace('{c}', CROPS[o.c]);
+const evTxt = (c, crop) => (EVT[c.fx] || '').replace(/\{(\w+)\}/g, (_, k) => k === 'c' ? (crop ? CROPS[crop] : 'uma cultura sorteada') : (c[k] ?? '')); // texto da regra do evento (a cultura sorteada vem do item de S.ev)
 const desc = c => c.t ? objTxt(c)
   : c.slots ? `${c.any ? 'Aceita qualquer cultura' : 'Aceita: ' + c.types.map(k => CROPS[k]).join(' / ')} · ${c.slots} vagas · ${price(c)} moedas`
   : c.crop ? `${CROPS[c.crop]} · nível ${c.nivel || 1} · ${NV(c).espacos} vaga(s) · +${NV(c).producao}/rodada · manut. ${NV(c).manut}`
-  : `${c.dur ? c.dur + ' rod. · ' : ''}${c.mult ? 'produção x' + c.mult.toFixed(2) + ' · ' : ''}${c.coins} moedas${ex(c)}`;
+  : [c.dur ? c.dur + ' rod.' : '', c.mult ? 'produção x' + c.mult.toFixed(2) : '', c.fx ? evTxt(c) : '', c.coins ? c.coins + ' moedas' : (c.fx || c.mult || c.night || c.reveal ? '' : '0 moedas'), ex(c).replace(/^ · /, '')].filter(Boolean).join(' · ');
+const evDesc = e => e.c.fx ? evTxt(e.c, e.crop) : desc(e.c); // descrição de um evento ATIVO (mostra a cultura sorteada)
 const NV = c => ASSETS.niveis[c.nivel || 1];
 const free = f => f.c.slots - f.plots.reduce((a, x) => a + NV(x.c).espacos, 0);
 const isNight = (p, f) => !f.c.any && (S.ev.some(e => e.c.night) || p.nightUntil >= S.round);

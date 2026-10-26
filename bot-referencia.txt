@@ -1,0 +1,31 @@
+function melhorPlantio(p) { let best = null;
+  p.hand.forEach((c, h) => p.fields.forEach((f, fi) => { if (!accepts(f, c.crop) || freeOf(f) < 1) return; let s = rnd();
+    if (p.obj.t === 'crop' && c.crop === p.obj.c) s += 3; if (p.obj.t === 'variety' && p.st.hc[c.crop] === 0 && !p.fields.some(g => g.plots.some(x => x.c.crop === c.crop))) s += 3; if (!best || s > best.s) best = { h, fi, s, c }; })); return best; }
+
+
+function decide(i, pf) { const p = S.players[i], o = p.obj, B = melhorPlantio(p);
+  if (B && rnd() < 0.93) { plantar(p, B.h, B.fi); return true; }
+  const U = melhorUp(p); if (U && rnd() < pf.up) { act(`${p.n} evolui ${CROPS[U.x.c.crop]} do nível ${lvl(U.x.c)} para ${lvl(U.x.c) + 1}`, () => A.up(U.fi, U.pi), oUp(U.fi, U.pi)); return true; }
+  if (['coins', 'income', 'clean'].includes(o.t) || p.coins < pf.reserve) { const k = K.filter(k => p.res[k] > 0 && S.gov >= CROP_PRICE[k]).sort((x, y) => p.res[y] * CROP_PRICE[y] - p.res[x] * CROP_PRICE[x])[0];
+    if (k) { act(`${p.n} vende ${p.res[k]} ${CROPS[k]} ao Governo (${CROP_PRICE[k]} cada)`, () => A.sell(k), oSell(k)); return true; } }
+  if (p.coins < 30 && p.debt <= 300 && S.gov >= LOAN && rnd() < 0.7) { act(`${p.n} pega empréstimo de ${LOAN}`, () => A.loan(), oLoan); return true; }
+  if (p.debt > 0 && p.coins > pf.reserve + 200) { act(`${p.n} paga ${Math.min(LOAN, p.debt)} da dívida`, () => A.pay(), oPay); return true; }
+  const opts = S.center.map((c, x) => ({ c, x, pr: modelPrice(c) })).filter(q => p.coins >= q.pr + pf.reserve * 0.5);
+  const precisa = p.hand.some(c => !p.fields.some(f => accepts(f, c.crop) && freeOf(f) >= 1)) || p.fields.length < 2 || (o.t === 'fields' && p.fields.length < o.v);
+  if (opts.length && precisa && (p.compras || 0) < REG.maxCompraCamposPorTurno && (!REG.maxCamposPorJogador || p.fields.length < REG.maxCamposPorJogador) && rnd() < pf.buy) { const q = opts.find(q => p.hand.some(c => q.c.any || q.c.types.includes(c.crop))) || opts.sort((a, b) => a.pr - b.pr)[0];
+    act(`${p.n} compra o campo ${q.c.id} por ${q.pr}`, () => A.buyF(q.x), oBuyF(q.x)); return true; }
+  if (p.hand.length < 3 && p.coins >= EXTRA + pf.reserve && p.fields.some(f => freeOf(f) >= 1) && rnd() < 0.6) { act(`${p.n} compra carta extra`, () => A.extra(), oExtra); return true; }
+  if (rnd() < pf.caos) { caos(p); return true; } return false; }
+
+
+
+
+function mercado(i, pf) { const p = S.players[i];
+  if (rnd() < 0.1 + 0.2 * pf.buy) { const k = pick(K.filter(k => p.res[k] >= 20)); if (k) { const q = ri(5, p.res[k]), pr = ri(1, 6);
+    act(`${p.n} abre o Mercado`, () => A.modal('mkt')); act(`${p.n} oferece ${q} ${CROPS[k]} a ${pr} moedas cada`, () => { inp('rq' + k, q); inp('rp' + k, pr); A.listRes(k); }, oListRes(k, q, pr)); } }
+  if (rnd() < 0.12 && p.hand.length) { const c = pick(p.hand), pr = ri(10, 60); act(`${p.n} abre o Mercado`, () => A.modal('mkt')); act(`${p.n} oferece a carta ${c.id} por ${pr}`, () => { inp('pr' + c.uid, pr); A.list('hand', c.uid); }, oList('hand', c.uid, pr)); }
+  S.mk.filter(live).slice(0, 3).forEach(l => { const comp = pick(S.players.map((q, x) => x).filter(x => x !== l.s && !S.players[x].out)); if (comp === undefined || rnd() > 0.5) return;
+    act(`${S.players[comp].n} abre o Mercado`, () => { A.modal('mkt'); A.act(comp); });
+    if (S.mk.some(x => x.id === l.id)) act(`${S.players[comp].n} tenta comprar a oferta de ${S.players[l.s].n} (${l.kind === 'res' ? l.qty + ' ' + CROPS[l.crop] + ' a ' + l.price : l.kind + ' por ' + l.price})`, () => A.buyM(l.id), oBuyM(l.id)); });
+  if (S.mk.length && rnd() < 0.15) { const l = pick(S.mk.filter(live).filter(x => x.s === i)); if (l) { act(`${p.n} abre o Mercado`, () => A.modal('mkt')); act(`${p.n} cancela a própria oferta`, () => A.cancel(l.id), oCancel(l.id)); } }
+  if (S.modal) act(`${p.n} fecha o Mercado`, () => A.modal(null)); }

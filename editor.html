@@ -21,7 +21,8 @@ img{width:44px;height:44px;object-fit:cover;border-radius:4px;vertical-align:mid
 <script>
 const $=s=>document.querySelector(s);
 const TIT={objetivo:'Objetivos',campo:'Campos (culturas aceitas)',plantacao:'Cartas de recurso (plantações) — uma por recurso',geral:'Eventos Gerais',individual:'Eventos Individuais'};
-const LAB={price:'Preço',slots:'Vagas',qtd:'Quantidade por rodada',custo:'Custo por rodada (manutenção)',dur:'Duração (rodadas)',mult:'Multiplicador',coins:'Moedas',v:'Valor'};
+const LAB={price:'Preço',slots:'Vagas',qtd:'Quantidade por rodada',custo:'Custo por rodada (manutenção)',dur:'Duração (rodadas)',mult:'Multiplicador',coins:'Moedas',v:'Valor',
+ valor:'Valor (moedas)',teto:'Preço máx. pago pelo Governo (moedas/un.)',pct:'Percentual (%)',fator:'Fator (x)',estoque:'Estoque por jogador na partida (x nº de jogadores)',limite:'Limite por jogador (de cada recurso)',preco:'Preço por unidade (moedas)',campoMax:'Campo grátis: custo máximo (moedas)',minRound:'Só a partir da rodada'};
 const CNAME={soja:'Soja',milho:'Milho',cana:'Cana-de-açúcar',cafe:'Café',algodao:'Algodão'};
 let dir,data,assets;
 const msg=t=>$('#st').textContent=t;

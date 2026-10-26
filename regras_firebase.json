@@ -1,0 +1,84 @@
+{
+  "rules": {
+    ".read": false,
+    ".write": false,
+    "salas": {
+      "$sala": {
+        "meta": {
+          ".read": "auth != null",
+          ".write": "auth != null && $sala.matches(/^[A-Z0-9]{4,8}$/) && (!data.exists() || data.child('host').val() === auth.uid)",
+          ".validate": "newData.hasChildren(['host', 'estado'])",
+          "host": {
+            ".validate": "newData.val() === auth.uid || newData.val() === data.val()"
+          },
+          "estado": {
+            ".validate": "newData.isString() && newData.val().matches(/^(lobby|jogando|fim)$/)"
+          },
+          "vagas": {
+            ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 8"
+          },
+          "criadaEm": {
+            ".validate": "newData.isNumber()"
+          },
+          "$outro": {
+            ".validate": false
+          }
+        },
+        "jogadores": {
+          ".read": "auth != null",
+          "$uid": {
+            ".write": "auth != null && (root.child('salas/' + $sala + '/meta/host').val() === auth.uid || (auth.uid === $uid && (data.exists() || root.child('salas/' + $sala + '/meta/estado').val() === 'lobby')))",
+            ".validate": "newData.hasChildren(['nome'])",
+            "nome": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 20"
+            },
+            "idx": {
+              ".validate": "newData.isNumber()"
+            },
+            "online": {
+              ".validate": "newData.isBoolean()"
+            },
+            "bot": {
+              ".validate": "newData.isString() && newData.val().matches(/^(facil|normal)?$/)"
+            },
+            "$outro": {
+              ".validate": false
+            }
+          }
+        },
+        "acoes": {
+          ".read": "auth != null && root.child('salas/' + $sala + '/meta/host').val() === auth.uid",
+          "$uid": {
+            ".write": "auth != null && ((auth.uid === $uid && root.child('salas/' + $sala + '/meta').exists()) || root.child('salas/' + $sala + '/meta/host').val() === auth.uid)",
+            "$id": {
+              ".validate": "newData.hasChildren(['tipo', 'ts'])",
+              "tipo": {
+                ".validate": "newData.isString() && newData.val().length <= 30"
+              },
+              "args": {
+                ".validate": "newData.isString() && newData.val().length <= 2000"
+              },
+              "ts": {
+                ".validate": "newData.isNumber()"
+              },
+              "$outro": {
+                ".validate": false
+              }
+            }
+          }
+        },
+        "visao": {
+          "$uid": {
+            ".read": "auth != null && auth.uid === $uid",
+            ".write": "auth != null && root.child('salas/' + $sala + '/meta/host').val() === auth.uid"
+          }
+        },
+        "estado": {
+          ".read": "auth != null && root.child('salas/' + $sala + '/meta/host').val() === auth.uid",
+          ".write": "auth != null && root.child('salas/' + $sala + '/meta/host').val() === auth.uid"
+        },
+        ".write": "auth != null && data.child('meta/host').val() === auth.uid && !newData.exists()"
+      }
+    }
+  }
+}

@@ -1,56 +1,186 @@
 # Tempo de Colheita — Fichas Técnicas dos Arquivos
 
 Todos os arquivos ficam na MESMA pasta (junto com a pasta `img/`).
-Para jogar: abra `index.html`. Para editar cartas: `editor.html`.
+Para jogar: abra `index.html` (no PC ou no celular). Para editar cartas: `editor.html`.
+
+## Fluxo dos menus
+`Jogar Online` → Criar Sala · Achar Sala · Buscar Partida (em breve) · Voltar. `Jogar Local` → Continuar Jogo (só se houver jogo salvo) · Novo Jogo · Tutorial (em breve) · Configurações (o antigo painel Dev) · Voltar. Criar Sala e Achar Sala funcionam (lobby.js): criam/entram na sala e levam à sala de espera; ao **Iniciar partida** o jogo online começa em todos os aparelhos (`online.js`). Buscar Partida e Tutorial mostram "Essa função encontra-se em implementação ainda". O link `?sala=CODIGO` abre direto a tela Achar Sala. Sair de uma partida volta ao menu principal.
 
 ## Regra de ouro
 Se for só mudar NÚMEROS e TEXTOS de cartas e regras → use o `editor.html` (não mexa em código).
 Se algo "se comporta errado" → use a tabela "Onde mexer" no fim deste arquivo.
 
 ## Arquivos de dados (o que o jogo "sabe")
-- **cartas.js** — O baralho: todos os objetivos, campos, cartas de recurso e eventos, mais preços, níveis e regras. É escrito pelo editor.html. Não edite à mão.
-- **config.js** — Nomes das culturas, textos dos objetivos, valores padrão e a função que completa arquivos antigos.
+- **cartas.js** — O baralho: objetivos, campos, cartas de recurso, os 20 eventos gerais e os individuais, mais preços, níveis e regras. É escrito pelo editor.html. Não edite à mão.
+- **config.js** — Nomes das culturas, textos dos objetivos, **textos das regras dos eventos gerais (EVT)**, valores padrão, os baralhos novos (DECKS_V5 = eventos gerais) e a função que completa arquivos antigos (`migrate`).
 
 ## Páginas
-- **index.html** — A página do jogo. Só lista quais arquivos carregar (a ORDEM importa, não mude).
-- **editor.html** — O editor de cartas e regras (use no Chrome/Edge).
-- **qa.html** — O robô de testes que joga sozinho e procura erros.
+- **index.html** — A página do jogo. Só lista quais arquivos carregar (a ORDEM importa, não mude). Já tem as marcações para celular (`viewport-fit=cover` e `theme-color`). O `comandos.js` entra logo depois de `acoes-mercado.js`, o `bot.js` logo depois dele, o `rede.js` logo depois do `bot.js`, o `lobby.js` logo depois do `menu.js`, o `visao.js` logo depois do `pecas-tela.js` e o `online.js` logo depois do `zoom.js` (antes do `iniciar.js`).
+- **editor.html** — O editor de cartas e regras (use no Chrome/Edge). Não faz parte do jogo no celular.
+- **qa.html** — O robô de testes que joga sozinho e procura erros. (Atenção: `menu()` agora abre o menu principal, não mais o formulário; se o QA precisa do formulário, ele deve chamar `Menu.ir('novo')` ou usar `A.new({ nomes, bots, first })`.) Tem oráculos próprios dos eventos gerais (Greve, Praga, Feira, Embargo etc.) e um teste dirigido com valores calculados à mão para cada carta nova. **Ainda não foi rodado depois das mudanças de celular, bot e online (o dono vai ajustá-lo mais tarde; ele não testa o jogo online).** Ele continua chamando `A.*` direto, sem passar pelos comandos (`Cmd`): continua valendo para conferir as regras do jogo, mas NÃO testa a camada de comandos (Fase 4).
 
 ## Aparência
-- **style.css** — Cuida só da aparência: cores, tamanhos, posição das cartas, abas laterais, mão, janelas, zoom e animação de melhoria. Não tem nenhuma regra do jogo.
+- **style.css** — Cuida só da aparência: cores, tamanhos, posição das cartas, abas laterais, mão, janelas, zoom e animação de melhoria. Agora é **responsivo** (celular em pé e deitado, tablet e PC, com media queries). No fim do arquivo está o bloco dos menus iniciais (`.menu .mb` botões grandes, `.mavs` aviso, `.sala` caixa do código, `.nmrow`/`.bt` humano ou bot) e logo depois o bloco das salas online (`.lbj` linha de jogador, `.pt` bolinha online/offline). Não tem nenhuma regra do jogo.
 
 ## Arquivos do motor do jogo (na ordem em que carregam)
-1. **estado.js** — Guarda as peças básicas: o estado da partida, as regras lidas do editor e o embaralhador.
-2. **cartas-visual.js** — Aparência e textos das cartas: nome, descrição, preço, nível, imagem de dia/noite.
-3. **consultas.js** — Perguntas rápidas: de quem é a vez, quem está vivo, comprar do baralho, se a carta cabe no campo, registro de eventos.
+1. **estado.js** — Guarda as peças básicas: o estado da partida (`S`), o **estado de interface deste aparelho (`UI`)**, as regras lidas do editor e o embaralhador. `UI` (janela aberta, carta escolhida, jogador sendo visto, "atuar como" do Mercado, ferramentas Dev) fica FORA de `S`: não vai para o save nem, no online, para os outros jogadores. `UIreset()` zera. `ligaUI()` é uma **ponte provisória**: faz `S.modal`, `S.plantSel`, `S.actor`, `S.viewing`, `S.viewRes`, `S.devP` e `S.dv` continuarem funcionando como atalhos (não enumeráveis, não vão ao save) para o código ainda não migrado (`janelas.js`, `qa.html`).
+2. **cartas-visual.js** — Aparência e textos das cartas: nome, descrição, preço, nível, imagem de dia/noite. Monta o texto das regras dos eventos (`evTxt`) e a descrição de um evento ATIVO com a cultura sorteada (`evDesc`). O bot usa daqui `free`, `NV`, `vef`, `nm` e `evDesc`: **não renomeie nem mude o que devolvem**.
+3. **consultas.js** — Perguntas rápidas: de quem é a vez (`cur()`), **quem sou eu neste aparelho (`eu()` índice, `me()` jogador; `EU` fica `null` no jogo local, onde acompanha a vez, e será fixo no online)**, `peekPend()` (devo escolher quem espiar?), quem está vivo, comprar do baralho, se a carta cabe no campo, registro de eventos. **Também guarda as consultas dos eventos ativos:** produção bloqueada (Greve/Praga/Tempestade), manutenção (Isenção/Incentivo), preço do Governo, juros, Taxa do Mercado, Embargo, campo grátis e limite da Feira.
 4. **objetivos.js** — Decide se um objetivo foi cumprido, se foi violado (eliminação) e quem vence a rodada.
-5. **rodada.js** — A virada de rodada: evento geral, juros, ordem dos jogadores, reposição dos campos à venda.
-6. **acoes-turno.js** — O fluxo da partida: novo jogo, continuar, sair, começar turno (produção e manutenção), encerrar turno.
-7. **acoes-economia.js** — Dinheiro com o Governo: comprar campo, empréstimo, pagar dívida, carta extra, vender recursos.
-8. **acoes-plantio.js** — Lavoura: escolher carta, plantar no campo, evoluir de nível.
-9. **acoes-mercado.js** — Mercado entre jogadores: ofertar, cancelar, comprar e contar as negociações.
-10. **dev.js** — Ferramentas de teste (painel Dev): dar moedas, cartas, forçar eventos.
-11. **menu.js** — Tela inicial: número de jogadores, nomes, quem começa.
-12. **pecas-tela.js** — Peças pequenas da tela: ícones de moeda/recurso, abas laterais, quem pode ver as informações de quem.
-13. **janelas.js** — As janelas de pop-up: Governo, Mercado, Objetivo, Espiar, Ver jogador, Dev.
-14. **tela.js** — Desenha a tela principal e ajusta o tamanho das cartas do centro.
-15. **zoom.js** — Ampliar carta, janela do campo, animação de melhoria, cliques e tecla Esc.
-16. **iniciar.js** — Liga o jogo (último a carregar).
+5. **rodada.js** — A virada de rodada: sorteia o evento geral (`sorteiaGeral`, com a trava do Auxílio), cria o evento ativo (`novoEvento`: cultura sorteada, estoque da Feira), aplica os efeitos de uma vez só (`efeitoImediato`: Recessão, Imposto, Auxílio, Mudas), executa a Alta demanda no fim da rodada (`fimDeRodada`), cobra juros, define a ordem dos jogadores e repõe os campos à venda.
+6. **acoes-turno.js** — O fluxo da partida: novo jogo, continuar, sair, começar turno (produção e manutenção com os efeitos dos eventos), encerrar turno. **Resultado das ações (Fase 2):** `recusa(msg)`, `exec(fn)` e `A.tentar(nome, ...args)` — rodam uma ação em silêncio (sem `alert`) e devolvem `{ ok, msg }`. O evento individual "espiar" deixa a pendência em `S.peekPend` (é parte do jogo; a janela de escolha aparece só para `eu()`). `A.cont()` migra saves antigos (tira os campos de interface de `S`). **`A.new()` lê o menu da tela ou recebe `{ nomes, bots, first }` como parâmetro** (assim a partida pode ser criada sem tela). Os campos Dev (moedas iniciais, recursos, ver tudo, objetivo de cada jogador) são lidos da tela e, se não estiverem nela, de `Menu.cfg` (a tela Configurações). `A.quit()` volta ao menu principal (**online, chama `Online.sair()`** e não mexe no jogo salvo); `A.act()` ("atuar como") não faz nada online. **`A.new({ ..., online: true })` ignora os campos Dev e `Menu.cfg`** (assim ninguém começa com moedas extras nem com "ver tudo", que vazaria tudo pela visão). Cada jogador tem `p.bot`: `''` (humano), `'facil'` ou `'normal'`.
+7. **acoes-economia.js** — (toda recusa diz o motivo e devolve `false`) Dinheiro com o Governo: comprar campo (com Incentivo Fiscal), empréstimo, pagar dívida, carta extra, vender recursos (com Governo paga +100%) e **comprar na Feira Regional**. `A.sell(k, qtd)` e `A.buyFeira(k, qtd)` aceitam a quantidade como parâmetro opcional (sem ela: vende tudo / lê o campo da tela).
+8. **acoes-plantio.js** — (toda recusa diz o motivo e devolve `false`) Lavoura: escolher carta (`UI.plantSel`), plantar no campo (`A.plantIn(fi, h)`: `h` opcional = carta da mão; sem ele usa a carta escolhida) e evoluir de nível.
+9. **acoes-mercado.js** — (toda recusa diz o motivo e devolve `false`; só se oferta e cancela o que é seu, e não se compra a própria oferta) Mercado entre jogadores: ofertar, cancelar, comprar (com Embargo e Taxa do Mercado) e contar as negociações. Quem atua é `UI.actor` ("atuar como" da janela). `A.listRes(k, qtd, preco)` e `A.list(kind, uid, preco)` aceitam os valores como parâmetros opcionais (sem eles: leem os campos da tela).
+10. **comandos.js** — **Camada de comandos (Fase 4).** O ÚNICO ponto por onde uma ação de jogo é pedida: botões da tela, janelas, zoom, bots e (no online) a rede. `Cmd.run(quem, 'sell', ['soja', 5])` confere quem pediu, se a partida está rodando, se é a vez dele, a fase do turno (começar / jogar / espiar pendente) e os argumentos; se algo estiver errado recusa com o motivo e nada muda. `Cmd.sell('soja')`, `Cmd.buyF(0)`, `Cmd.end()` etc. são os atalhos dos botões (jogador DESTE aparelho; mostram o `alert`; completam quantidade e preço lendo a tela). Detalhes na seção "Comandos" abaixo. Só cria um nome global: `Cmd`. **Online (Fase 7):** no convidado, `Cmd.nome(...)` só confere e ENVIA ao anfitrião (`Online.pede`); no anfitrião executa de verdade.
+11. **bot.js** — **Jogador controlado pelo computador** (níveis fácil e normal). Joga só pelos comandos (`Cmd.run`), com as mesmas regras de vez e de fase de um humano, sem ver o que um humano não veria. Tem a tela "Bot X está jogando..." e o teste `Bot.simular()`. Detalhes na seção "Bot" abaixo.
+12. **rede.js** — **Transporte online** (Firebase Realtime Database + login anônimo). É o ÚNICO arquivo que conhece o Firebase; não depende de `S`, `A` nem `Menu`. O SDK só é baixado ao chamar `Rede.iniciar()`, então o jogo local não gasta nada. Interface: `Rede.iniciar`, `criar(nome, vagas)`, `entrar(codigo, nome)`, `enviar(tipo, args)`, `aoAcao`, `aoVisao`, `aoJogadores`, `aoMeta`, `darVisao(s)`, `gravarEstado/lerEstado`, `definirEstado`, `sair`, `lerConvite`, `linkConvite` e as propriedades `Rede.uid/codigo/ehHost/naSala/convite`. **Fase 6 (só o anfitrião e só no lobby):** `adicionarBot(nivel)`, `removerJogador(chave)`, `fixarJogadores(ordem)` (grava idx 0..n-1) e `definirVagas(n)` (2 a 8); os nomes já saem limpos de `< > & " ' ` `. Para trocar de serviço no futuro, reescreva só este arquivo mantendo `Rede.*`. O lobby (`lobby.js`) e o jogo online (`online.js`, Fase 7) o usam. Não tem canal de resposta do anfitrião para o jogador: o `online.js` leva o "recibo" da jogada dentro da visão. **Fase 9:** `Rede.aoConexao(fn)` (este aparelho está conectado?), `Rede.removerSala()` (host apaga a sala inteira e sai; sem `Rede.sair()` depois) e `Rede.limparAntigas()` (apaga as salas que ESTE aparelho criou e que acabaram ou têm mais de 24 h; a lista fica em `tc_salas` no próprio aparelho; roda sozinha ao criar uma sala). `Rede.sair()` e a presença (`online:true` ao reconectar) **não recriam nada** numa sala que já foi apagada. Persistência padrão `local`: o uid sobrevive a recarregar a página, e `Rede.entrar` volta para a mesma vaga mesmo com a partida em andamento. Detalhes e estrutura gravada no cabeçalho do próprio arquivo.
+13. **dev.js** — Ferramentas de teste (painel Dev; o alvo vem de `UI.devP`; ainda usa `alert` direto, pois só existe no jogo local): dar moedas, cartas, forçar eventos (o evento forçado também aplica os efeitos).
+14. **menu.js** — Os menus iniciais. `Menu.tela` escolhe a tela (`main`, `online`, `local`, `novo`, `config`; `criar`, `achar` e `sala` vêm do `lobby.js`); `Menu.ir('tela')` navega e `Menu.wip()` mostra o aviso de "em implementação". A tela `novo` tem número de jogadores, nomes, **escolha humano ou bot de cada jogador (`select.bt`)** e quem começa (`names()` mantém o digitado ao mudar o número de jogadores). A tela `espera` (Fase 7) é o "Partida iniciando…" do convidado entre o fim do lobby e a primeira visão. A tela `config` guarda os valores em `Menu.cfg` (só na memória; não vão para o save). No celular tudo fica dentro de `<div class="menu">`.
+15. **lobby.js** — **Salas online (Fase 6).** As telas `Criar Sala`, `Achar Sala` e a sala de espera (`Menu.tela` = `criar`, `achar`, `sala`) e a lógica do lobby, falando só com `Rede`. Anfitrião: cria a sala (nome + 2 a 8 jogadores, bots contam), vê código e link de convite, vê quem conectou (bolinha online/offline), põe bots nas vagas livres (fácil/normal), tira jogadores (✕), muda as vagas, escolhe quem começa e inicia. Convidado: nome + código (o link `?sala=CODIGO` já vem preenchido), vê a lista e espera; se for removido ou a sala fechar, volta ao menu com aviso. Ao iniciar: grava a ordem final (idx 0, 1, 2…), põe a sala em `jogando` e chama `Lobby.aoIniciar(cfg)` em todos, com `cfg = { nomes, bots, first, uids, meuIdx, host }` (o formato de `A.new`). Sem `aoIniciar` mostra "Partida iniciada". **Fase 9:** "Fechar sala" põe `fim`, espera 1,2 s e APAGA a sala (`Rede.removerSala`); quando a partida começa o `online.js` chama `Lobby.desliga()` (o lobby para de ouvir a sala: antes ele reagia a "sala encerrada" com `Rede.sair()`, que desligava também os ouvintes do `online.js`, e o convidado nunca era avisado). Segurança: nomes vindos da rede são escapados ao desenhar e limpos (sem `< > & " ' ` `) em `cfg.nomes`; os botões usam a POSIÇÃO na lista, nunca texto da rede.
+16. **pecas-tela.js** — Peças pequenas da tela: ícones de moeda/recurso, abas laterais, quem pode ver as informações de quem.
+17. **visao.js** — **Visão filtrada** (Fase 3). `viewFor(i)` devolve uma cópia do estado `S` como o jogador `i` pode vê-lo (`i = null`: espectador). É o que o anfitrião vai enviar a cada jogador no online; segredo não sai daqui. Público: nomes, bot/humano, **o evento individual de jogadores BOT (Fase 7)**, quem saiu, campos (sem os plantios), noite/revelação, rodada, ordem, eventos, campos à venda, Mercado, registro e vencedor. Só quando `sees()` permite: moedas, dívida, estoque, plantios e quantas cartas há na mão (cartas ocultas viram `{ oculta: true }`). Só do próprio jogador: mão, objetivo, evento individual e estatísticas. Nunca vai: baralhos, `uid` e `devAll`; o cofre do Governo só com "Tudo à vista"; `peek` e `peekPend` só para quem deve ter. Valores escondidos viram `null`. Usa `sees()` de `pecas-tela.js`; não altera `S`.
+18. **janelas.js** — As janelas de pop-up: Governo (inclui a Feira Regional), Mercado (mostra "fechado" no Embargo), Objetivo, Espiar, Ver jogador, Dev. Os botões de jogo (espiar, empréstimo, pagar, carta extra, vender, Feira, Mercado) chamam `Cmd.*`; abrir/fechar e "atuar como" são interface (`A.modal`, `A.act`). O ✕ `.mx` já está desenhado. **Governo, Objetivo, Espiar e Ver jogador usam `me()` (Fase 7). Online (Fase 8):** o Mercado atua sempre pelo jogador deste aparelho ("Jogando como: X", sem o seletor "Atuar como"; variável `ai`); os botões que só valem na vez (Governo: empréstimo, pagar, carta extra, vender, Feira) ficam desativados fora dela com um aviso (variável `pode`); o painel Dev não é desenhado (a janela fecha). No jogo local nada disso muda.
+19. **tela.js** — Desenha a tela principal (mostra os eventos ativos e o preço dos campos, "Grátis" no Incentivo) e ajusta o tamanho das cartas do centro. Mostra o jogador deste aparelho (`me()`) e, separado, quem está na vez (`cur()`). **Na vez de um bot mostra a tela do bot e chama `Bot.agenda()`** (online, só o anfitrião roda bots). **Os botões de jogo chamam `Cmd.*`, nunca `A.*` direto** (`A.modal`, `A.quit`, `A.cancelPick` são interface). Na vez de um bot, a caixa de eventos mostra o evento individual DO BOT (`ie`), não o de quem olha. **Online (Fase 9): fora da sua vez o jogador vê a tela de ESPERA ("X está jogando...": só o registro, os eventos e os botões Mercado e Sair), igual à vez de um bot; o quadro completo (loja, mão, encerrar) só aparece na SUA vez.** **Online (Fase 8):** na vez de um bot a janela do Mercado pode ser aberta (desenhada junto da tela do bot); comprar campo fica desativado fora da sua vez. **Online (Fase 7):** o anfitrião publica a visão de cada jogador depois de cada mudança (`Online.aposRender()`); o convidado desenha a visão recebida (objetivo cumprido vem de `S.extra.feito`); não grava `tc_save`; sem botão Dev; "Passe o dispositivo" vira "Sua vez / Aguarde"; "Encerrar turno" só aparece na sua vez; jogador eliminado segue assistindo. Estrutura para celular: `.top` = `.st` (texto) + `.acts` (botões); `.seats` agrupa as abas; `.board` agrupa campos à venda + seus campos; `#evb` é recolhível (`EVB_OPEN`). No PC esses grupos não mudam nada.
+20. **zoom.js** — (sempre mostra as cartas do jogador deste aparelho, `me()`) Ampliar carta, janela do campo, animação de melhoria, cliques e tecla Esc. Online, "Melhorar" e "Plantar" ficam desativados fora da sua vez (Fase 8). `Z.up` pede a melhoria por `Cmd.up`: no jogo local a resposta vem na hora e a animação toca; no convidado online a resposta vem depois e `Z.resposta(ack)` toca a animação (ou reabre a janela do campo se recusada).
+21. **online.js** — **Jogo online (Fase 7).** Liga lobby, comandos e rede. `Lobby.aoIniciar(cfg)` → `Online.iniciar(cfg)`. **Anfitrião:** `EU = seu idx`, `A.new({ ..., online: true })`, ouve `Rede.aoAcao`, executa cada jogada por `Cmd.run(idx, tipo, args)` (o `idx` vem do uid de quem enviou; ignora `id` repetido) e publica a cada humano a SUA visão (`viewFor`) depois de cada mudança. **Convidado:** só envia (`Online.pede`) e desenha a visão recebida. O resultado de cada jogada volta como "recibo" dentro da visão. **Fase 9:** retomada do anfitrião (estado gravado), bot que assume a vaga de quem saiu/caiu, faixa de conexão e desistência quando o anfitrião some, apagar a sala ao sair. Detalhes nas seções "Jogo online (Fase 7)" e "Robustez (Fase 9)". Só cria um nome global: `Online` (também `window.Online`).
+22. **iniciar.js** — Liga o jogo (último a carregar): lê o link de convite (`?sala=CODIGO`, guardado em `Rede.convite`): se houver, abre direto a tela Achar Sala; depois manda desenhar a primeira tela.
+
+## Bot (bot.js)
+- **Como joga:** cada passo escolhe UMA ação e a pede pela camada de comandos (`go`, `plantIn`, `up`, `sell`, `buyF`, `loan`, `pay`, `extra`, `buyFeira`, `listRes`, `buyM`, `cancel`, `peek`, `end`), como um jogador qualquer. O único `A.*` direto é um `A.end()` de emergência, no tratamento de erro, para o jogo não travar. Ordem: recolhe ofertas antigas, sobrevive (vende tudo/empréstimo se faltar moeda), se o objetivo já está cumprido só vende a sobra, fecha objetivos de moedas, planta, evolui, usa a Feira, Mercado, converte estoque em moedas, compra campo, carta extra e paga dívida.
+- **Níveis:** `Bot.PF` (fácil: descuida, guarda pouca reserva; normal: persegue o objetivo e evita eliminação). **Velocidade:** `Bot.delay` (padrão 700 ms; 0 = o mais rápido). Há um botão ⏩ na tela do bot.
+- **Alert:** `Bot.tenta(chave, 'sell', [args])` pede o comando em silêncio (`Cmd.run`); se foi recusado ou nada mudou, não tenta de novo naquele turno. `Bot.cmd(p, nome, args)` faz o mesmo para go/peek/end e lança erro se recusado (o `acao()` trata e destrava o turno). O bot não mexe mais em `UI.actor`: o Mercado atua pelo remetente do comando.
+- **Online:** só o anfitrião roda bots (`Bot.agenda()` não faz nada no convidado) e o botão ⏩ só aparece nele; o convidado vê a tela "Bot X está jogando..." e (Fase 8) tem o botão 🤝 Mercado (só online; no jogo local a tela do bot não mudou).
+- **Evento individual:** o do bot é PÚBLICO (decisão do dono): na vez de um bot a caixa de eventos mostra o evento individual dele, com o nome do bot.
+- **Teste:** no console do navegador, `Bot.simular(20, 3, ['normal'])` roda 20 partidas só com bots, sem tela, e informa quantas terminaram, quem venceu, por qual objetivo e erros de estado. Não mexe na partida salva.
+- **Limites conhecidos:** com 2 jogadores alguns objetivos de muitas moedas ou de Mercado (`noLoan`, `allLvl`, `clean`, `mUnits`, `mProfit`, `noites`, `floorUntil`) podem não fechar em 150 rodadas (é questão de balanceamento). Os testes do bot foram feitos em Node, com as funções de `cartas-visual.js` simuladas.
+
+## Comandos (Fase 4)
+**Regra:** tudo que muda o jogo é pedido por `Cmd`. Botões, janelas, zoom, bots e (no online) a rede NUNCA chamam `A.*` de jogo direto. As ações `A.*` ficam como a "execução": só o `Cmd` as chama, depois de conferir.
+- **Comandos de jogo (15):** `go`, `end`, `buyF`, `loan`, `pay`, `extra`, `sell`, `buyFeira`, `plantIn`, `up`, `peek`, `listRes`, `list`, `cancel`, `buyM`. A lista está em `Cmd.nomes` (é a lista permitida da rede).
+- **Ações de interface (ficam em `A.*`, valem só neste aparelho, nunca vão pela rede):** `modal`, `act`, `view`, `pick`, `cancelPick`, `new`, `cont`, `quit`.
+- **Quando cada um vale** (campo `q` da tabela `CMD`, dentro de comandos.js): `inicio` (`go`) só na vez do jogador e antes de "Estou pronto"; `jogo` (`end`, `buyF`, `loan`, `pay`, `extra`, `sell`, `buyFeira`, `plantIn`, `up`) só na vez dele, depois de começar e sem "espiar" pendente; `peek` só para quem tem o espiar pendente; `mercado` (`listRes`, `list`, `cancel`, `buyM`) qualquer jogador vivo, a qualquer hora, atuando pelo REMETENTE (o "atuar como" do aparelho não conta).
+- **Argumentos sempre explícitos:** `plantIn(fi, h)` leva a posição da carta na mão; `listRes(k, qtd, preco)`, `list(tipo, uid, preco)`; `sell` e `buyFeira` aceitam quantidade opcional (sem ela: vende tudo / compra o máximo). Números viram inteiros positivos (até 1 bilhão); texto, `NaN`, `Infinity` e negativos são recusados. No uso local (`Cmd.sell('soja')`) o que faltar é completado pela tela, como antes (carta escolhida em `UI.plantSel`; campos `#fq…`, `#rq…`, `#rp…`, `#pr…`).
+- **Resposta:** `{ ok, msg }`. `Cmd.run(quem, nome, args)` é mudo (bots, testes, rede); `Cmd.run(quem, nome, args, false)` e os atalhos `Cmd.nome(...)` mostram o `alert` da recusa.
+- **Online (Fase 7):** no ANFITRIÃO, se `EU != null` e o remetente não é este aparelho (jogada de outro jogador ou de um bot), a `UI` do aparelho é guardada e devolvida depois do comando e a tela é redesenhada (o anfitrião não perde a janela aberta nem vê dados de outro jogador). No CONVIDADO, `Cmd.local` confere vez/fase/argumentos na hora (recusa imediata, com alerta) e, se estiver certo, chama `Online.pede`; devolve `{ ok: true, pendente: true }`. No jogo local (`EU` nulo) nada disso acontece. Online o remetente é sempre quem sou eu (o "atuar como" do Mercado não vale).
+- **Efeitos novos (visíveis no jogo local):** `go` duas vezes na mesma vez e `end` antes de começar o turno agora são recusados; com "espiar" pendente só `peek` é aceito (a janela já bloqueava a tela; agora o código também).
+- **Para criar uma ação nova:** escreva-a em `acoes-*.js` (com `recusa()`), acrescente uma linha na tabela `CMD` de comandos.js (quando vale + como limpar os argumentos) e chame-a na tela por `Cmd.nome(...)`.
+- **Teste:** `teste_fase4.js` (Node, arquivos reais + peças falsas das cartas) confere vez, fase, argumentos estranhos, Mercado fora da vez, o caminho remoto e o bot passando pela camada. Rode com `node teste_fase4.js` na pasta dos arquivos.
+
+## Quem sou eu e interface (Fase 1)
+`cur()` = quem joga agora. `me()`/`eu()` = quem é o jogador DESTE aparelho (no jogo local é o mesmo que `cur()`). As **telas, janelas e o zoom mostram `me()`**; as **ações continuam em `cur()`** (no online só valem na vez de quem enviou). Tudo que é só deste aparelho está em `UI`. O que é do jogo, mesmo parecendo interface (`S.hide`, `S.peek`, `S.peekPend`), continua em `S`.
+
+## Resultado das ações (Fase 2)
+Toda ação do jogador (`A.*`) recusa por `recusa(msg)`: mostra o `alert` como sempre e devolve `false`. Quem precisa saber o resultado (bots, testes, a rede no online) chama `A.tentar('sell', 'soja', 5)` e recebe `{ ok, msg }`, sem `alert`. Recusas que antes eram silenciosas (plantar onde não cabe, pagar sem dívida, ofertar item que não é seu etc.) agora também dizem o motivo. `A.tentar` aceita qualquer ação de `A` e fica só para testes e uso interno: **a rede e os botões usam `Cmd`** (seção abaixo), que tem a lista permitida e confere vez e fase. `A.go` e `A.end` em si não conferem fase (quem confere é o `Cmd`).
+
+## Visão filtrada (Fase 3)
+`viewFor(i)` (visao.js) é a ÚNICA porta de saída do estado para outros jogadores: nada de `S` inteiro pela rede. Ao criar um campo novo em `S` ou em um jogador, decida se é público, só de quem `sees()` permite, só do dono ou nunca sai, e ajuste `viewFor`. O teste confere que todo campo de `S` foi tratado. Tamanho medido: cerca de 5 KB por visão (máximo 12 KB).
+
+## Salas online (Fase 6)
+Fluxo: `Jogar Online → Criar Sala` (nome + jogadores) → sala de espera com o código e o link; o outro aparelho usa `Achar Sala` (ou o link). O anfitrião adiciona bots, tira jogadores, escolhe quem começa e **Iniciar partida**: `Rede.fixarJogadores` + `Rede.definirEstado('jogando')` + `Lobby.aoIniciar(cfg)`. Limites: de 2 a 8 jogadores por sala (regra do `rede.js` e do Apêndice A), bots contam; ninguém entra depois que a partida começa (só volta quem já estava, mesmo uid). Fechar a sala marca o estado `fim`, espera um instante e apaga a sala (os convidados voltam ao menu com aviso). Teste em duas pontas: use aparelhos ou navegadores diferentes (duas abas do mesmo navegador são o MESMO jogador).
+
+## Jogo online (Fase 7)
+**Quem faz o quê.** O ANFITRIÃO (quem criou a sala) roda o jogo de verdade: tem o `S` completo, roda os bots e decide tudo. Os CONVIDADOS não executam regra nenhuma: mandam a jogada e desenham o que o anfitrião devolve.
+- **Início:** o lobby chama `Lobby.aoIniciar(cfg)` em todos os aparelhos (`cfg = { nomes, bots, first, uids, meuIdx, host }`). Anfitrião: `EU = meuIdx`, `A.new({ nomes, bots, first, online: true })`, passa a ouvir `Rede.aoAcao`. Convidado: `EU = meuIdx`, mostra "Partida iniciando…" (tela `espera`) e passa a ouvir `Rede.aoVisao`.
+- **Jogada do convidado:** `Cmd.nome(...)` → confere na hora (vez, fase, argumentos) → `Rede.enviar(tipo, args)` → o anfitrião recebe (`Online.recebeAcao`), ignora `id` repetido, descobre quem é pelo UID (nunca pelo que veio escrito) e executa `Cmd.run(idx, tipo, args)` → publica a nova visão (e o recibo) → o convidado desenha. Só UMA jogada fica pendente por vez (toque duplo é ignorado); sem resposta em 8 s o botão é liberado e aparece um aviso.
+- **Recibo (`ack = { id, tipo, ok, msg }`):** o `rede.js` não tem canal de resposta, então o anfitrião põe o resultado da última jogada de cada jogador DENTRO da visão. É assim que o convidado vê "Sem estoque", "Moedas insuficientes" etc. Ao receber um recibo `ok`, o convidado faz o que o `A.*` faz na interface local (`plantIn` limpa a carta escolhida; `end` fecha janelas; `peek` fecha a janela).
+- **Visão publicada** = `viewFor(i)` + `sessao` (muda se o anfitrião reiniciar) + `n` (cresce a cada envio; o convidado ignora visão velha) + `extra.feito` (objetivo cumprido, calculado no anfitrião) + `ack`. Só vai a humanos que não são o anfitrião; é agrupada (espera 40 ms) para juntar mudanças seguidas. **Só publica se o estado `S` mudou** (mudar de janela no aparelho não gasta rede).
+- **Vez:** a tela "Passe o dispositivo" vira "Sua vez, X! [Começar meu turno]" para quem joga e "Vez de X — aguarde" para os outros. Ao chegar a SUA vez o título da página muda para "🔔 Sua vez!" e o celular vibra (se o navegador deixar).
+- **Sair:** `A.quit()` → `Online.sair()`. Convidado: confirma e sai. Anfitrião: confirma que **encerra a partida para todos** (`definirEstado('fim')`); os convidados voltam ao menu com o aviso "A sala foi encerrada pelo anfitrião.". Depois de uma vitória sai sem confirmar.
+- **O que o online NÃO faz:** lê `Menu.cfg` (Configurações/Dev), grava `tc_save` (o jogo salvo é do jogo local), mostra o botão Dev, ou deixa agir "como outro jogador" no Mercado.
+- **Janelas (Fase 8):** o Mercado atua pelo jogador deste aparelho; Governo/comprar campo/Melhorar/Plantar ficam desativados fora da vez; não existe Dev online; **na vez de um bot dá para abrir o Mercado**.
+- **O que se digita sobrevive ao redesenho:** a tela é redesenhada a cada visão nova (e, no anfitrião, a cada jogada de bot ou de outro jogador). `Online.campos()` guarda os campos de texto da tela (quantidade e preço do Mercado, Feira), o campo em foco com o cursor e a rolagem da janela; `Online.restaura()` os devolve; `Online.desenha()` faz `render()` com isso. Depois de uma jogada ACEITA (`listRes`, `list`, `buyFeira`) os campos dela voltam vazios (`Online.idsDe`).
+- **Limites conhecidos:** o jogador que sai do jogo volta com o mesmo aparelho/navegador (o uid mora nele); outro navegador ou aparelho não consegue voltar a uma partida em andamento. O iPhone não vibra quando chega a sua vez (o Safari não tem essa função: o título da aba muda, mas só ajuda com a página aberta). Notificação com o app fechado não existe (exigiria push, fora do plano gratuito simples).
+- **Custo:** cada mudança manda ~5 a 12 KB a cada humano. Confira a aba *Uso* do Realtime Database depois de uma partida longa (limite gratuito: 10 GB/mês de download).
+- **Testes:** `teste_fase8.js` (janelas: Mercado sem "atuar como", digitação/foco/rolagem preservados, botões desativados fora da vez, espiar, ver jogador, objetivo, Mercado na vez do bot, Dev ausente, jogo local intacto) usa as peças de `teste_comum.js` (Firebase falso, aparelho, partida, DOM de teste que entende `<input>`, foco e rolagem). `teste_fase7.js` (Node) liga DOIS aparelhos (arquivos reais do jogo) pelo `rede.js` REAL sobre um Firebase falso em memória e confere início, privacidade (nada do anfitrião vaza na visão), vez, recibo, recusa, toque duplo, entrega repetida, remetente falso, bot só no anfitrião, `Z.up` assíncrono, eliminado, vitória, saída e sala encerrada. `node teste_fase7.js` na pasta dos arquivos (a variável `LAT=ms` muda a latência das escritas). Não testa o Firebase de verdade nem o `lobby.js`.
+
+## Robustez (Fase 9)
+**O que acontece quando alguém some.** Tudo isto está em `online.js`; os tempos são propriedades de `Online` (os testes encurtam): `ESPERA_VAGA_MS` 30 s, `ESPERA_ANFITRIAO_MS` 120 s, `SALVA_MS` 0,8 s, `FIM_MS` 1,2 s, `DESCARTE_MS` 1,5 s.
+- **Convidado SAI (botão Sair):** avisa o anfitrião com a ação `saindo` (não passa por `Cmd`; o `recebeAcao` a trata) e um BOT assume a vaga na hora (`S.players[i].bot = 'normal'`, `ex = 1`, o registro avisa). A partida não trava na vez dele.
+- **Convidado PERDE A CONEXÃO** (fechou a página, ficou sem sinal): o anfitrião vê `online:false` (aviso na tela) e, depois de `ESPERA_VAGA_MS`, o bot assume. Quando o jogador volta (`Rede.entrar` com o mesmo uid; pelo link `?sala=` ou pelo código) a vaga é DEVOLVIDA (`bot = ''`) e ele recebe a visão atual. Um jogador com a vaga assumida ainda recebe visões (assiste) e suas jogadas são recusadas ("um bot está jogando no seu lugar").
+- **Anfitrião SAI (botão Sair):** põe a sala em `fim`, espera `FIM_MS` (os convidados são avisados e voltam ao menu) e APAGA a sala (`Rede.removerSala`).
+- **Anfitrião CAI ou recarrega a página:** o convidado vê a faixa vermelha "O anfitrião está desconectado… (N s)". Se o anfitrião voltar a tempo (mesmo sem recarregar), a faixa some. Se passar `ESPERA_ANFITRIAO_MS`, o convidado volta ao menu com o código da sala (a vaga dele continua, dá para voltar se o anfitrião retomar).
+- **RETOMADA:** o anfitrião grava o estado COMPLETO (`Rede.gravarEstado(S)`) a cada mudança (junta mudanças em `SALVA_MS`; também tenta ao fechar a página, `pagehide`). Ao voltar (Achar Sala com o código, ou o link) o `Online.iniciar` do anfitrião lê `Rede.lerEstado()`: se houver partida salva com o mesmo número de jogadores, RETOMA (`retoma`) em vez de começar outra; se não conseguir ler, NÃO começa outra por cima (avisa e sai). Jogadas que ficaram na fila de antes da volta são descartadas por `DESCARTE_MS` (o convidado vê "o anfitrião acabou de voltar, tente de novo"). A sessão (`sessao`) muda e os convidados recomeçam a contagem de visões.
+- **Conexão do próprio aparelho:** `Rede.aoConexao` mostra a faixa "📡 Sem conexão" (no convidado e no anfitrião); enquanto está sem conexão o convidado não desiste do anfitrião, e ao reconectar ganha uma janela nova de espera.
+- **Sem lixo:** `Rede.sair()` e a presença não recriam nada numa sala já apagada; `Rede.limparAntigas()` apaga as MINHAS salas encerradas ou com mais de 24 h (nunca a sala em uso, nunca de outro anfitrião).
+- **Teste:** `teste_fase9.js` (Node, dois aparelhos, lobby e rede REAIS sobre o Firebase falso com queda/volta de conexão): tela de espera, lobby solto, anfitrião sai, convidado sai (só pelo aviso `saindo`), convidado cai e volta, anfitrião cai e volta, anfitrião some, retomada (moedas, rodada, fila antiga descartada), limpeza de salas, fechar sala no lobby.
+
+## Regras de segurança do banco (Fase 9)
+- **Arquivo:** `regras_firebase.json` (colar em *Realtime Database › Regras › Publicar*). `regras_antigas.json` é o Apêndice A original, só para comparar. Diferenças: (1) o anfitrião pode APAGAR a sala inteira (`$sala/.write` só para exclusão: sem isso `Rede.removerSala`/"Sair" do anfitrião é NEGADO); (2) ninguém cria caixa de ações em sala que não existe; (3) `args` de uma ação tem no máximo 2000 caracteres.
+- **O que garantem:** só quem tem login lê/escreve; só o dono lê a própria visão; só o anfitrião lê o estado completo e as caixas de ação; só o anfitrião escreve visões/estado/meta; cada jogador escreve só a própria vaga e a própria caixa; ninguém entra em partida em andamento (só volta quem já estava); ninguém lista as salas; nada fora de `/salas`.
+- **Teste:** `teste_regras.js` roda 42 situações (as mesmas do Rules Playground) contra as regras novas e as antigas com um INTERPRETADOR SIMPLIFICADO das regras (`teste_regras_motor.js`). Além disso, `REGRAS=regras_firebase.json node teste_fase9.js` (e as Fases 7 e 8) roda o jogo inteiro SOB as regras e falha se qualquer operação for negada. **É uma simulação minha, não o Firebase: confira no Rules Playground e jogando.**
+
+## Nomes que NÃO podem ser renomeados (o qa.html e o bot dependem deles)
+`UI`, `me()`, `eu()`, `cur()`, `S.peekPend`, `recusa`, `exec`, `A.tentar`, `viewFor`, `Cmd` (e `Cmd.run`, `Cmd.nomes`, os atalhos `Cmd.<comando>`), `Lobby` (e `Lobby.aoIniciar`, `Lobby.cfgPartida`), `Online` (e `Online.iniciar`, `Online.aposRender`, `Online.pede`, `Online.sair`, `Online.ativo`, `Online.host`), `Z.resposta`, `#onl-aviso`, `#onl-faixa`, a ação `saindo`, `Rede.aoConexao`, `Rede.removerSala`, `Rede.limparAntigas`, `tc_salas`, `Online.campos/restaura/desenha`, os ids `rq…`, `rp…`, `pr…`, `fq…` (a digitação é guardada por id), `Rede.*`, `#app`, `.menu`, `#mavs`, `#hud`, `.top`, `.center`, `.fs`, `.cards`, `.mine`, `.hand`, `.card`, `.side`, `.sideL`, `.sideR`, `.tab`, `#modal`, `.box`, `.wide`, `.mk`, `.gal`, `#evb`, `.log`, `#zoom`, `.zp`, `#n`, `#f`, `#nl`, **`.nm`** (um por jogador) e **`.bt`** (um por jogador, na mesma ordem de `.nm`). Também os campos de tela lidos pelas ações quando não há parâmetro: `#rq…`, `#rp…`, `#pr…`, `#fq…`. Pode ADICIONAR classes novas, não renomear as existentes.
+
+## Eventos gerais (20 cartas)
+Cada carta tem `dur` (rodadas) e, quando tem efeito especial, o campo `fx`. Os números (valor, %, limite...) são editáveis no editor.html e o texto da carta acompanha.
+
+| Carta | fx / campo | Onde a regra está |
+|---|---|---|
+| Chuva generosa (x1,5 · 2 rod.) | `mult` | acoes-turno.js |
+| Safra recorde (x2 · 1 rod.) | `mult` | acoes-turno.js |
+| Clima ameno (x1,25 · 3 rod.) | `mult` | acoes-turno.js |
+| Feira Regional | `feira` (estoque, limite, preco) | rodada.js (estoque) · acoes-economia.js (`buyFeira`) · janelas.js |
+| Alta demanda | `demanda` (teto) | rodada.js (`fimDeRodada`) |
+| Governo paga +100% | `govPaga` (fator) | consultas.js (`govPreco`) · acoes-economia.js |
+| Incentivo Fiscal (2 rod.) | `incentivo` (pct, campoMax) | consultas.js (`manutOf`, `campoGratis`) · acoes-economia.js |
+| Isenção | `isencao` | consultas.js (`manutOf`) |
+| Auxílio aos pequenos | `auxilio` (valor, minRound) | rodada.js (`geralOk`, `efeitoImediato`) |
+| Entrega de mudas | `mudas` | rodada.js (`efeitoImediato`) |
+| Campos noturnos (2 rod.) | `night` | cartas-visual.js (`isNight`) |
+| Tudo à vista (2 rod.) | `reveal: all` | pecas-tela.js (`sees`) |
+| Recessão | `recessao` (valor) | rodada.js (`efeitoImediato`) |
+| Praga (cultura sorteada) | `praga` | consultas.js (`prodBloqueada`) |
+| Juros em alta (2 rod.) | `juros` (fator) | consultas.js (`jurosPct`) · rodada.js |
+| Embargo | `embargo` | consultas.js · acoes-mercado.js · janelas.js |
+| Taxa do Mercado (2 rod.) | `taxa` (pct) | consultas.js (`taxaMercado`) · acoes-mercado.js |
+| Imposto sobre fortunas | `imposto` (valor) | rodada.js (`efeitoImediato`) |
+| Tempestade | `tempestade` | consultas.js (`prodBloqueada`) |
+| Greve | `greve` | consultas.js (`prodBloqueada`) |
+
+Regras de detalhe: o Auxílio só sai da rodada 10 em diante, uma vez por jogo e com 3+ jogadores (carta barrada volta ao baralho). Entrega de mudas passa do limite da mão. Recessão e Imposto vão para o cofre do Governo. O Governo paga 1 moeda por recurso por padrão (editável em "Governo paga por unidade").
 
 ## Onde mexer (guia rápido)
 | Quero mudar... | Arquivo |
 |---|---|
-| Valores, preços, regras, sprites | editor.html |
+| Valores, preços, regras, sprites, números dos eventos | editor.html |
 | Texto de um tipo de objetivo | config.js |
+| Texto da regra de um evento geral | config.js (EVT) |
+| Trocar/adicionar cartas de evento geral | config.js (DECKS_V5) e depois abrir/salvar no editor.html |
 | Condição para vencer um objetivo | objetivos.js |
-| O que acontece na virada de rodada | rodada.js |
-| Produção/manutenção no início do turno | acoes-turno.js |
-| Empréstimo, juros pagos, venda ao Governo | acoes-economia.js |
+| O que acontece na virada de rodada / efeitos imediatos dos eventos | rodada.js |
+| Produção/manutenção no início do turno | acoes-turno.js (e consultas.js para os efeitos dos eventos) |
+| Empréstimo, juros pagos, venda ao Governo, compra de campo, Feira | acoes-economia.js |
 | Plantar ou evoluir | acoes-plantio.js |
-| Mercado entre jogadores | acoes-mercado.js |
-| Cores, tamanhos e posições (visual) | style.css |
+| Mercado entre jogadores (Embargo, Taxa) | acoes-mercado.js |
+| Como o bot decide, níveis fácil/normal, velocidade | bot.js (`Bot.PF`, `Bot.delay`) |
+| Testar o bot jogando sozinho | console do navegador: `Bot.simular(...)` |
+| Quem é bot (seleção no menu) | menu.js (`.bt`) e acoes-turno.js (`A.new`) |
+| Opções e textos dos menus, o que cada botão faz | menu.js |
+| Telas e regras do lobby (criar/achar/sala, bots, iniciar) | lobby.js |
+| Funções do anfitrião no Firebase (bots, idx, vagas) | rede.js |
+| Configurações (antigo Dev do menu inicial) | menu.js (`cfgHTML`, `Menu.cfg`) e acoes-turno.js (`A.new` lê `Menu.cfg`) |
+| Visual dos menus | style.css (bloco "Menus iniciais", no fim) |
+| Tela "Bot X está jogando..." | bot.js (`Bot.tela`) e o gancho em tela.js (`if (p.bot) ...`) |
+| O que cada jogador pode ver (privacidade, o que vai pela rede) | visao.js (`viewFor`) e pecas-tela.js (`sees`) |
+| Mensagem de recusa de uma ação / saber se a ação deu certo | acoes-*.js (`recusa`) e acoes-turno.js (`exec`, `A.tentar`) |
+| Quem pode fazer o quê e quando (vez, fase do turno, argumentos permitidos), lista de comandos da rede | comandos.js (tabela `CMD`) |
+| Criar uma ação nova de jogo | acoes-*.js (a ação) + comandos.js (linha na tabela `CMD`) + o botão chamando `Cmd.nome(...)` |
+| Quem sou eu / o que é só deste aparelho (janela aberta, carta escolhida) | consultas.js (`eu`, `me`) e estado.js (`UI`) |
+| Falar com o Firebase (criar/entrar na sala, enviar ações) | rede.js (só ele) |
+| Quanto esperar antes de um bot assumir a vaga / de o convidado desistir do anfitrião / salvar o estado | online.js (`ESPERA_VAGA_MS`, `ESPERA_ANFITRIAO_MS`, `SALVA_MS`...) |
+| Quem pode ler/escrever o quê no banco | regras_firebase.json (e confira com `teste_regras.js`) |
+| A tela que o jogador vê esperando a vez dos outros | tela.js (`if (on && !mv)`) |
+| Jogo online: quem executa, o que é publicado, recibo da jogada, sair, aviso "sua vez" | online.js |
+| O que o convidado desenha e o que muda online na tela (vez, eliminado, sem Dev) | tela.js (variável `on`) |
+| O que o jogador digita/rolagem sobrevive ao redesenho online | online.js (`campos`, `restaura`, `desenha`) e comandos.js (`Cmd.aplica`, no anfitrião) |
+| Botões das janelas desativados fora da vez; Mercado sem "atuar como" online | janelas.js (`online`, `pode`, `dis`, `ai`) |
+| Cores, tamanhos e posições (visual, inclusive celular) | style.css |
 | Quais elementos aparecem na tela principal | tela.js |
-| Janelas (Governo, Mercado...) | janelas.js |
+| Janelas (Governo, Feira, Mercado...) | janelas.js |
+| Montagem da partida (jogadores, humano/bot, quem começa) | menu.js (`formJogo`, `names`) |
 | Zoom/animação de carta (lógica) | zoom.js |
 | Duração da animação de melhoria | zoom.js (UPGRADE_MS) e style.css (2s nas animações) |
 | Ferramentas de teste | dev.js |
+| Testes automáticos | qa.html |

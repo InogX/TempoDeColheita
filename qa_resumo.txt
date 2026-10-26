@@ -1,46 +1,15 @@
 QA do Tempo de Colheita (QA 1.2)
-Status: FINALIZADO - atualizado em 22/10/2026, 05:14:07
-Início: 21/10/2026, 23:40:02
-Janela: 23:39 até 05:40
+Status: FINALIZADO - atualizado em 24/10/2026, 17:59:57
+Início: 24/10/2026, 17:59:51
+Janela: 17:59 até 03:40
 
-Partidas concluídas: 5085 (sem vencedor no limite de 150 rodadas: 20)
-Média de rodadas por partida: 7.1
-Rodadas de testes dirigidos: 205
+Partidas concluídas: 0 (sem vencedor no limite de 150 rodadas: 0)
+Média de rodadas por partida: -
+Rodadas de testes dirigidos: 1
 Jogadores por partida: aleatório
 
 Relatório detalhado:
-> Quantidade de partidas: 5085
->> Por participantes
->>> 2 participantes: 560 (média de 15.0 rodadas | decididas por desempate: 24 | sem vencedor: 16)
->>>> Jogador 1: 276(49.3%) | Jogador 2: 268(47.9%)
->>> 3 participantes: 565 (média de 10.7 rodadas | decididas por desempate: 42 | sem vencedor: 4)
->>>> Jogador 1: 170(30.1%) | Jogador 2: 214(37.9%) | Jogador 3: 177(31.3%)
->>> 4 participantes: 565 (média de 7.1 rodadas | decididas por desempate: 66 | sem vencedor: 0)
->>>> Jogador 1: 151(26.7%) | Jogador 2: 131(23.2%) | Jogador 3: 139(24.6%) | Jogador 4: 144(25.5%)
->>> 5 participantes: 564 (média de 5.8 rodadas | decididas por desempate: 53 | sem vencedor: 0)
->>>> Jogador 1: 123(21.8%) | Jogador 2: 111(19.7%) | Jogador 3: 107(19.0%) | Jogador 4: 112(19.9%) | Jogador 5: 111(19.7%)
->>> 6 participantes: 567 (média de 5.7 rodadas | decididas por desempate: 92 | sem vencedor: 0)
->>>> Jogador 1: 88(15.5%) | Jogador 2: 87(15.3%) | Jogador 3: 108(19.0%) | Jogador 4: 98(17.3%) | Jogador 5: 110(19.4%) | Jogador 6: 76(13.4%)
->>> 7 participantes: 566 (média de 5.3 rodadas | decididas por desempate: 107 | sem vencedor: 0)
->>>> Jogador 1: 86(15.2%) | Jogador 2: 84(14.8%) | Jogador 3: 85(15.0%) | Jogador 4: 87(15.4%) | Jogador 5: 85(15.0%) | Jogador 6: 73(12.9%) | Jogador 7: 66(11.7%)
->>> 8 participantes: 567 (média de 5.3 rodadas | decididas por desempate: 111 | sem vencedor: 0)
->>>> Jogador 1: 66(11.6%) | Jogador 2: 82(14.5%) | Jogador 3: 88(15.5%) | Jogador 4: 60(10.6%) | Jogador 5: 72(12.7%) | Jogador 6: 70(12.3%) | Jogador 7: 55(9.7%) | Jogador 8: 74(13.1%)
->>> 9 participantes: 565 (média de 4.7 rodadas | decididas por desempate: 109 | sem vencedor: 0)
->>>> Jogador 1: 63(11.2%) | Jogador 2: 73(12.9%) | Jogador 3: 64(11.3%) | Jogador 4: 74(13.1%) | Jogador 5: 62(11.0%) | Jogador 6: 56(9.9%) | Jogador 7: 58(10.3%) | Jogador 8: 63(11.2%) | Jogador 9: 52(9.2%)
->>> 10 participantes: 566 (média de 4.6 rodadas | decididas por desempate: 96 | sem vencedor: 0)
->>>> Jogador 1: 47(8.3%) | Jogador 2: 64(11.3%) | Jogador 3: 51(9.0%) | Jogador 4: 49(8.7%) | Jogador 5: 52(9.2%) | Jogador 6: 54(9.5%) | Jogador 7: 63(11.1%) | Jogador 8: 74(13.1%) | Jogador 9: 61(10.8%) | Jogador 10: 51(9.0%)
+> Quantidade de partidas: 0
 
-> Resumo geral por jogador (partidas ganhas/partidas que participou)
-Jogador 1: 1070/5085 (21.0%)
-Jogador 2: 1114/5085 (21.9%)
-Jogador 3: 819/4525 (18.1%)
-Jogador 4: 624/3960 (15.8%)
-Jogador 5: 492/3395 (14.5%)
-Jogador 6: 329/2831 (11.6%)
-Jogador 7: 242/2264 (10.7%)
-Jogador 8: 211/1698 (12.4%)
-Jogador 9: 113/1131 (10.0%)
-Jogador 10: 51/566 (9.0%)
-
-Bugs diferentes encontrados: 1 (ocorrências: 16)
-- "21_10_2026_23_49 - Bug.txt" (16x): Vitória não detectada ao fim da rodada: Jogador 1 cumpriu Objetivo 5
+Bugs diferentes encontrados: 1 (ocorrências: 19)
+- "24_10_2026_17_59 - Bug.txt" (19x): Exceção JavaScript ao iniciar a partida com 2 jogadores

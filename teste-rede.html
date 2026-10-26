@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Teste de rede — Tempo de Colheita</title>
+<style>
+  body{font:15px/1.4 system-ui,sans-serif;max-width:640px;margin:0 auto;padding:12px;background:#f4f1e8;color:#222}
+  h1{font-size:18px} fieldset{margin:10px 0;border:1px solid #bbb;border-radius:8px;background:#fff}
+  button{padding:8px 12px;margin:3px 3px 3px 0;font-size:15px} input{padding:7px;font-size:15px;margin:3px 3px 3px 0}
+  #log{background:#111;color:#9f9;font:13px/1.35 monospace;padding:8px;border-radius:8px;height:260px;overflow:auto;white-space:pre-wrap}
+  .ok{color:#9f9}.er{color:#f88}.in{color:#8cf}
+</style>
+</head>
+<body>
+<h1>Teste de rede (Fase 5) — apague este arquivo depois dos testes</h1>
+<p>Abra esta página em <b>duas abas</b>. Aqui cada aba recebe um usuário próprio (persistência por aba). Aba 1: iniciar → criar sala. Aba 2: iniciar → entrar com o código (ou pelo link) → enviar mensagem.</p>
+
+<fieldset><legend>1. Conectar</legend>
+  <button id="bIni">Iniciar (login anônimo)</button> <span id="uid"></span>
+</fieldset>
+
+<fieldset><legend>2. Sala</legend>
+  <input id="nome" placeholder="Seu nome" value="Jogador">
+  <button id="bCriar">Criar sala</button><br>
+  <input id="cod" placeholder="CÓDIGO" size="9" maxlength="8" style="text-transform:uppercase">
+  <button id="bEntrar">Entrar</button>
+  <button id="bSair">Sair</button>
+  <div id="sala"></div>
+</fieldset>
+
+<fieldset><legend>3. Mensagem</legend>
+  <input id="txt" placeholder="texto" value="olá">
+  <button id="bEnv">Enviar ao anfitrião</button>
+  <div><small>O anfitrião recebe a ação e responde com uma “visão” só para quem enviou.</small></div>
+</fieldset>
+
+<fieldset><legend>4. Privacidade (só vale depois das regras da Fase 9)</legend>
+  <button id="bEstado">Tentar ler /estado</button>
+  <input id="outro" placeholder="uid de outro jogador" size="24">
+  <button id="bVisao">Tentar ler a visão desse uid</button>
+  <div><small>Com as regras SIMPLES de agora, estas leituras FUNCIONAM (esperado). Com as regras da Fase 9, devem dar “Sem permissão”.</small></div>
+</fieldset>
+
+<div id="log"></div>
+
+<script src="rede.js"></script>
+<script>
+(function(){
+  var $=function(i){return document.getElementById(i)};
+  function log(t,c){var d=document.createElement('div');d.className=c||'';d.textContent=new Date().toLocaleTimeString()+'  '+t;$('log').appendChild(d);$('log').scrollTop=1e9}
+  function seg(p){return p.then(function(r){return r},function(e){log('ERRO: '+e.message,'er');throw e})}
+  Rede.aoErro=function(e){log('ouvinte: '+e.message,'er')};
+
+  var c=Rede.lerConvite(); if(c){ $('cod').value=c; log('Convite no link: '+c,'in'); }
+
+  function ligar(){
+    Rede.aoJogadores(function(l){ $('sala').textContent='Sala '+Rede.codigo+(Rede.ehHost?' (anfitrião)':' (convidado)')+' — jogadores: '+l.map(function(j){return j.nome+(j.online?'':'(off)')}).join(', ') });
+    Rede.aoVisao(function(v){ log('VISÃO recebida: '+JSON.stringify(v),'ok') });
+    if(Rede.ehHost) Rede.aoAcao(function(a){
+      log('AÇÃO recebida de '+a.de.slice(0,6)+': '+a.tipo+' '+JSON.stringify(a.args),'ok');
+      return Rede.darVisao(a.de,{eco:a.args&&a.args.texto,hora:new Date().toISOString()});
+    });
+  }
+
+  $('bIni').onclick=function(){ seg(Rede.iniciar({persistencia:'aba'})).then(function(u){ $('uid').textContent='uid: '+u; log('Conectado. uid='+u,'ok') }) };
+  $('bCriar').onclick=function(){ seg(Rede.criar($('nome').value,4)).then(function(cod){
+    $('cod').value=cod; log('Sala criada: '+cod,'ok'); log('Link de convite: '+Rede.linkConvite(cod),'in'); ligar() }) };
+  $('bEntrar').onclick=function(){ seg(Rede.entrar($('cod').value,$('nome').value)).then(function(r){
+    log('Entrou na sala '+r.codigo+' (idx '+r.idx+(r.host?', anfitrião':'')+')','ok'); ligar() }) };
+  $('bSair').onclick=function(){ seg(Rede.sair()).then(function(){ $('sala').textContent=''; log('Saiu da sala') }) };
+  $('bEnv').onclick=function(){ seg(Rede.enviar('msg',{texto:$('txt').value})).then(function(id){ log('Ação enviada (id '+id+')') }) };
+  $('bEstado').onclick=function(){ seg(Rede._ler('estado')).then(function(v){ log('LEU /estado: '+String(v).slice(0,80),'er') }).catch(function(){}) };
+  $('bVisao').onclick=function(){ seg(Rede._ler('visao/'+$('outro').value.trim())).then(function(v){ log('LEU visão de outro: '+String(v).slice(0,80),'er') }).catch(function(){}) };
+})();
+</script>
+</body>
+</html>

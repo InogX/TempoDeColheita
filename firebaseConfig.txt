@@ -1,0 +1,56 @@
+Contexto: vamos fazer a FASE 5 (rede.js) do jogo "Tempo de Colheita". Seguem as decisões já tomadas e o que já está pronto do meu lado.
+
+JÁ PRONTO (não refaça)
+- Projeto Firebase criado no plano Spark (gratuito, SEM cartão). NÃO usar Blaze, Cloud Storage, Functions, App Hosting nem Firebase Hosting.
+- Realtime Database criado.
+- Autenticação ANÔNIMA já está ATIVA. Use signInAnonymously; o uid de cada jogador vem daí.
+- O jogo já está publicado e funcionando no GitHub Pages: [COLE AQUI O ENDEREÇO, ex.: https://USUARIO.github.io/NOME-DO-REPO/]
+
+MEU firebaseConfig (apiKey de web não é segredo; a segurança vem das regras):
+
+
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+const firebaseConfig = {
+  apiKey: "AIzaSyDH_9pyOM6Czj50EziAW0GTWPsDKuYuRMY",
+  authDomain: "tempodecolheita.firebaseapp.com",
+  databaseURL: "https://tempodecolheita-default-rtdb.firebaseio.com",
+  projectId: "tempodecolheita",
+  storageBucket: "tempodecolheita.firebasestorage.app",
+  messagingSenderId: "913427944483",
+  appId: "1:913427944483:web:d38959695793cede670d96"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+
+
+
+O QUE PRECISO NA FASE 5
+1. Criar rede.js isolado, com interface simples (criar sala, entrar, enviar, ao receber, sair), para dar para trocar o transporte depois.
+2. Carregar o SDK do Firebase de forma compatível com um site estático no GitHub Pages (sem build): use uma versão FIXA e com mais de 2 semanas de lançamento, e me diga qual escolheu e por quê. Confira a versão atual do SDK.
+3. Criar sala com código curto (4 a 8 caracteres, letras maiúsculas e números), link de convite ?sala=CODIGO (lido em iniciar.js) e entrada por código.
+4. Gravar os dados NESTA estrutura, porque as regras de segurança da Fase 9 já estão escritas para ela (se precisar mudar, me avise para ajustar as regras):
+
+   /salas/{CODIGO}/
+     meta           { host: uid, estado: 'lobby'|'jogando'|'fim', vagas: n, criadaEm: timestamp }
+     jogadores/{uid}  { nome, idx, online, bot }
+     acoes/{uid}/{id} { tipo, args, ts }     (cada jogador escreve só na própria caixa)
+     visao/{uid}      (visão filtrada de cada jogador; só o anfitrião escreve, só o dono lê)
+     estado           (estado COMPLETO; só o anfitrião lê e escreve)
+
+   Importante: o estado completo e as visões individuais devem ficar em nós SEPARADOS, para que nenhum jogador consiga ler informação secreta de outro.
+5. Trocar as regras do modo de teste por regras SIMPLES agora (qualquer usuário autenticado lê e escreve só em /salas, negado em todo o resto) e me entregar o texto para eu colar no console. As regras restritivas ficam para a Fase 9.
+6. Conferir os limites gratuitos ATUAIS do Realtime Database no plano Spark (conexões simultâneas, armazenamento e download mensal) e me dizer. Em 23/10/2026 eu tinha: 100 conexões simultâneas e 1 GB armazenado; o limite de download mensal não foi reconfirmado.
+7. Avisar o que eu preciso fazer no console do Firebase. Já sei que o domínio do GitHub Pages precisa estar em Authentication > Configurações > Domínios autorizados.
+8. Teste simples entre duas abas (criar sala numa, entrar na outra, trocar uma mensagem). Diga com clareza o que foi testado de verdade e o que não foi.
+
+REGRAS DE TRABALHO
+- Mudanças pequenas e localizadas, listadas por arquivo; offline (passe o aparelho, com e sem bots) deve continuar igual.
+- Preserve ids e classes da tela, inclusive .nm e .bt.
+- Nada de serviços pagos ou que peçam cartão.
+- Atualize a Ficha Técnica.

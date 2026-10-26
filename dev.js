@@ -3,7 +3,7 @@
 // ========================
 
 const D = { // ferramentas Dev (só aparecem com a regra "Painel Dev" ligada)
-  i() { return S.devP != null ? S.devP : S.order[S.t]; }, p() { return S.players[+document.getElementById('dvP').value]; },
+  i() { return UI.devP != null ? UI.devP : eu(); }, p() { return S.players[+document.getElementById('dvP').value]; },
   n() { return +document.getElementById('dvN').value || 0; }, v(id) { return document.getElementById(id).value; },
   coins(soma) { const p = D.p(); p.coins = soma ? p.coins + D.n() : D.n(); after(); },
   debt() { D.p().debt = Math.max(0, D.n()); after(); },
@@ -18,9 +18,9 @@ const D = { // ferramentas Dev (só aparecem com a regra "Painel Dev" ligada)
   level() { const p = D.p(), [fi, pi] = D.v('dvPl').split(':').map(Number), x = p.fields[fi] && p.fields[fi].plots[pi], lv = +D.v('dvLv'); if (!x) return;
     if (free(p.fields[fi]) + NV(x.c).espacos < ASSETS.niveis[lv].espacos) return alert('Sem vagas para esse nível'); if (lv > 1) x.c.nivel = lv; else delete x.c.nivel; after(); },
   obj() { D.p().obj = { ...CARDS.objetivo.find(c => c.id == D.v('dvObj')) }; after(); },
-  gEvent() { const c = { ...CARDS.geral.find(x => x.id == D.v('dvGe')), uid: ++S.uid }; S.ev.push({ c, left: c.dur }); alive().forEach(p => { p.coins += c.coins; }); log(`DEV: evento ${nm(c)}`); after(); },
+  gEvent() { const c = { ...CARDS.geral.find(x => x.id == D.v('dvGe')), uid: ++S.uid }, e = novoEvento(c); S.ev.push(e); alive().forEach(p => { p.coins += c.coins || 0; }); efeitoImediato(e); log(`DEV: evento ${nm(c)}`); after(); },
   iEvent() { const p = D.p(), e = { ...CARDS.individual.find(x => x.id == D.v('dvIe')), uid: ++S.uid }; p.ind = e; p.coins += e.coins;
-    if (e.night) p.nightUntil = S.round + (e.dur || 1) - 1; if (e.reveal == 'self') p.pubUntil = S.round + (e.dur || 1) - 1; if (e.reveal == 'peek') S.modal = 'peek'; log(`DEV: ${p.n} recebeu ${nm(e)}`); after(); },
+    if (e.night) p.nightUntil = S.round + (e.dur || 1) - 1; if (e.reveal == 'self') p.pubUntil = S.round + (e.dur || 1) - 1; if (e.reveal == 'peek') S.peekPend = S.order[S.t]; log(`DEV: ${p.n} recebeu ${nm(e)}`); after(); },
   round() { S.round = Math.max(1, D.n()); render(); }, next() { nextRound(); render(); }, all() { S.devAll = !S.devAll; render(); },
   clearSale() { S.center = []; render(); }, rebuy() { D.p().compras = 0; render(); },
   clearMk() { S.mk.forEach(l => { if (l.kind == 'res') S.players[l.s].res[l.crop] += l.qty; }); S.mk = []; render(); },
