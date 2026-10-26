@@ -1,4 +1,4 @@
-# Tempo de Colheita — Plano (versão 9): o que falta
+# Tempo de Colheita — Plano (versão 10): o que falta
 
 **Como usar numa conversa nova:** envie este arquivo + o `FICHAS_TECNICAS.md` atualizado + os arquivos da lista da etapa. **Uma etapa por conversa.** Sempre envie a versão mais recente dos arquivos.
 
@@ -13,7 +13,7 @@
 | **1. Mobile (visual)** | ✅ Testado pelo dono em **iOS e Android**: o jogo roda tranquilo até a fase atual. O `janelas.js` atual já desenha o ✕ `.mx` (a dúvida antiga está resolvida). Ficam para a Fase 8 só as janelas passarem a usar `me()`. |
 | **2. Bot** | ✅ Pronto, ligado e **testado no navegador pelo dono**. Desde a Fase 4 ele pede tudo pelos comandos (`Cmd`). |
 | **2,5. Menus** | ✅ Conferidos no celular pelo dono. Criar Sala e Achar Sala são do `lobby.js` (Fase 6), **testadas pelo dono com dois celulares conectados**. |
-| **3. Online** | **Fases 0 a 6 ✅ confirmadas pelo dono.** **Fases 7 e 8 🔄 parcialmente confirmadas**: o dono jogou com dois celulares (conectou, jogou, as transações funcionam, sem botão Dev, bot ok) e achou 3 problemas, **corrigidos na Fase 9**; faltam o Mercado, o espiar e a eliminação (ver "Testes" abaixo). **Fase 9 🔄 entregue** (retomada, bot que assume a vaga, aviso de anfitrião desconectado, regras de segurança). Fases 10 e 11 ainda não iniciadas. |
+| **3. Online** | **Fases 0 a 9 ✅ confirmadas pelo dono** (Fases 7 e 8 no essencial; ficam pendências menores, listadas em "Testes", que não travam a Fase 10). Regras de segurança **publicadas** e jogo funcionando sob elas. Testado até aqui só com **Android + PC (Windows) + 1 bot**. **Fase 10 ⬜ é a próxima** (4G/5G, sala lotada, iPhone, privacidade no console e as pendências menores). Fase 11 🔄 parcialmente pronta. |
 
 > **Conferido nos arquivos (23/10/2026):** a Fase 1 está no código (`UI`, `UIreset`, `ligaUI` em `estado.js`; `EU`/`eu()`/`me()` em `consultas.js`; `A.plantIn(fi, h)`); a Fase 2 também (`recusa`, `exec`, `A.tentar` em `acoes-turno.js`; as quatro `acoes-*.js` recusando com motivo); da Fase 3, o `index.html` carrega o `visao.js` (o arquivo não veio nesta rodada: vale a confirmação do dono de que o jogo abre normal e a conferência feita antes).
 
@@ -29,7 +29,7 @@
 | **Jogo publicado no GitHub Pages, online e funcionando** | ✅ (confirmado pelo dono) |
 | Realtime Database criado + app Web registrado + `firebaseConfig` em mãos | ✅ o dono tem o `firebaseConfig` e vai colá-lo direto na conversa da Fase 5 (não vai neste arquivo) |
 | Domínio do GitHub Pages (`usuario.github.io`) adicionado em *Authentication › Configurações › Domínios autorizados* | ✅ confirmado por captura de tela: `inogx.github.io` está em Domínios autorizados (tipo Custom) |
-| Regras do banco trocadas do modo de teste (o modo de teste **expira**, em geral em 30 dias) | ✅ regras simples publicadas (confirmado pelo dono). Regras restritivas no **Apêndice A**, para a Fase 9 (as simples NÃO protegem segredos) |
+| Regras do banco trocadas do modo de teste (o modo de teste **expira**, em geral em 30 dias) | ✅ **regras restritivas publicadas** (dono, 26/10/2026; o jogo funcionou sob elas). Ficam para a Fase 10 só a conferência de privacidade no console e, se ainda não feitas, as simulações do Rules Playground (Apêndice A). |
 
 ### Fases do código
 | Fase | Status |
@@ -41,10 +41,10 @@
 | 4 — Camada de comandos | ✅ entregue (`comandos.js` novo + `bot.js`, `tela.js`, `janelas.js`, `zoom.js`, `index.html`), testada em Node (115 conferências, 5 defeitos plantados detectados) e **confirmada pelo dono** (24/10/2026: o jogo roda certo). |
 | 5 — Rede (`rede.js`) | ✅ entregue e testada no Firebase real pelo dono: duas abas de `teste-rede.html` no GitHub Pages criaram/entraram na sala e trocaram mensagem, e a aba *Uso* do Realtime Database mostrou as duas conexões. (Não foi testado ainda: dois aparelhos diferentes, 4G/5G, nem a parte de privacidade, que só vale após a Fase 9.) |
 | 6 — Lobby | ✅ entregue (`lobby.js` novo + `rede.js`, `menu.js`, `iniciar.js`, `style.css`, `index.html`), testada em Node e **confirmada pelo dono: dois celulares conectaram na mesma sala** (24/10/2026) |
-| 7 — Sincronização e vez | 🔄 testada em Node (63 conferências) e **jogada pelo dono com dois celulares: funciona** (conectou, as mesmas coisas acontecem nos dois, transações ok, vibração no Android). Vira ✅ quando os itens ⬜ da seção "Testes" forem feitos. |
-| 8 — Janelas | 🔄 testada em Node (43 conferências). **Pendente no celular:** Mercado (digitação, teclado, na vez do bot), espiar e eliminação. O que o dono viu de errado (loja aparecendo fora da vez) foi corrigido na Fase 9. |
-| 9 — Robustez + regras de segurança | 🔄 **entregue nesta conversa** (`online.js`, `rede.js`, `lobby.js`, `tela.js` + `regras_firebase.json`). Testada em Node (52 conferências com o lobby e a rede REAIS sobre um Firebase falso com queda de conexão; as Fases 7, 8 e 9 também passam SOB as regras novas; 42 situações de regras). **Falta:** publicar as regras e fazer os testes ⬜ da seção "Testes". |
-| 10 — Testes | ⬜ **próxima** (roteiro com dois aparelhos e 4G/5G; conferência final de privacidade e consumo) |
+| 7 — Sincronização e vez | ✅ **confirmada pelo dono** (Android + PC + bot): sincroniza, vez, transações, título da aba "🔔 Sua vez", eliminado segue assistindo. Pendências menores (espiar, recusa só do anfitrião, toque duplo) na seção "Testes". |
+| 8 — Janelas | ✅ **confirmada no essencial**: Mercado (vender, comprar, nomes corretos na tela) conferido. **Ainda não confirmados:** digitação preservada e teclado do celular no Mercado, Mercado na vez do bot, espiar, "Melhorar" como convidado (ver "Testes"). |
+| 9 — Robustez + regras de segurança | ✅ **confirmada pelo dono** (26/10/2026): convidado e anfitrião saindo pelo botão **e** perdendo a conexão, bot assumindo a vaga após ~30 s, reconexão devolvendo a vaga, convidado recarregando a página e voltando pelo código, link de convite, regras restritivas publicadas. Pendentes menores: retomada do anfitrião por F5, limpeza de salas antigas, conferência no console (ver "Testes"). |
+| 10 — Testes | ⬜ **próxima** (conversa nova, com o PROMPT 3). Agenda: **4G/5G** (dono não pôde testar ainda), **sala lotada** (consumo), **iPhone online** (nunca testado), privacidade no console com as regras publicadas, partida longa, e as pendências menores da seção "Testes". |
 | 11 — Publicação | 🔄 parte já pronta: o jogo está no GitHub Pages; falta só documentar o convite (`?sala=`) na prática |
 
 > Atualize este quadro quando cada fase for **entregue e testada**. Fases marcadas 🔄 só passam a ✅ depois que o arquivo novo for conferido.
@@ -52,48 +52,51 @@
 ---
 
 ### Testes com o dono: o que já foi confirmado e o que ainda falta
-> **Como usar:** marque ✅ quando conferir. Tudo o que está ⬜ precisa ser feito antes de dar a Fase 7, 8 e 9 como prontas. A Fase 10 repete tudo isto com 4G/5G.
+> **Atualizado em 26/10/2026.** Ambiente de todos os testes até agora: **Android + PC (Windows) + 1 bot**. **Nada foi testado ainda com iPhone online nem com 4G/5G.** Marque ✅ quando conferir. A Fase 10 repete o essencial com 4G/5G e cobre o que está ⬜.
 
-**✅ Já confirmado pelo dono (jogando com dois celulares)**
+**✅ Confirmado pelo dono**
 | | O que | Observação |
 |---|---|---|
-| ✅ | Os dois celulares se encontram, conectam, jogam e as mesmas coisas acontecem nos dois | |
+| ✅ | Os aparelhos se encontram, conectam, jogam e as mesmas coisas acontecem nos dois | |
 | ✅ | Não existe botão Dev online | |
-| ✅ | As transações (vender, empréstimo etc.) funcionam entre os dois | |
+| ✅ | Transações (vender, empréstimo etc.) funcionam entre os dois | |
 | ✅ | A vez do bot aparece como deveria | |
-| ✅ | O "Continuar Jogo" do modo local não é afetado pela partida online (era uma partida local antiga) | |
-| ✅ | Vibração quando chega a sua vez: **Android vibrou** | **iPhone não vibra:** é limitação do Safari (já prevista). Fica assim; ver nota ao fim do bloco. |
-| ✅ | Consumo no Firebase: **215,38 KB** no total depois de vários testes | Muito abaixo do limite gratuito (10 GB/mês). Reconferir depois de uma partida longa. |
+| ✅ | "Continuar Jogo" do modo local não é afetado pela partida online | |
+| ✅ | Vibração na sua vez: Android vibrou | iPhone não vibra (limitação do Safari, já prevista). |
+| ✅ | Título da aba muda para "🔔 Sua vez" | |
+| ✅ | **Regras restritivas publicadas**; o jogo funciona sob elas | O dono relatou que "arrumou as regras" e jogou depois. Não relatou as simulações do Rules Playground. |
+| ✅ | **Convidado sai** pelo botão Sair | O bot assume a vaga e a partida segue. |
+| ✅ | **Convidado perde a conexão** (desconexão acidental) | O bot assumiu após ~30 s. |
+| ✅ | **Reconexão** | A vaga volta ao jogador que retornou. |
+| ✅ | **Anfitrião sai** pelo botão Sair e **anfitrião some** (desconexão acidental) | Funcionou nos dois casos. Não relatado: a sala sumir do console. |
+| ✅ | **Convidado recarrega a página** | É desconectado da sala, mas volta sem problemas pelo código. |
+| ✅ | **Link de convite** (`?sala=CODIGO`) | Funciona. |
+| ✅ | **Mercado**: vender e comprar entre os dois; nomes na tela corretos | Digitação preservada e teclado ainda não confirmados (abaixo). |
+| ✅ | **Eliminação**: o eliminado segue assistindo a partida | Viu só o registro (log), como na tela de espera. Não relatado: o aviso "eliminado". |
+| ✅ | **Consumo no Firebase** | **957 KB** de Download e **11 KB** de Armazenamento depois de alguns testes curtos. Limite gratuito: ~360 MB/dia de download e 1 GB de armazenamento. Muito abaixo. |
 
-**🔧 Problemas que o dono encontrou, corrigidos na Fase 9 (precisam ser REconferidos)**
-| | Problema | O que mudou |
-|---|---|---|
-| ⬜ | Fora da vez o jogador via a loja como se fosse a vez dele, com os botões só levemente acinzentados; tentar comprar não funcionava e não era intuitivo | Fora da vez o jogador agora vê a **tela de espera, igual à do bot** ("X está jogando...", só o registro, os eventos e os botões Mercado e Sair). A loja, a mão e "Encerrar turno" só aparecem na SUA vez. |
-| ⬜ | Quando B saiu, a partida travava quando voltava a vez dele (a partida se perdia) | Um **bot assume a vaga** na hora (se B tocou em Sair) ou depois de 30 s sem conexão. Se B voltar, recebe a vaga de volta. |
-| ⬜ | Quando A (anfitrião) saiu, B não foi avisado nem tirado da sala; só percebeu ao tentar jogar (ficou carregando e depois "o anfitrião não respondeu") | **Causa achada:** o lobby continuava ouvindo a sala durante o jogo e, ao ver "sala encerrada", chamava `Rede.sair()`, que desligava também os ouvintes do jogo. Agora o lobby se desliga ao iniciar. B é avisado e volta ao menu; a sala é apagada. Se A simplesmente SOME (fecha a aba, sem sinal), B vê uma faixa vermelha com contagem e, passados 2 minutos, volta ao menu com o código da sala. |
-
-**⬜ Ainda falta testar (Fases 7 e 8)**
+**⬜ Pendente, mais importante (entra na Fase 10)**
 | | O que | Como |
 |---|---|---|
-| ⬜ | **Mercado** completo | Oferta de recurso fora da vez; o outro compra; digitar quantidade/preço e esperar o outro jogar (o que foi digitado não pode sumir, a janela não volta ao topo) e **o teclado do celular não pode fechar** sozinho; Mercado aberto na vez do bot. *(Ficou pendente por falta de bateria.)* |
-| ⬜ | **Espiar** (evento individual) | Só quem tem o evento vê "Escolha quem espiar"; depois vê as moedas do espiado e isso some no fim do turno. |
-| ⬜ | **Eliminação** | Quem é eliminado segue assistindo (tela de espera com o aviso "eliminado"). |
-| ⬜ | Recusa que só o anfitrião sabe | Vender o que não tem ou comprar sem moedas: o convidado vê o aviso do motivo e nada muda. |
+| ⬜ | **4G/5G** (dono pediu para deixar pendente) | Um aparelho fora do Wi-Fi (dados móveis), outro no Wi-Fi. Criar sala, entrar, jogar um turno cada, sair. Conferir se conecta e se a latência é aceitável. |
+| ⬜ | **Sala lotada** (consumo) | Sala com 8 jogadores (bots contam; vários aparelhos se der). Jogar algumas rodadas e olhar a aba *Uso* do Realtime Database antes e depois. O dono quer entender o consumo por jogador. |
+| ⬜ | **iPhone online** (nunca relatado) | Entrar numa sala pelo iPhone, jogar um turno, abrir o Mercado, digitar com o teclado, sair. Conferir título/tela "Sua vez" (não vibra). |
+| ⬜ | **Privacidade no console com as regras publicadas** | Em Realtime Database › Dados, `visao/{uid}` de cada jogador não pode trazer a mão nem o objetivo dos outros; o `estado` só deve ser legível pelo anfitrião (Rules Playground, simulações #1 a #7 do Apêndice A). |
+| ⬜ | Consumo depois de uma **partida longa** | Aba *Uso* depois de uma partida inteira. |
+
+**⬜ Pendente, menor (não trava a Fase 10)**
+| | O que | Como |
+|---|---|---|
+| ⬜ | **Espiar** (evento individual) | Só quem tem o evento vê "Escolha quem espiar"; depois vê as moedas do espiado e isso some no fim do turno. (O dono não conseguiu confirmar: não saiu o evento.) |
+| ⬜ | Recusa que só o anfitrião sabe | Convidado vende o que não tem ou compra sem moedas: aparece o motivo e nada muda. |
 | ⬜ | **Melhorar** um plantio como convidado | A animação só toca depois da resposta do anfitrião. |
 | ⬜ | Toque duplo | Dois toques rápidos em "Comprar campo" no convidado: só compra um. |
-| ⬜ | Título da aba muda para "🔔 Sua vez" | (O Android vibrou; o título não foi mencionado.) |
+| ⬜ | Mercado: **digitação preservada e teclado** | Digitar quantidade/preço fora da vez e esperar o outro jogar: o texto não some, a janela não volta ao topo e o teclado do celular não fecha. Também o Mercado aberto na vez do bot (🤝). |
+| ⬜ | **Retomada do anfitrião por F5** | F5 no anfitrião no meio da partida, Jogar Online › Achar Sala com o mesmo nome e código: a partida continua com as mesmas moedas e rodada. (O dono relatou a reconexão, mas não esta situação em separado.) |
+| ⬜ | Limpeza de salas antigas | Criar 2 salas de teste e fechar; criar outra: no console só sobram as salas vivas. Conferir também que a sala **some** do console quando o anfitrião sai. |
+| ⬜ | Tela de espera fora da vez (conferência explícita) | Fora da vez: só registro, eventos e botões Mercado/Sair; loja, mão e "Encerrar turno" só na sua vez. Visto indiretamente na eliminação. |
+| ⬜ | Aviso "eliminado" | Conferir se a tela do eliminado mostra o aviso, além do registro. |
 
-**⬜ Ainda falta testar (Fase 9: coisas novas)**
-| | O que | Como (dois celulares, 1 bot) |
-|---|---|---|
-| ⬜ | **Publicar as regras de segurança** | Siga o roteiro do Apêndice A (copiar as regras antigas, testar no Rules Playground, publicar e jogar uma partida inteira). **Se aparecer "Sem permissão no banco", volte as regras antigas.** |
-| ⬜ | Convidado **sai** pelo botão Sair | O anfitrião vê no registro "B saiu da partida: um bot assumiu o lugar" e a partida segue sem travar na vez dele. |
-| ⬜ | Convidado **perde a conexão** | Ligue o modo avião no convidado por ~40 s. No anfitrião aparece o aviso; depois de 30 s um bot assume. Desligue o modo avião: B recebe a vaga de volta e o registro diz "B voltou à partida". |
-| ⬜ | Anfitrião **sai** pelo botão Sair | B é avisado ("A sala foi encerrada pelo anfitrião") e volta ao menu. No console do Firebase (Realtime Database › Dados) a sala **some**. |
-| ⬜ | Anfitrião **some** (fechar a aba ou modo avião) | B vê a faixa vermelha "O anfitrião está desconectado… (N s)". Se o anfitrião voltar antes de 2 min, a faixa some e a partida segue. Se não voltar, B volta ao menu com o código da sala. |
-| ⬜ | **Retomada:** anfitrião recarrega a página no meio da partida | Recarregue (F5) o celular do anfitrião, escolha Jogar Online › Achar Sala, digite o mesmo nome e o código (ou abra o link de convite). A partida **continua de onde parou** (mesmas moedas e rodada) e B volta a jogar. |
-| ⬜ | Limpeza de salas antigas | Crie 2 salas de teste e feche; crie outra: no console do Firebase só devem sobrar as salas vivas. |
-| ⬜ | Consumo depois de uma partida longa | Aba *Uso* do Realtime Database. |
 
 > **Nota (iPhone):** o Safari do iPhone não tem a função de vibrar, e um site não consegue avisar com o app fechado sem *push* (fora do plano gratuito simples). Com a página aberta o título da aba muda e a tela diz "Sua vez". Se isso incomodar, a próxima opção é um som curto quando chegar a sua vez (não foi feito).
 
@@ -129,11 +132,11 @@
 | Gancho `if (p.bot) ...` em `tela.js` | É o mesmo ponto onde entra "Aguardando [jogador]". |
 
 ### O que ainda atrapalha para o online
-> **Resolvido:** tudo das Fases 1 a 8 e, na Fase 9: anfitrião que cai/recarrega (retoma), jogador que sai/cai (bot assume e devolve), aviso de anfitrião desconectado, estado salvo, limpeza de salas, lobby brigando com o jogo, tela de espera fora da vez e regras restritivas (prontas, falta publicar).
+> **Resolvido:** tudo das Fases 1 a 9: anfitrião que cai/recarrega (retoma), jogador que sai/cai (bot assume e devolve, confirmado), aviso de anfitrião desconectado, estado salvo, limpeza de salas, lobby brigando com o jogo, tela de espera fora da vez e **regras restritivas publicadas**.
 
 | Problema que continua aberto | Onde | Fase |
 |---|---|---|
-| As regras restritivas (`regras_firebase.json`) ainda **não estão publicadas**: enquanto não estiverem, quem souber o uid de outro jogador consegue ler a visão dele. | Firebase | 9 (ação do dono) |
+| **iPhone online** e **4G/5G** ainda não foram testados (só Android + PC). | — | 10 |
 | Quem troca de navegador/aparelho (uid novo) não consegue voltar a uma partida em andamento. | `rede.js` | 10/futuro |
 | iPhone não vibra; não há notificação com o app fechado. | — | opcional (som curto) |
 | Anfitrião que fecha a página de vez: a partida só continua se ele voltar (os convidados desistem em 2 min e podem voltar com o código). Não há troca de anfitrião. | `online.js` | futuro |
@@ -141,6 +144,7 @@
 | `qa.html` adiado pelo dono e não testa o online. | `qa.html` | — |
 
 ### Fase 9 entregue — o que mudou para as próximas fases
+- **✅ Confirmada pelo dono em 26/10/2026** (Android + PC + bot): saída e queda de conexão de anfitrião e convidado, bot assumindo a vaga em ~30 s, reconexão, convidado recarregando e voltando, link de convite e regras restritivas publicadas. Consumo medido: 957 KB de download e 11 KB de armazenamento em testes curtos. Pendências menores na seção "Testes".
 - **Feita com as Fases 7 e 8 só parcialmente confirmadas.** O dono jogou e relatou três problemas (loja fora da vez, partida travada quando B sai, B não avisado quando A sai); os três foram corrigidos aqui e entraram na lista de "reconferir".
 - **Arquivos alterados:** `online.js` (retomada, presença, vaga assumida, faixas de conexão, saída), `rede.js` (`aoConexao`, `removerSala`, `limparAntigas`; `sair()` e presença não recriam sala apagada), `lobby.js` (`fechar()` apaga a sala), `tela.js` (tela de espera). **Novos:** `regras_firebase.json` (regras de segurança corrigidas) e `regras_antigas.json` (só para comparar). **Não alterados:** `comandos.js`, `bot.js`, `janelas.js`, `zoom.js`, `acoes-*.js`, `estado.js`, `consultas.js`, `visao.js`, `pecas-tela.js`, `menu.js`, `iniciar.js`, `index.html`.
 - **Causa do "B não foi avisado quando A saiu" (achada reproduzindo com o lobby REAL):** o `lobby.js` continuava ouvindo a sala durante o jogo e reagia a "sala encerrada" com `Rede.sair()`; o `Rede.sair()` desliga TODOS os ouvintes, inclusive o do `online.js`, que então nunca era avisado. Nos testes das Fases 7 e 8 isso passou despercebido porque eu usava um lobby de mentira. Agora o `online.js` chama `Lobby.desliga()` ao iniciar.
@@ -284,13 +288,14 @@
 ### Arquivos a enviar (para a Fase 10)
 | Arquivo | Por quê |
 |---|---|
-| **FICHAS_TECNICAS.md** e este plano | Sempre a versão mais recente (a da Fase 9 em diante). |
-| **O resultado dos testes ⬜ da seção "Testes"** | Antes de abrir a Fase 10: me diga o que passou e o que falhou (passo, aparelho, o que apareceu). Falhas são corrigidas em conversa própria. |
+| **FICHAS_TECNICAS.md** e este plano (`PLANO_MOBILE_BOT_ONLINE.md`) | Sempre a versão mais recente. As Fichas **não mudaram** desde a Fase 9 (nenhum código novo desde então). |
+| **O resultado dos testes** | Este plano já traz o que o dono confirmou em 26/10/2026. Se fizer mais testes antes de abrir a conversa (4G/5G, sala lotada, iPhone), diga o que passou e o que falhou (passo, aparelho, o que apareceu). |
 | **online.js, rede.js, lobby.js, tela.js, regras_firebase.json** | O que a Fase 9 mexeu. |
-| **comandos.js, bot.js, janelas.js, zoom.js, visao.js, acoes-*.js, estado.js, consultas.js, menu.js, pecas-tela.js, index.html, iniciar.js** | Para os testes em Node com os arquivos reais. |
-| **teste_comum.js, teste_regras_motor.js, teste_fase4/7/8/9.js, teste_regras.js** | Os testes. |
+| **comandos.js, bot.js, janelas.js, zoom.js, visao.js, acoes-turno.js, acoes-economia.js, acoes-plantio.js, acoes-mercado.js, estado.js, consultas.js, menu.js, pecas-tela.js, index.html, iniciar.js** | Para os testes em Node com os arquivos reais. |
+| **teste_comum.js, teste_regras_motor.js, teste_fase4.js, teste_fase7.js, teste_fase8.js, teste_fase9.js, teste_regras.js** | Os testes. |
+| *(opcional)* **Prints** da aba *Uso* e dos dados do Realtime Database | Ajudam na conferência de consumo e de privacidade. |
 
-Não enviar: `cartas-visual.js` (visual puro, exceto se for mexer em `free/NV/vef/nm/evDesc`), `editor.html`, `qa.html`.
+Não enviar: `cartas-visual.js` (visual puro, exceto se for mexer em `free/NV/vef/nm/evDesc`), `editor.html`, `qa.html`. O `firebaseConfig` já está no `rede.js`: não precisa colar de novo.
 
 ### PROMPT 3 — Preparação do online (para colar numa conversa nova; hoje a próxima é a FASE 10)
 
@@ -304,8 +309,9 @@ JÁ DECIDIDO E PRONTO (não refaça)
 - Transporte: Firebase Realtime Database, plano Spark (gratuito, SEM cartão). Autenticação anônima ativa. Jogo no GitHub Pages. rede.js pronto.
 - Arquitetura: o navegador do anfitrião roda o jogo e os bots e grava o estado completo; os outros enviam comandos e recebem uma visão filtrada.
 - FASES 1 a 6 ✅ (identidade, recusa/exec, visão filtrada, comandos, rede, lobby), confirmadas.
-- FASES 7 e 8 🔄: online.js (anfitrião executa por Cmd.run e publica viewFor(i) + recibo + extra.feito; convidado valida e envia por Online.pede). Janelas online: Mercado sem "atuar como", digitação preservada, Mercado na vez do bot, sem Dev. O dono jogou com dois celulares e funcionou; faltam Mercado, espiar e eliminação (ver seção "Testes" do plano).
-- FASE 9 🔄 (entregue): tela de ESPERA fora da vez (igual à do bot); bot assume a vaga de quem sai/cai e devolve quando volta; faixa de conexão e desistência do anfitrião sumido; anfitrião retoma a partida salva (Rede.gravarEstado/lerEstado); sala apagada ao sair; limpeza de salas antigas; o lobby se desliga ao iniciar (Lobby.desliga); regras_firebase.json (apagar sala, ação em sala inexistente, args <= 2000). O dono ainda vai publicar as regras e fazer os testes ⬜.
+- FASES 7 e 8 ✅ (no essencial): online.js (anfitrião executa por Cmd.run e publica viewFor(i) + recibo + extra.feito; convidado valida e envia por Online.pede). Janelas online: Mercado sem "atuar como", digitação preservada, Mercado na vez do bot, sem Dev. O dono jogou (Android + PC + bot): sincronização, transações, Mercado (vender/comprar/nomes), eliminação e título da aba confirmados. Pendências menores no plano: espiar, recusa só do anfitrião, melhorar como convidado, toque duplo, teclado/digitação no Mercado.
+- FASE 9 ✅ (confirmada pelo dono em 26/10/2026): tela de ESPERA fora da vez; bot assume a vaga de quem sai/cai e devolve quando volta (testado: sair e cair, ~30 s, reconexão); faixa de conexão e desistência do anfitrião sumido; retomada (Rede.gravarEstado/lerEstado); sala apagada ao sair; limpeza de salas antigas; o lobby se desliga ao iniciar; regras_firebase.json PUBLICADAS. Convidado que recarrega volta pelo código. Link de convite funciona. Consumo medido: 957 KB download e 11 KB armazenamento (testes curtos).
+- AINDA NÃO TESTADO: 4G/5G, sala lotada (8 jogadores), iPhone online, privacidade no console com as regras publicadas, partida longa. Todos os testes até agora foram Android + PC (Windows) + 1 bot.
 - qa.html está adiado (o dono ajusta depois): não depende dele.
 
 REGRAS DE TRABALHO
@@ -319,25 +325,26 @@ REGRAS DE TRABALHO
 8. Se rodar código para testar, teste em Node com os arquivos reais (há teste_fase4/7/8/9.js, de dois aparelhos com o lobby e a rede REAIS, e teste_regras.js); diga claramente o que foi e o que não foi testado. Cuidado com peças falsas: o lobby falso escondeu um defeito na Fase 7.
 
 ROTEIRO (status no quadro do plano)
-FASES 0 a 6 — FEITAS. FASES 7, 8 e 9 — entregues; o dono confirma depois dos testes ⬜.
-FASE 10 — Testes. Conferir com o dono os resultados dos testes ⬜; corrigir o que falhar; roteiro com dois aparelhos em 4G/5G; conferir no console do Firebase que nenhuma informação secreta aparece nas mensagens (visao/{uid} de cada um, estado só do anfitrião) com as regras publicadas; conferir o consumo depois de uma partida longa.
+FASES 0 a 9 — FEITAS e confirmadas pelo dono (com as pendências menores do plano).
+FASE 10 — Testes. (1) Rodar a bateria em Node com os arquivos reais e dizer o que passou. (2) Dar ao dono um roteiro curto e ordenado para: 4G/5G; sala lotada de 8 (medir consumo por jogador na aba Uso); iPhone online; conferir no console do Firebase que nenhuma informação secreta aparece (visao/{uid} de cada um, estado só do anfitrião) e as simulações do Rules Playground; partida longa e consumo. (3) Incluir no roteiro as pendências menores do plano (espiar, recusa só do anfitrião, melhorar como convidado, toque duplo, digitação/teclado no Mercado, retomada do anfitrião por F5, limpeza de salas, aviso de eliminado). (4) Corrigir o que o dono relatar, em mudanças pequenas.
 FASE 11 — Publicação. Documentar o convite (?sala=CODIGO) e o que conferir (domínio autorizado no Firebase Authentication; restringir a chave de API ao domínio do GitHub Pages).
 ```
 
 ---
 
 ## Ordem sugerida
-1. ~~Fases 4 e 6~~ ✅.
-2. **Publicar as regras de segurança** (Apêndice A, com backup e teste) e fazer os testes ⬜ da seção "Testes com o dono", na ordem: primeiro os de reconferência (tela de espera, B sai, A sai), depois Mercado/espiar/eliminação, depois as coisas novas da Fase 9 (queda de conexão, retomada, limpeza).
-3. Me diga o resultado (ou o passo que falhou). Falhas são corrigidas ANTES de abrir a Fase 10.
-4. **Fase 10 — Testes** (conversa nova, com o PROMPT 3), depois a 11.
-5. Em qualquer momento, em conversa própria: **balanceamento com 2 jogadores** e o ajuste do `qa.html`.
+1. ~~Fases 4, 6 e 9~~ ✅. ~~Publicar as regras de segurança~~ ✅ (26/10/2026).
+2. **Fase 10 — Testes** (conversa nova, com o PROMPT 3 e os arquivos da lista "Arquivos a enviar"). Quando o dono puder, antes ou durante: **4G/5G**, **sala lotada**, **iPhone**.
+3. Depois, a **Fase 11** (publicação: documentar o convite e restringir a chave de API ao domínio do GitHub Pages).
+4. Em qualquer momento, em conversa própria: **balanceamento com 2 jogadores** e o ajuste do `qa.html`.
 
 ---
 
 ## Apêndice A — Regras de segurança do Realtime Database (Fase 9)
 
 > **O arquivo é `regras_firebase.json`** (o texto abaixo é o mesmo). `regras_antigas.json` é a versão original deste apêndice, só para comparar. **Estas regras foram testadas com um interpretador simplificado que eu escrevi, NÃO com o Firebase de verdade: por isso o roteiro abaixo manda conferir no Rules Playground e jogando, e tem um plano de volta.**
+
+> **✅ Publicadas pelo dono em 26/10/2026**; as partidas rodaram sob elas sem erro de permissão (sair, cair, voltar, convite). Falta só a conferência de privacidade no console e, se ainda não feitas, as simulações abaixo (Fase 10).
 
 **O que mudou em relação às regras antigas (3 correções):**
 1. **O anfitrião pode apagar a sala inteira** (`$sala/.write`, só para exclusão). Sem isso o botão Sair do anfitrião, o "Fechar sala" e a limpeza de salas antigas são NEGADOS pelo banco.
