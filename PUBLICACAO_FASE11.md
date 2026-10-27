@@ -56,21 +56,22 @@ Em *GitHub › Settings › Pages*, deixe **Enforce HTTPS** marcado (o login e o
 
 ---
 
-## 4. Atualizar o jogo com salas em andamento (cuidado)
+## 4. Atualizar o jogo (versão e salas em andamento)
 
-O jogo **não compara a versão** entre anfitrião e convidado, e o navegador/GitHub Pages guarda arquivos em cache por alguns minutos. Se você publicar uma mudança no meio de uma partida, anfitrião e convidado podem rodar versões diferentes e se entender mal. Por isso:
+O jogo tem um **número de versão** (`VERSAO` no início do objeto `Online`, no arquivo `online.js`, hoje `'2026-10-26a'`). Ele aparece em letras pequenas no menu principal. O anfitrião envia a versão dele junto com o jogo e, se a do convidado for diferente, o convidado recebe **um aviso** pedindo para recarregar a página. Ninguém é expulso. A checagem acontece na **primeira atualização do jogo depois do início da partida** (não na entrada da sala, porque isso exigiria mudar as regras do banco).
 
-1. **Não publique enquanto houver partida em andamento.**
-2. Depois de publicar, espere uns minutos (o GitHub Pages leva um tempo) e peça a **todos** para recarregar a página com força (PC: Ctrl+F5; celular: fechar e abrir o navegador, ou limpar o cache do site).
-3. Só então criem uma sala nova.
-
-*(Melhoria opcional para depois: um número de versão no jogo, mostrado no menu e conferido na entrada da sala. Não foi feito: é mudança de código e a Fase 11 é só de publicação.)*
+**Ao publicar uma mudança:**
+1. **Mude o número `VERSAO` em `online.js`** (por exemplo, `'2026-10-30a'`; na segunda do mesmo dia, `'2026-10-30b'`). Sem isso, o aviso não funciona.
+2. **Não publique enquanto houver partida em andamento.** O navegador e o GitHub Pages guardam arquivos em cache por alguns minutos, então anfitrião e convidado podem ficar em versões diferentes.
+3. Depois de publicar, espere uns minutos e peça a **todos** para recarregar com força (PC: Ctrl+F5; celular: fechar e abrir o navegador, ou limpar o cache do site). Confira no menu principal que o número é o novo.
+4. Só então criem uma sala nova.
 
 ---
 
 ## 5. Lista final antes de divulgar
 
 - [ ] Bloco 1 do roteiro (privacidade/Rules Playground) feito e OK.
+- [ ] Número `VERSAO` (online.js) mudado para esta publicação e conferido no menu principal do site.
 - [ ] Domínio `inogx.github.io` autorizado (✅).
 - [ ] Chave de API restrita por referenciador **e testada** em aba anônima (2.2).
 - [ ] Regras restritivas publicadas, fora do modo de teste (✅).

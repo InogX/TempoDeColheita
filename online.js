@@ -8,11 +8,13 @@
 // Entrada: Lobby.aoIniciar(cfg) (cfg = { nomes, bots, first, uids, meuIdx, host }, vem do lobby.js). Saída: Online.sair() (chamado por A.quit quando online). Se a sala for encerrada pelo anfitrião, o convidado volta ao menu com aviso.
 // Fase 8: a tela é redesenhada a cada visão nova, então Online.campos()/restaura()/desenha() guardam e devolvem o que o jogador estava digitando (quantidade/preço do Mercado, Feira), o campo em foco e a rolagem da janela; depois de uma jogada aceita (listRes, list, buyFeira) os campos dela voltam vazios. O anfitrião faz o mesmo quando um bot ou outro jogador age (comandos.js, Cmd.aplica).
 // FASE 9 (robustez): (1) o ANFITRIÃO grava o estado completo (Rede.gravarEstado) a cada mudança e, se voltar (recarregou a página, caiu), RETOMA a partida de onde parou em vez de começar outra; jogadas que ficaram na fila de antes da volta são descartadas (os convidados são avisados). (2) jogador que SAI (avisa o anfitrião com a ação 'saindo') ou fica sem conexão por mais de ESPERA_VAGA_MS tem a vaga assumida por um BOT; quando volta (Rede.entrar com o mesmo uid) recebe a vaga de volta. (3) o CONVIDADO vê uma faixa se perder a conexão ou se o ANFITRIÃO ficar desconectado; passados ESPERA_ANFITRIAO_MS volta ao menu com o código da sala. (4) quando a partida começa o online.js DESLIGA os ouvintes do lobby (Lobby.desliga): o lobby reagia a "sala encerrada" com Rede.sair(), que desligava também os ouvintes do online.js, e o convidado nunca era avisado. (5) o anfitrião que sai APAGA a sala (Rede.removerSala) depois de avisar. Limites: outro navegador/aparelho = outro uid = não volta a uma partida em andamento; se o anfitrião não voltar a partida fica parada (os convidados são avisados).
+// VERSÃO (Fase 10): Online.VERSAO é o número da versão do jogo (MUDAR A CADA PUBLICAÇÃO no GitHub Pages). O anfitrião inclui `versao` em cada visão; o convidado compara com a SUA e, se forem diferentes, avisa UMA vez (alert) para recarregar a página, sem tirar ninguém da partida. Não precisa de mudança nas regras do banco (o nó visao/{uid} não tem validação de formato); a checagem acontece na primeira visão depois do início da partida.
 // Depende de: Rede (rede.js); Cmd (comandos.js); viewFor (visao.js); done (objetivos.js); A, S, EU, UI, ligaUI, UIreset, render, Menu, Bot, Z (podem não existir: usa typeof).
 // ========================
 
 (function () {
   const Online = {
+    VERSAO: '2026-10-26a', versaoAvisada: false, // número da versão deste jogo (mudar a cada publicação)
     ativo: false, host: false, uids: [], idxDe: {}, offs: [],
     sessao: null, seq: 0, ultimo: '', ack: {}, vistos: new Set(), sujos: new Set(), pubT: null, // anfitrião
     n: 0, sessaoVista: null, pend: null, vistosAck: new Set(), eraMinha: false, // convidado (e eraMinha também no anfitrião)
@@ -94,7 +96,7 @@
       if (!this.ativo || !this.host || !S || !S.order) return;
       const mapa = {};
       this.sujos.forEach(i => { const q = S.players[i], u = this.uids[i]; if (!q || (q.bot && !q.ex) || !u) return;
-        const v = viewFor(i); v.sessao = this.sessao; v.n = ++this.seq; v.extra = { feito: this.feito(q) }; if (this.ack[i]) v.ack = this.ack[i];
+        const v = viewFor(i); v.sessao = this.sessao; v.versao = this.VERSAO; v.n = ++this.seq; v.extra = { feito: this.feito(q) }; if (this.ack[i]) v.ack = this.ack[i];
         mapa[u] = v; });
       this.sujos.clear();
       if (Object.keys(mapa).length) Rede.darVisoes(mapa).catch(e => { console.warn('[online] visão não enviada', e); this.aviso('⚠ Falha ao enviar o jogo aos outros jogadores.', 4000); });
@@ -132,6 +134,7 @@
     },
     recebe(v) { // uma visão nova do anfitrião
       if (!this.ativo || this.host || !v || !Array.isArray(v.players) || !Array.isArray(v.order)) return;
+      if (v.versao !== this.VERSAO && !this.versaoAvisada) { this.versaoAvisada = true; alert(`Este aparelho está com a versão "${this.VERSAO}" do jogo e o anfitrião com "${v.versao || 'antiga'}". Recarregue a página (PC: Ctrl+F5; celular: feche e abra o navegador) para evitar erros. Se continuar assim, peça ao anfitrião para recarregar também.`); } // versões diferentes: avisa uma vez, não tira ninguém
       if (v.sessao !== this.sessaoVista) { this.sessaoVista = v.sessao; this.n = 0; } // anfitrião reiniciou: recomeça a contagem
       if (typeof v.n === 'number') { if (v.n <= this.n) return; this.n = v.n; } // visão velha ou repetida
       let resp = null;
@@ -212,7 +215,7 @@
     limpa() { // desliga tudo e volta ao "jogo local"
       clearTimeout(this.pubT); this.pubT = null; clearTimeout(this.salvaT); this.salvaT = null; clearInterval(this.vigiaT); this.vigiaT = null; this.offs.splice(0).forEach(f => { try { f(); } catch (e) {} });
       if (this.pend) clearTimeout(this.pend.t);
-      this.pend = null; this.sujos.clear(); this.ack = {}; this.vistos.clear(); this.vistosAck.clear(); this.ultimo = ''; this.n = 0; this.sessaoVista = null; this.eraMinha = false;
+      this.pend = null; this.sujos.clear(); this.ack = {}; this.vistos.clear(); this.vistosAck.clear(); this.ultimo = ''; this.n = 0; this.sessaoVista = null; this.eraMinha = false; this.versaoAvisada = false;
       this.fora = {}; this.on = {}; this.lista = []; this.descarteAte = 0; this.hostUid = null; this.hostOff = null; this.semConexao = false; this.faixa('');
       this.ativo = false; this.host = false; this.uids = []; this.idxDe = {}; EU = null; this.aviso('');
       if (typeof Bot !== 'undefined') Bot.parar();

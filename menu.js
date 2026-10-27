@@ -2,7 +2,7 @@
 // menu.js: Menus iniciais. `Menu.tela` escolhe a tela: 'main' (Jogar Online / Jogar Local), 'online' (Criar Sala, Achar Sala, Buscar Partida), 'local' (Continuar Jogo, Novo Jogo, Tutorial, Configurações),
 // 'novo' (monta a partida local: nº de jogadores, nomes, humano ou bot em cada um, quem começa), 'criar', 'achar' e 'sala' (as telas das salas online vêm de lobby.js: Lobby.telaCriar/telaAchar/telaSala), 'espera' (convidado aguardando a primeira visão do anfitrião, online.js),
 // 'config' (antigo painel Dev: moedas iniciais, recursos, ver tudo, objetivo de cada jogador; os valores ficam em `Menu.cfg`, que A.new lê). O que ainda não está pronto (Buscar Partida, Tutorial) mostra "Essa função encontra-se em implementação ainda" (`Menu.wip`).
-// (Celular: tudo fica dentro de <div class="menu">, que o style.css usa para campos em largura total.)
+// O menu principal mostra o número da versão (Online.VERSAO, online.js) em letras pequenas. (Celular: tudo fica dentro de <div class="menu">, que o style.css usa para campos em largura total.)
 // ========================
 
 const WIP = '🚧 Essa função encontra-se em implementação ainda.';
@@ -34,7 +34,7 @@ function menu() {
   else if (T === 'sala') h = Lobby.telaSala();
   else if (T === 'espera') h = `<h2>🌾 Partida iniciando…</h2><p>Aguardando o anfitrião enviar o jogo.</p>${mb('Sair', 'A.quit()', 'sec')}`; // convidado, entre o fim do lobby e a primeira visão (online.js)
   else if (T === 'config') h = `<h2>Configurações</h2>${cfgHTML()}${mb('Voltar', "Menu.ir('local')", 'sec')}`;
-  else h = `<h2>Menu</h2>${mb('Jogar Online', "Menu.ir('online')")}${mb('Jogar Local', "Menu.ir('local')")}`;
+  else h = `<h2>Menu</h2>${mb('Jogar Online', "Menu.ir('online')")}${mb('Jogar Local', "Menu.ir('local')")}${window.Online && Online.VERSAO ? `<p class="mavs"><small>Versão ${Online.VERSAO}</small></p>` : ''}`;
   $('#app').innerHTML = `<div class="menu">${h}</div>`;
   if (T === 'novo') names();
   if (T === 'sala') Lobby.pinta();
