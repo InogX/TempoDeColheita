@@ -57,17 +57,22 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 
 | # | Item | Categoria | Complexidade | Precisa de | Trava algo? |
 |---|---|---|---|---|---|
-| A | **Balanceamento com 2 jogadores** | Regras / design | **Média** | `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`, `cartas-visual.js`, `bot.js`, `comandos.js`, `acoes-*.js`, `estado.js`, `consultas.js` | Não (o dono já aprovou) |
+| A | **Balanceamento com 2 jogadores** | Regras / design | **Média** (1ª rodada **feita**: medida e proposta, falta aprovar/jogar) | `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`, `cartas-visual.js`, `bot.js`, `comandos.js`, `acoes-*.js`, `estado.js`, `consultas.js` | Não (o dono já aprovou) |
 | B | **VFX** (efeitos visuais) | Visual | **Baixa a média** | `zoom.js`, `style.css`, `cartas-visual.js` | Não |
 | C | **Tutorial** | Conteúdo + tela | **Baixa (texto) a alta (guiado)** | depende do formato; `menu.js`, `tela.js`, `style.css` | Não |
 | D | **`qa.html`** | Ferramenta do dono | **Baixa a média** | o próprio `qa.html` + os arquivos atuais | Não (adiado pelo dono) |
 | E | **Buscar Partida** | Online / social | **Alta** | `rede.js`, `lobby.js`, `menu.js`, regras do banco | Não |
 
-### A. Balanceamento com 2 jogadores — complexidade **média**
-- **O que é:** alguns objetivos raramente fecham numa partida de 2: `noLoan`, `allLvl`, `clean`, `mUnits`, `mProfit`, `noites`, `floorUntil`. Provável causa: o cofre do Governo é finito. (É uma hipótese do plano, ainda não medida.)
-- **Como eu faria:** rodar muitas partidas de bots em Node (`Bot.simular`, com o código real), medir a taxa de vitória por objetivo, propor ajustes pequenos nos números (e só neles), medir de novo.
-- **Por que é média:** é iterativo e envolve **decisões suas** (o que é "equilibrado"?). Ainda não vi `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`: não sei o tamanho real do ajuste.
-- **Risco:** mexer em número de regra muda o jogo para todos (inclusive local). Mudanças pequenas e medidas, uma de cada vez.
+### A. Balanceamento com 2 jogadores — **1ª rodada feita** (ver `RELATORIO_BALANCEAMENTO.md`)
+- **Feito:** causa confirmada (dinheiro total fixo = 1500 × nº de jogadores); metas em moedas passam a escalar com isso; 14 números ajustados; verificação com os arquivos reais (900 partidas de bots, 0 erros). Objetivos de dinheiro passaram de "impossíveis" para ~19–22 rodadas.
+- **Falta (dono):** trocar os 3 arquivos (`cartas.js`, `cartas-visual.js`, `objetivos.js`), **jogar** algumas partidas de 2 jogadores e dizer se o ritmo agradou; conferir o `editor.html` (ele reescreve o `cartas.js`).
+- **Sub-itens que sobraram (cada um é pequeno e independente):**
+  - **A2. Melhorar o bot no `allLvl`** (um plantio por campo de 2+ vagas; evoluir primeiro os plantios mais baixos). *Baixa a média*; mexe só no `bot.js`.
+  - **A3. `mAll`/`mSellTo` em 2 jogadores** (viram "1 negociação", 77–92% de vitórias): exige decisão de regra/código. *Baixa a média.*
+  - **A4. `lvl3n`/`lvl3crops` (~20%):** têm piso de ~27 rodadas; precisa de decisão de design (são "objetivos de fim de partida"?). *Média.*
+  - **A5. Balancear 3 a 5 jogadores:** nova rodada de medição por tamanho (o valor base de 5+ ainda é lento: `coins`, `clean`, `noLoan` ~0% com 5). *Média.*
+  - **A6. Concentração de dinheiro / cofre que zera:** característica da economia fechada; só olhar se as partidas parecerem "decididas cedo". *Média a alta (mexe na economia).*
+- **Ferramentas:** `balanceamento_medicao.zip` (medir de novo depois de qualquer mudança).
 
 ### B. VFX — complexidade **baixa a média**
 - **O que é:** efeitos visuais. Já existe um **gancho vazio** `Z.fx(el)` no `zoom.js` para a animação de melhoria (a animação em si já existe).
@@ -103,7 +108,7 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 - **Ajuste do zoom no iPhone** nos campos de número: só se o teste mostrar o problema; precisa do `style.css`. *Baixa.*
 - **Menos consumo de download:** hoje cada ação reenvia a visão inteira a todos os humanos. Só vale se a medida real mostrar problema; não parece ser o caso. *Baixa a média.*
 - **Aviso de versão já na entrada da sala** (hoje é na primeira visão depois do início): exigiria mudar as regras do banco. *Baixa, mas mexe nas regras.*
-- **Arrumar o `teste_regras.js`** para não depender de `regras_antigas.json`, e um **`rodar_todos.js`** que roda todos os testes de uma vez. *Baixa.*
+- ~~**`rodar_todos.js`** que roda todos os testes de uma vez~~ ✅ feito: os testes agora vêm num pacote único (`testes_tempo_de_colheita.zip`).
 
 ---
 

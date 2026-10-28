@@ -131,7 +131,7 @@
 | 2 | Bot no navegador | ✅ testado pelo dono. |
 | 3 | Menus no celular | ✅ conferidos pelo dono (iOS e Android). |
 | 4 | Evento individual do bot | ✅ **decidido: fica VISÍVEL e já está pronto** (jogo local: `tela.js`; online: `viewFor` em `visao.js` manda o `ind` de jogadores bot a todos — Fase 7). |
-| 5 | **Balanceamento com 2 jogadores** | ⬜ **a fazer (dono aprovou).** Objetivos que raramente fecham: `noLoan`, `allLvl`, `clean`, `mUnits`, `mProfit`, `noites`, `floorUntil`. Provável causa: o cofre do Governo é finito. Fazer em **conversa própria**; enviar `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`, `cartas-visual.js`, `bot.js`, `comandos.js` + as `acoes-*.js` + `estado.js`, `consultas.js` (para testar com `Bot.simular` de verdade). Pode ser feito antes ou depois do online; não trava nada. |
+| 5 | **Balanceamento com 2 jogadores** | 🔄 **medido e proposto; falta o dono aprovar e jogar.** Causa confirmada: o dinheiro total do jogo é fixo (1500 × nº de jogadores = 3000 com 2 jogadores), então metas como 6000/4000 moedas eram impossíveis. Entregues `cartas.js`, `cartas-visual.js` e `objetivos.js` (escala das metas em moedas + 14 números ajustados); resultados e pendências em **`RELATORIO_BALANCEAMENTO.md`**. Não resolvido: `mAll`/`mSellTo`, `lvl3n`/`lvl3crops`, `mBuys`/`mProfit`, `allLvl` (bot) e 3 a 5 jogadores. |
 
 ---
 
@@ -307,7 +307,7 @@
 | **O resultado dos testes** | Este plano já traz o que o dono confirmou em 26/10/2026. Se fizer mais testes antes de abrir a conversa (4G/5G, sala lotada, iPhone), diga o que passou e o que falhou (passo, aparelho, o que apareceu). |
 | **online.js, rede.js, lobby.js, tela.js, regras_firebase.json** | O que a Fase 9 mexeu. |
 | **comandos.js, bot.js, janelas.js, zoom.js, visao.js, acoes-turno.js, acoes-economia.js, acoes-plantio.js, acoes-mercado.js, estado.js, consultas.js, menu.js, pecas-tela.js, index.html, iniciar.js** | Para os testes em Node com os arquivos reais. |
-| **teste_comum.js, teste_regras_motor.js, teste_fase4.js, teste_fase7.js, teste_fase8.js, teste_fase9.js, teste_fase10_sala8.js, teste_fase10_versao.js, teste_regras.js** e **regras_antigas.json** | Os testes (o `teste_regras.js` precisa do `regras_antigas.json` para a comparação). |
+| **testes_tempo_de_colheita.zip** (pasta `testes/`: `rodar_todos.js`, `teste_comum.js`, `teste_regras_motor.js`, `teste_fase4/7/8/9.js`, `teste_fase10_sala8.js`, `teste_fase10_versao.js`, `teste_regras.js`, `regras_firebase.json`, `regras_antigas.json`) | Os testes, num pacote só; descompactar na mesma pasta dos arquivos do jogo e rodar `node rodar_todos.js`. |
 | *(opcional)* **Prints** da aba *Uso* e dos dados do Realtime Database | Ajudam na conferência de consumo e de privacidade. |
 
 Não enviar: `cartas-visual.js` (visual puro, exceto se for mexer em `free/NV/vef/nm/evDesc`), `editor.html`, `qa.html`. O `firebaseConfig` já está no `rede.js`: não precisa colar de novo.

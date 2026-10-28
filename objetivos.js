@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// objetivos.js: Decide se o objetivo de um jogador foi cumprido, se ele violou uma regra do objetivo (eliminação), e define quem vence no fim da rodada (com desempate).
+// objetivos.js: Decide se o objetivo de um jogador foi cumprido (as metas usam vef/vef2 de cartas-visual.js: escalam com o nº de jogadores), se ele violou uma regra do objetivo (eliminação), e define quem vence no fim da rodada (com desempate).
 // ========================
 
 const done = p => { const o = p.obj, v = vef(o), st = p.st, pl = plotsOf(p), g = k => st[k] || 0, op = S.players.filter(q => q !== p && !q.out);
@@ -20,10 +20,10 @@ const done = p => { const o = p.obj, v = vef(o), st = p.st, pl = plotsOf(p), g =
     case 'mAll': { const ps = st.partners || []; return op.length > 0 && S.players.every((q, i) => q === p || q.out || ps.includes(i)); } // todos os adversários ainda vivos
     case 'mSellTo': return (st.buyers || []).length >= Math.min(v, Math.max(1, op.length));
     case 'mUnits': return g('mu') >= v;
-    case 'azar': return g('azar') >= o.v && p.coins >= o.v2;
-    case 'noites': return g('noites') >= o.n && p.coins >= o.v;
-    case 'floorUntil': return S.round >= o.r && p.coins >= o.v;
-    case 'allLvl': return S.round >= o.r && pl.length >= o.n && pl.every(x => lvOf(x) >= 2) && p.coins >= o.v;
+    case 'azar': return g('azar') >= o.v && p.coins >= vef2(o);
+    case 'noites': return g('noites') >= o.n && p.coins >= v;
+    case 'floorUntil': return S.round >= o.r && p.coins >= v;
+    case 'allLvl': return S.round >= o.r && pl.length >= o.n && pl.every(x => lvOf(x) >= 2) && p.coins >= v;
   }
   return false; };
 // objetivo com restrição: violar elimina o jogador (como falência) — só se o objetivo tiver elim:1

@@ -1,13 +1,16 @@
 // ===== FICHA TÉCNICA =====
-// cartas-visual.js: Cuida da APARÊNCIA e dos TEXTOS das cartas: nome, descrição, preço, nível, imagem (dia/noite) e o desenho (HTML) de cada carta.
+// cartas-visual.js: Cuida da APARÊNCIA e dos TEXTOS das cartas: nome, descrição, preço, nível, imagem (dia/noite) e o desenho (HTML) de cada carta. BALANCEAMENTO: vef(o) é a meta EFETIVA do objetivo: as metas em MOEDAS (coins, clean, noLoan, noites, floorUntil, allLvl; MOEDAS_ESC) escalam com o total de dinheiro do jogo (1500 por jogador), então `v` no cartas.js é o valor para 5+ jogadores (2 jogadores = 40%); o azar escala só a meta de moedas (vef2); os de mercado (esc:1) e mAll/mSellTo escalam pelo nº de adversários.
 // ========================
 
 const fa = c => ASSETS.campo[c.slots] || {};
 const price = c => (c.any ? fa(c).precoCromada : fa(c).preco) ?? c.price;
 const nm = c => c.slots ? (c.any ? fa(c).nomeCromada : fa(c).nome) || c.id : c.nome || c.id;
 const ex = c => (c.night ? ' · plantações de noite' : '') + ({ all: ' · todos veem tudo', self: ' · você revela suas informações', peek: ' · espie um jogador' }[c.reveal] || '');
-const vef = o => (o.t === 'mAll' || o.t === 'mSellTo') ? Math.max(1, Math.min(o.v, NJ() - 1)) : (o.esc ? Math.max(1, Math.ceil(o.v * Math.min(NJ() - 1, 4) / 4)) : o.v); // meta efetiva (escala com o nº de jogadores)
-const objTxt = o => (T[o.t] || o.t).replace('{v}', vef(o)).replace('{v2}', o.v2).replace('{n}', o.n).replace('{r}', o.r).replace('{floor}', o.floor).replace('{c}', CROPS[o.c]);
+const MOEDAS_ESC = ['coins', 'clean', 'noLoan', 'noites', 'floorUntil', 'allLvl']; // objetivos cuja meta (v) é em MOEDAS: escalam com o total de dinheiro do jogo (1500 por jogador); v = valor para 5+ jogadores
+const fMoeda = () => Math.min(NJ(), 5) / 5;
+const vef = o => (o.t === 'mAll' || o.t === 'mSellTo') ? Math.max(1, Math.min(o.v, NJ() - 1)) : MOEDAS_ESC.includes(o.t) ? Math.max(1, Math.round(o.v * fMoeda())) : (o.esc ? Math.max(1, Math.ceil(o.v * Math.min(NJ() - 1, 4) / 4)) : o.v); // meta efetiva (escala com o nº de jogadores)
+const vef2 = o => o.t === 'azar' ? Math.max(1, Math.round(o.v2 * fMoeda())) : o.v2; // 'azar': a meta de moedas (v2) também escala (v é a contagem de eventos)
+const objTxt = o => (T[o.t] || o.t).replace('{v}', vef(o)).replace('{v2}', vef2(o)).replace('{n}', o.n).replace('{r}', o.r).replace('{floor}', o.floor).replace('{c}', CROPS[o.c]);
 const evTxt = (c, crop) => (EVT[c.fx] || '').replace(/\{(\w+)\}/g, (_, k) => k === 'c' ? (crop ? CROPS[crop] : 'uma cultura sorteada') : (c[k] ?? '')); // texto da regra do evento (a cultura sorteada vem do item de S.ev)
 const desc = c => c.t ? objTxt(c)
   : c.slots ? `${c.any ? 'Aceita qualquer cultura' : 'Aceita: ' + c.types.map(k => CROPS[k]).join(' / ')} · ${c.slots} vagas · ${price(c)} moedas`
