@@ -131,7 +131,7 @@
 | 2 | Bot no navegador | ✅ testado pelo dono. |
 | 3 | Menus no celular | ✅ conferidos pelo dono (iOS e Android). |
 | 4 | Evento individual do bot | ✅ **decidido: fica VISÍVEL e já está pronto** (jogo local: `tela.js`; online: `viewFor` em `visao.js` manda o `ind` de jogadores bot a todos — Fase 7). |
-| 5 | **Balanceamento com 2 jogadores** | 🔄 **medido e proposto; falta o dono aprovar e jogar.** Causa confirmada: o dinheiro total do jogo é fixo (1500 × nº de jogadores = 3000 com 2 jogadores), então metas como 6000/4000 moedas eram impossíveis. Entregues `cartas.js`, `cartas-visual.js` e `objetivos.js` (escala das metas em moedas + 14 números ajustados); resultados e pendências em **`RELATORIO_BALANCEAMENTO.md`**. Não resolvido: `mAll`/`mSellTo`, `lvl3n`/`lvl3crops`, `mBuys`/`mProfit`, `allLvl` (bot) e 3 a 5 jogadores. |
+| 5 | **Balanceamento com 2 jogadores** | 🔄 **2 rodadas feitas (medido, ajustado e conferido em Node); falta o dono jogar.** Causa: dinheiro total fixo (1500 × nº de jogadores). Metas em moedas escalam com ele; números ajustados; `mAll`/`mSellTo` só com 6+ jogadores; `mBuys`/`mProfit` desligados (`minJ` 99); `allLvl` com regra nova (10+ plantios, mais da metade acima do nível 1) + 1 linha no `bot.js`; `lvl3n` = 1. Arquivos: `cartas.js`, `cartas-visual.js`, `objetivos.js`, `bot.js`, `config.js` (+ `editor.html`, só rótulos). Detalhes e pendências em **`RELATORIO_BALANCEAMENTO.md`**. |
 
 ---
 

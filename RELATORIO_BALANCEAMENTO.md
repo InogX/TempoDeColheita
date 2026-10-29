@@ -1,38 +1,39 @@
-# Balanceamento com 2 jogadores — relatório
+# Balanceamento — relatório (rodadas 1 e 2)
 
-Medido com o **jogo real** (cartas.js, config.js, objetivos.js, rodada.js, bot.js, comandos.js, acoes-*.js...) rodando em Node, só com bots, sorteio reprodutível. **Importante:** bot não é humano. Onde o resultado depende de como o bot joga, está dito.
+Medido com o **jogo real** (cartas.js, config.js, objetivos.js, rodada.js, bot.js, comandos.js, acoes-*.js...) rodando em Node, só com bots, sorteio reprodutível. **Bot não é humano:** onde o resultado depende de como o bot joga, está dito.
 
-## 1. Diagnóstico (o que as medidas mostraram)
+## 1. Diagnóstico (rodada 1)
 
-**1.1 O dinheiro total do jogo é fixo.** Cada jogador começa com 500 moedas e o cofre do Governo começa com 1000 por jogador, então o total é **1500 × nº de jogadores**. Com 2 jogadores são **3000 moedas** (sobe só para ~3300 na rodada 60, por causa dos eventos individuais). Logo:
-- `coins` 6000 e `clean` 4000 eram **impossíveis** com 2 jogadores (fechavam 0–4% das vezes). Com 3 jogadores, `clean` já fechava 100%; `coins` só fechava com 4–5 jogadores (26% e 98%). Os valores foram pensados para **5 jogadores**.
-- A hipótese do plano ("cofre finito") está **confirmada**. Quando o cofre zera, quem não vendeu ao Governo a tempo fica sem renda, e o dinheiro se concentra num jogador só (visto em várias partidas).
+**1.1 O dinheiro total do jogo é fixo:** 500 iniciais por jogador + 1000 de cofre por jogador = **1500 × nº de jogadores** (3000 com 2 jogadores; sobe só a ~3300 na rodada 60 por causa dos eventos individuais). Por isso `coins` 6000 e `clean` 4000 eram impossíveis com 2 jogadores (0–4% de sucesso); foram pensados para 5 jogadores.
 
-**1.2 Os objetivos tinham velocidades muito diferentes.** Medindo cada um sozinho (o adversário com um objetivo que nunca fecha), a mediana de rodadas para cumprir ia de **5–6** (`mAll`, `mSellTo`) a **70+** (`noLoan`) ou **nunca**. A partida natural dura em média 13 rodadas, então os lentos quase nunca ganhavam: não por serem impossíveis, mas porque o adversário fechava o dele antes.
+**1.2 Os objetivos tinham velocidades muito diferentes** (mediana de 5–6 a 70+ rodadas, ou "nunca"). A partida dura ~13 rodadas, então os lentos quase nunca ganhavam, não por serem impossíveis, mas porque o adversário fechava o dele antes.
 
-**1.3 Três objetivos dependem do bot ou do parceiro, não do número:**
-- `allLvl`: o bot põe 3 plantios de nível 1 num campo de 3 vagas, e aí nenhum deles consegue subir (evoluir exige vaga livre); campo de 1 vaga também nunca comporta nível 2. Um jogador que planeja (um plantio por campo de 2+ vagas) consegue. Mesmo com um bot ajustado só no teste, só 30% fechava, então é um problema de estratégia do bot.
-- `mBuys`: com um parceiro que vende, fecha **100% em 3 rodadas**; com um adversário que não põe oferta no Mercado, **0%**. Depende totalmente do outro jogador.
-- `mProfit`: é difícil mesmo com parceiro (o bot só vende a 2 moedas por unidade); a taxa de sucesso sobe de 7% para 64% se a meta cair de 500 para 150 (valores efetivos com 2 jogadores).
+**1.3 Causa do `allLvl` (descoberta na rodada 2):** o bot **enchia todos os campos de plantios de nível 1** e ficava sem vaga livre; sem vaga livre nenhum plantio consegue evoluir (chegou a ter 31 mil unidades paradas no estoque). Era defeito do bot, não da regra.
 
-**1.4 Em 2 jogadores, `mAll` e `mSellTo` viram "uma negociação"** (a meta é limitada a nº de adversários − 1 = 1). Fecham em 6 rodadas e ganham 77–92% das partidas. Isso **não** se corrige só com números.
+## 2. O que foi feito
 
-## 2. O que foi mudado
+### Rodada 1
+- **`cartas-visual.js` / `objetivos.js`:** as metas em MOEDAS (`coins`, `clean`, `noLoan`, `noites`, `floorUntil`) e a meta de moedas do `azar` escalam com o total de dinheiro do jogo; o `v` no `cartas.js` é o valor para 5+ jogadores (2 jogadores = 40%).
+- **`cartas.js`:** números ajustados para aproximar a velocidade dos objetivos (~20 rodadas).
 
-### 2.1 Código (pequeno)
-- **`cartas-visual.js`:** `vef(o)` passa a escalar as metas **em moedas** (`coins`, `clean`, `noLoan`, `noites`, `floorUntil`, `allLvl`) com o total de dinheiro: meta efetiva = `v × min(nº de jogadores, 5) / 5`. Ou seja, **`v` no `cartas.js` passa a ser o valor para 5+ jogadores** (2 jogadores = 40%; 3 = 60%; 4 = 80%). Novo `vef2` faz o mesmo com a meta de moedas do `azar` (`v2`). A escala é **por tipo de objetivo**, não por uma flag nova nos dados, para o `editor.html` não perdê-la ao salvar.
-- **`objetivos.js`:** `azar`, `noites`, `floorUntil` e `allLvl` usam a meta efetiva (antes usavam `o.v`/`o.v2` direto, e o texto da carta já mostrava a meta escalada: ficavam inconsistentes).
-- O `bot.js` **não foi alterado**. As regras da economia (cofre, evolução, produção, manutenção) **não foram alteradas**.
+### Rodada 2 (suas decisões)
+| Decisão | O que foi feito |
+|---|---|
+| `mAll` e `mSellTo` só com 6+ jogadores | `"minJ":6` nas duas cartas (o sorteio já respeitava `minJ`). |
+| Retirar `mBuys` e `mProfit` por enquanto | `"minJ":99` nas duas: **desligadas**, mas a definição fica guardada. Para religar: `minJ` volta a 0 (ou apague o campo). |
+| `allLvl` com regra nova | **"Tenha 10+ plantios, com mais da metade acima do nível 1"** (sem rodada mínima nem moedas). Código em `objetivos.js`, texto em `config.js`, e **1 linha no `bot.js`**: com esse objetivo o bot não lota o último espaço livre de campos de 2+ vagas. |
+| `lvl3n`/`lvl3crops`: mudar a quantidade | `lvl3n` de 4 para **1** (efeito medido abaixo). `lvl3crops` ficou em 2 (1 seria igual ao `lvl3n`). |
+| `coins`/`clean` ligados ao nº de jogadores | Já estava (rodada 1). Além disso, a escala agora **acompanha as regras de moedas iniciais e cofre** do editor (com os valores atuais o resultado é idêntico). |
+| Conferir o `editor.html` | Ver seção 5. |
 
-### 2.2 Números (`cartas.js`, valores para 5+ jogadores; entre parênteses o valor efetivo com 2 jogadores)
+### Números do `cartas.js` (valores para 5+ jogadores; entre parênteses o efetivo com 2 jogadores)
 | Objetivo | Antes | Depois |
 |---|---|---|
 | `coins` | 6000 | **4000** (1600) |
 | `clean` | 4000 | **3500** (1400) |
-| `noLoan` | 3000 | 3000 (**1200**, só pela escala) |
+| `noLoan` | 3000 | 3000 (**1200**, pela escala) |
 | `noites` | 2000, 3 noites | 2000 (**800**), 3 noites |
 | `floorUntil` | rodada 25, 2500 | **rodada 20, 2000** (800) |
-| `allLvl` | rodada 30, 1000 | **rodada 20**, 1000 (400) |
 | `azar` | 5 eventos, 1500 | 5 eventos, **2500** (1000) |
 | `slots` | 14 | **32** |
 | `chrome` | 3 | **6** |
@@ -40,54 +41,57 @@ Medido com o **jogo real** (cartas.js, config.js, objetivos.js, rodada.js, bot.j
 | `prodEach` | 150 | **500** |
 | `stockN` | 250 | **350** |
 | `mSales` | 10 (meta 3) | **16** (meta 4) |
-| `mProfit` | 2000 (meta 500) | **600** (meta 150) |
-| `lvl3n` | 4 | **3** |
-| `lvl3crops` | 3 | **2** |
-| `mBuys`, `mAll`, `mSellTo`, `mUnits` | — | **sem mudança** |
+| `lvl3n` | 4 | **1** |
+| `allLvl` | rodada 30, 4 plantios todos acima do nível 1, 1000 moedas | **10+ plantios, mais da metade acima do nível 1** |
+| `mAll`, `mSellTo` | — | só com 6+ jogadores |
+| `mBuys`, `mProfit` | — | **desligados** |
+| `lvl3crops`, `mUnits` | — | sem mudança |
 
-## 3. Resultados (2 jogadores, 3000 partidas de bots normais, objetivos sorteados)
-Partidas: mediana de **13 → 17** rodadas; sem final em 150 rodadas: **170 → 74** (de 3000).
+## 3. Resultados com 2 jogadores (3000 partidas de bots normais)
+Partidas: mediana **13 → 18** rodadas (p90 22); sem final em 150 rodadas: **170 → 1** (de 3000). O sorteio de 2 jogadores agora tem 16 objetivos (os 4 acima saíram dele).
 
-| Objetivo | Venceu antes | Venceu depois | Mediana de rodadas (isolado) antes → depois |
+| Objetivo | Venceu antes | Venceu depois | Mediana de rodadas, isolado: antes → depois |
 |---|---|---|---|
-| `mAll` | 86% | **92%** | 6 → 6 |
-| `mSellTo` | 78% | 77% | 7 → 6 |
-| `prodEach` | 82% | 68% | 11 → 21 |
-| `mSales` | 67% | 68% | 15 → 16 |
-| `azar` | 49% | 64% | 24 → 19 |
-| `noLoan` | 23% | **63%** | 70 → 19 |
-| `slots` | 88% | 63% | 10 → 18 |
-| `mUnits` | 53% | 61% | 18 → 19 |
-| `stockN` | 65% | 57% | 16 → 20 |
-| `clean` | 10% | **56%** | nunca → 21 |
-| `coins` | 12% | **53%** | nunca → 22 |
-| `chrome` | 83% | 51% | 11 → 18 |
-| `floorUntil` | 40% | 51% | 29 → 20 |
-| `lvlsum` | 77% | 44% | 11 → 20 |
-| `noites` | 41% | 44% | 28 → 22 |
-| `lvl3n` | 37% | **20%** | 32 → 29 |
-| `lvl3crops` | 33% | **19%** | 31 → 27 |
-| `mBuys` | 19% | 14% | nunca → nunca (depende do parceiro) |
-| `mProfit` | 8% | 8% | 24 → 20 (mas só 16% fecham) |
-| `allLvl` | 1% | 2% | nunca → nunca (bot) |
+| `mSales` | 67% | **76%** | 15 → 18 |
+| `mUnits` | 53% | **74%** | 18 → 19 |
+| `azar` | 49% | 67% | 24 → 20 |
+| `slots` | 88% | 66% | 10 → 18 |
+| `noLoan` | 23% | **66%** | 70 → 20 |
+| `prodEach` | 82% | 61% | 11 → 21 |
+| `stockN` | 65% | 53% | 16 → 20 |
+| `clean` | 10% | **52%** | nunca → 20 |
+| `floorUntil` | 40% | 49% | 29 → 20 |
+| `lvlsum` | 77% | 43% | 11 → 20 |
+| `chrome` | 83% | 43% | 11 → 19 |
+| `coins` | 12% | **41%** | nunca → 22 |
+| `allLvl` | 1% | **41%** | nunca → 21 |
+| `noites` | 41% | 35% | 28 → 25 |
+| `lvl3n` | 37% | **26%** | 32 → 24 |
+| `lvl3crops` | 33% | **10%** | 31 → 28 |
 
-Leitura: o número de objetivos entre 40% e 65% de vitórias passou de 5 para **11**; os de dinheiro, que eram os mais impossíveis, agora fecham em 19–22 rodadas e 99–100% das vezes quando isolados.
+Isolados (o adversário com um objetivo que nunca fecha), **todos os objetivos ativos fecham em 97–100% das vezes em 18–28 rodadas**.
 
-## 4. O que NÃO ficou resolvido (decisões suas)
-1. **`mAll` (92%) e `mSellTo` (77%)**: em 2 jogadores é uma única negociação. Resolver exige uma mudança de regra/código (por exemplo, exigir mais de uma negociação), não de número.
-2. **`lvl3n` e `lvl3crops` (~20%)** ficaram **mais** raros: a partida ficou um pouco mais longa, mas eles continuam tendo um piso de ~27 rodadas. Testei reduzir o custo de evolução de 250 para 150 e quase não ajudou (27 contra 30 rodadas), então não mexi nessa regra global. Ou ficam como objetivos "de fim de partida", ou se pensa numa regra específica para eles.
-3. **`mBuys` e `mProfit` (14% e 8%)** dependem do outro jogador e do preço. Contra um humano que vende e compra, devem se comportar melhor do que contra bots. Só um teste com pessoas diz.
-4. **`allLvl`** precisa de uma melhoria **no bot** (plantar um por campo de 2+ vagas e priorizar a evolução dos plantios mais baixos). Está listado como item à parte; o número já foi ajustado.
-5. **3 a 5 jogadores:** melhoraram (por exemplo, `coins` de 0% para 10% com 3 jogadores; `mUnits` de 19% para 54% com 5) mas **não ficaram equilibrados**: com 5 jogadores `coins`, `clean` e `noLoan` continuam perto de 0%, porque o valor base (5+) ainda é lento (~35–55 rodadas). Equilibrar isso é uma segunda rodada de medição (por tamanho de partida).
-6. **Concentração de dinheiro** (o cofre do Governo zera e um jogador fica com quase tudo): é uma característica da economia fechada, observada nas medidas. Não mexi, mas é provavelmente a próxima coisa a olhar se as partidas de 2 jogadores parecerem "decididas cedo".
+**Com 6 jogadores** (1000 partidas): `mSellTo` 63% e `mAll` 39% (referência justa = ~17%), então funcionam; os de dinheiro (`coins`, `clean`, `noLoan`) ficam perto de 0% (ver 4.3).
 
-## 5. Cuidados ao usar
-- **São 3 arquivos para trocar juntos:** `cartas.js`, `cartas-visual.js`, `objetivos.js`. Para voltar atrás, volte com os 3 antigos.
-- **Texto das cartas:** a carta mostra a meta **efetiva** (com 2 jogadores, "Acumule 1600 moedas"), não o `v` do arquivo.
-- **`editor.html`:** ele reescreve o `cartas.js`. Depois de trocar os arquivos, abra o editor, confira que os números novos aparecem e só então salve (eu não vi o `editor.html`; não sei se ele preserva tudo).
-- **Jogos já em andamento** (salvos no aparelho ou salas online): usam o objetivo guardado, mas a meta passa a ser calculada com a regra nova.
-- **Para publicar:** mude o `VERSAO` em `online.js` (ver `PUBLICACAO_FASE11.md`) e não publique com partida em andamento.
-- **Testes:** a bateria em Node (`rodar_todos.js`) usa cartas e objetivos falsos, então não cobre esta mudança. Rodei uma verificação própria com os arquivos reais: 900 partidas de bots (2, 3, 4, 6 e 10 jogadores, níveis fácil e normal), **0 erros**, e os textos de todos os 20 objetivos conferidos de 2 a 10 jogadores. Falta o teste **jogando** (você).
+## 4. O que NÃO ficou resolvido
+1. **`lvl3crops` (10%)**. Reduzir a quantidade ajuda pouco: mesmo exigindo só 1 plantio no nível 3, o bot leva ~23 rodadas; com 3, ~29. O gargalo não é o custo de evoluir (testei baixar 250 → 150: quase sem efeito), e sim comprar o campo de 3 vagas e juntar os recursos certos. Deve continuar um objetivo "de partida mais longa".
+2. **`mSales` e `mUnits` (76% e 74%)** dependem do Mercado: o bot só vende se outro bot compra. Como você tem dúvidas sobre o Mercado com humanos, vale **medir jogando com pessoas** antes de mexer nos números (ou desligar como os outros dois, com `minJ` 99).
+3. **3 a 6+ jogadores:** nos jogos grandes os objetivos de dinheiro têm um piso de ~24 rodadas qualquer que seja o valor (medi de 1500 a 4000 com 5 jogadores), e a partida de 5+ dura 10–16 rodadas. Resolver exige uma rodada própria de calibração por tamanho de partida.
+4. **Concentração de dinheiro:** o cofre do Governo zera e um jogador pode ficar com quase tudo (visto em várias partidas). É característica da economia fechada; só vale mexer se as partidas parecerem "decididas cedo".
 
-## 6. Como reproduzir as medidas
-O pacote `balanceamento_medicao.zip` tem os scripts (veja o `LEIA-ME.md` dentro). Exemplo: `node medir.js natural 300` (partidas naturais), `node medir.js solo 100` (cada objetivo isolado), `node ajuste.js "Objetivo 6" v 2 "1000,1500,2000"` (curva de dificuldade de um número).
+## 5. `editor.html`: está correto
+Reproduzi em Node o que ele faz (abrir, `migrate`, salvar) com os arquivos novos:
+- Abrir **não altera nada** nos dados; abrir → salvar → reler dá dados **idênticos** (os campos novos `minJ`, `v` etc. são preservados; os 20 objetivos continuam).
+- O texto dos objetivos fica no `config.js`, que o editor **não** edita (por isso o `allLvl` novo mudou lá).
+- Ajuste feito (só rótulos, 9 linhas): `minJ`, `n`, `r`, `v2`, `floor`, `elim` e `esc` apareciam com o nome cru; o `v` aparecia como "Valor", mas nos objetivos de dinheiro é o valor para 5+ jogadores; as regras "moedas iniciais" e "cofre" avisam que as metas acompanham. **O editor.html não afeta o jogo**, só a sua tela de edição.
+- Ao usar: para desligar um objetivo, ponha `minJ` = 99; para exigir mais jogadores, `minJ` = o mínimo.
+
+## 6. Cuidados ao usar
+- **Arquivos do jogo a trocar juntos (5):** `cartas.js`, `cartas-visual.js`, `objetivos.js`, `bot.js`, `config.js`. Para voltar atrás, volte com os antigos. `editor.html` é opcional (só rótulos).
+- **A carta mostra a meta efetiva** (com 2 jogadores, "Acumule 1600 moedas"), não o `v` do arquivo.
+- **Jogos já em andamento** (salvos no aparelho ou salas online): o objetivo fica guardado dentro da partida. Um `allLvl` guardado no formato antigo ficaria com meta de 1000 plantios (porque agora o `v` é a quantidade de plantios), ou seja, impossível. **Comece partida nova depois de trocar os arquivos e não publique com partida em andamento.**
+- **Para publicar:** mude o `VERSAO` em `online.js` (`PUBLICACAO_FASE11.md`). O `bot.js` mudou, então anfitrião e convidados precisam estar na mesma versão.
+- **Testes:** a bateria `rodar_todos.js` passou (12 de 12) com o `bot.js` novo, mas ela usa cartas e objetivos falsos, então não cobre esta mudança. Verifiquei com os arquivos reais: 900 partidas de bots (2, 3, 4, 6 e 10 jogadores, fácil e normal) com **0 erros** e os textos dos 20 objetivos de 2 a 10 jogadores. **Falta o teste jogando** (você).
+
+## 7. Como reproduzir as medidas
+`balanceamento_medicao.zip` (veja o `LEIA-ME.md`; o comando mais simples é `node medir_tudo.js`).

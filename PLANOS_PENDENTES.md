@@ -57,22 +57,21 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 
 | # | Item | Categoria | Complexidade | Precisa de | Trava algo? |
 |---|---|---|---|---|---|
-| A | **Balanceamento com 2 jogadores** | Regras / design | **Média** (1ª rodada **feita**: medida e proposta, falta aprovar/jogar) | `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`, `cartas-visual.js`, `bot.js`, `comandos.js`, `acoes-*.js`, `estado.js`, `consultas.js` | Não (o dono já aprovou) |
+| A | **Balanceamento** (2 jogadores feito; 3 a 6+ pendente) | Regras / design | **Média** (2 rodadas **feitas**; falta o dono jogar) | `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`, `cartas-visual.js`, `bot.js`, `comandos.js`, `acoes-*.js`, `estado.js`, `consultas.js` | Não (o dono já aprovou) |
 | B | **VFX** (efeitos visuais) | Visual | **Baixa a média** | `zoom.js`, `style.css`, `cartas-visual.js` | Não |
 | C | **Tutorial** | Conteúdo + tela | **Baixa (texto) a alta (guiado)** | depende do formato; `menu.js`, `tela.js`, `style.css` | Não |
 | D | **`qa.html`** | Ferramenta do dono | **Baixa a média** | o próprio `qa.html` + os arquivos atuais | Não (adiado pelo dono) |
 | E | **Buscar Partida** | Online / social | **Alta** | `rede.js`, `lobby.js`, `menu.js`, regras do banco | Não |
 
-### A. Balanceamento com 2 jogadores — **1ª rodada feita** (ver `RELATORIO_BALANCEAMENTO.md`)
-- **Feito:** causa confirmada (dinheiro total fixo = 1500 × nº de jogadores); metas em moedas passam a escalar com isso; 14 números ajustados; verificação com os arquivos reais (900 partidas de bots, 0 erros). Objetivos de dinheiro passaram de "impossíveis" para ~19–22 rodadas.
-- **Falta (dono):** trocar os 3 arquivos (`cartas.js`, `cartas-visual.js`, `objetivos.js`), **jogar** algumas partidas de 2 jogadores e dizer se o ritmo agradou; conferir o `editor.html` (ele reescreve o `cartas.js`).
-- **Sub-itens que sobraram (cada um é pequeno e independente):**
-  - **A2. Melhorar o bot no `allLvl`** (um plantio por campo de 2+ vagas; evoluir primeiro os plantios mais baixos). *Baixa a média*; mexe só no `bot.js`.
-  - **A3. `mAll`/`mSellTo` em 2 jogadores** (viram "1 negociação", 77–92% de vitórias): exige decisão de regra/código. *Baixa a média.*
-  - **A4. `lvl3n`/`lvl3crops` (~20%):** têm piso de ~27 rodadas; precisa de decisão de design (são "objetivos de fim de partida"?). *Média.*
-  - **A5. Balancear 3 a 5 jogadores:** nova rodada de medição por tamanho (o valor base de 5+ ainda é lento: `coins`, `clean`, `noLoan` ~0% com 5). *Média.*
+### A. Balanceamento — **2 rodadas feitas** (ver `RELATORIO_BALANCEAMENTO.md`)
+- **Feito:** causa confirmada (dinheiro total fixo = 1500 × nº de jogadores); metas em moedas escalam com isso (e com as regras de moedas do editor); números ajustados; decisões do dono aplicadas (`mAll`/`mSellTo` só com 6+ jogadores; `mBuys`/`mProfit` desligados com `minJ` 99; `allLvl` com regra nova + correção do bot; `lvl3n` = 1); `editor.html` conferido. Verificação com os arquivos reais: 900 partidas de bots, 0 erros; bateria de testes 12 de 12.
+- **Falta (dono):** trocar os 5 arquivos do jogo (`cartas.js`, `cartas-visual.js`, `objetivos.js`, `bot.js`, `config.js`), **começar partida nova**, **jogar** algumas de 2 jogadores (e, se der, uma de 6) e dizer se o ritmo agradou. Antes de publicar: mudar o `VERSAO` em `online.js`.
+- **Sub-itens que sobraram (cada um pequeno e independente):**
+  - **A3. `lvl3crops` (~10%):** piso de ~23–28 rodadas por causa de comprar campo de 3 vagas e juntar recursos; precisa de decisão de design (objetivo "de partida longa"?) ou de outra regra. *Média.*
+  - **A4. `mSales`/`mUnits` (76% e 74% contra bots):** dependem do Mercado. Esperar o teste com humanos; se o Mercado continuar duvidoso, desligar com `minJ` 99 (1 linha cada). *Baixa.*
+  - **A5. Calibrar 3 a 6+ jogadores:** nos jogos grandes os objetivos de dinheiro têm piso de ~24 rodadas qualquer que seja o valor e a partida dura 10–16 rodadas (com 6 jogadores `coins`/`clean`/`noLoan` ~0%). Nova rodada de medição por tamanho de partida. *Média.*
   - **A6. Concentração de dinheiro / cofre que zera:** característica da economia fechada; só olhar se as partidas parecerem "decididas cedo". *Média a alta (mexe na economia).*
-- **Ferramentas:** `balanceamento_medicao.zip` (medir de novo depois de qualquer mudança).
+- **Ferramentas:** `balanceamento_medicao.zip` (`node medir_tudo.js`; LEIA-ME em linguagem simples). Medir de novo depois de qualquer mudança.
 
 ### B. VFX — complexidade **baixa a média**
 - **O que é:** efeitos visuais. Já existe um **gancho vazio** `Z.fx(el)` no `zoom.js` para a animação de melhoria (a animação em si já existe).

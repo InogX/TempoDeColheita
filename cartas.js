@@ -1,7 +1,7 @@
 // ARQUIVO DE DADOS - editado pelo editor.html (ou à mão, se preferir)
 const CARDS = {
  "objetivo": [
-  {"id":"Objetivo 1","nome":"Objetivo 1","sprite":"","t":"lvl3n","v":3},
+  {"id":"Objetivo 1","nome":"Objetivo 1","sprite":"","t":"lvl3n","v":1},
   {"id":"Objetivo 2","nome":"Objetivo 2","sprite":"","t":"lvl3crops","v":2},
   {"id":"Objetivo 3","nome":"Objetivo 3","sprite":"","t":"lvlsum","v":36},
   {"id":"Objetivo 4","nome":"Objetivo 4","sprite":"","t":"prodEach","v":500},
@@ -12,15 +12,15 @@ const CARDS = {
   {"id":"Objetivo 9","nome":"Objetivo 9","sprite":"","t":"chrome","v":6},
   {"id":"Objetivo 10","nome":"Objetivo 10","sprite":"","t":"slots","v":32},
   {"id":"Objetivo 11","nome":"Objetivo 11","sprite":"","t":"mSales","v":16,"esc":1},
-  {"id":"Objetivo 12","nome":"Objetivo 12","sprite":"","t":"mBuys","v":8,"esc":1},
-  {"id":"Objetivo 13","nome":"Objetivo 13","sprite":"","t":"mProfit","v":600,"esc":1},
-  {"id":"Objetivo 14","nome":"Objetivo 14","sprite":"","t":"mAll","v":3},
-  {"id":"Objetivo 15","nome":"Objetivo 15","sprite":"","t":"mSellTo","v":4},
+  {"id":"Objetivo 12","nome":"Objetivo 12","sprite":"","t":"mBuys","v":8,"esc":1,"minJ":99},
+  {"id":"Objetivo 13","nome":"Objetivo 13","sprite":"","t":"mProfit","v":600,"esc":1,"minJ":99},
+  {"id":"Objetivo 14","nome":"Objetivo 14","sprite":"","t":"mAll","v":3,"minJ":6},
+  {"id":"Objetivo 15","nome":"Objetivo 15","sprite":"","t":"mSellTo","v":4,"minJ":6},
   {"id":"Objetivo 16","nome":"Objetivo 16","sprite":"","t":"mUnits","v":600,"esc":1},
   {"id":"Objetivo 17","nome":"Objetivo 17","sprite":"","t":"azar","v":5,"v2":2500,"floor":100,"elim":1},
   {"id":"Objetivo 18","nome":"Objetivo 18","sprite":"","t":"noites","n":3,"v":2000},
   {"id":"Objetivo 19","nome":"Objetivo 19","sprite":"","t":"floorUntil","r":20,"floor":50,"v":2000,"elim":1},
-  {"id":"Objetivo 20","nome":"Objetivo 20","sprite":"","t":"allLvl","r":20,"n":4,"v":1000}
+  {"id":"Objetivo 20","nome":"Objetivo 20","sprite":"","t":"allLvl","v":10}
  ],
  "campo": [
   {"id":"Campo 1","nome":"Campo 1","slots":1,"types":["soja","milho"]},

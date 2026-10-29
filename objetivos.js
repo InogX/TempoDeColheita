@@ -23,7 +23,7 @@ const done = p => { const o = p.obj, v = vef(o), st = p.st, pl = plotsOf(p), g =
     case 'azar': return g('azar') >= o.v && p.coins >= vef2(o);
     case 'noites': return g('noites') >= o.n && p.coins >= v;
     case 'floorUntil': return S.round >= o.r && p.coins >= v;
-    case 'allLvl': return S.round >= o.r && pl.length >= o.n && pl.every(x => lvOf(x) >= 2) && p.coins >= v;
+    case 'allLvl': return pl.length >= v && pl.filter(x => lvOf(x) >= 2).length * 2 > pl.length; // n+ plantios e MAIS da metade acima do nível 1
   }
   return false; };
 // objetivo com restrição: violar elimina o jogador (como falência) — só se o objetivo tiver elim:1
