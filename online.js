@@ -14,7 +14,7 @@
 
 (function () {
   const Online = {
-    VERSAO: '2026-10-29a', versaoAvisada: false, // número da versão deste jogo (mudar a cada publicação)
+    VERSAO: '2026-10-30a', versaoAvisada: false, // número da versão deste jogo (mudar a cada publicação)
     ativo: false, host: false, uids: [], idxDe: {}, offs: [],
     sessao: null, seq: 0, ultimo: '', ack: {}, vistos: new Set(), sujos: new Set(), pubT: null, // anfitrião
     n: 0, sessaoVista: null, pend: null, vistosAck: new Set(), eraMinha: false, // convidado (e eraMinha também no anfitrião)
