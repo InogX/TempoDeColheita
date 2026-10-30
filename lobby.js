@@ -1,6 +1,6 @@
 // ===== FICHA TÉCNICA =====
 // lobby.js: Salas online (Fase 6). Telas "Criar Sala", "Achar Sala" e a sala de espera (Menu.tela = 'criar' | 'achar' | 'sala') e a lógica do lobby, falando só com `Rede` (rede.js).
-// Anfitrião: cria a sala (nome + nº de jogadores, de 2 a 8, bots contam), vê o código e o link de convite, vê quem conectou (com bolinha de online), põe bots nas vagas livres (fácil/normal), tira jogadores, muda o nº de vagas, escolhe quem começa (aleatório ou um jogador) e inicia.
+// Anfitrião: cria a sala (nome + nº de jogadores, de 2 a 10, bots contam), vê o código e o link de convite, vê quem conectou (com bolinha de online), põe bots nas vagas livres (fácil/normal), tira jogadores, muda o nº de vagas, escolhe quem começa (aleatório ou um jogador) e inicia.
 // Convidado: digita nome e código (ou abre o link ?sala=CODIGO, que já vem preenchido), vê a lista e espera. Se for removido ou a sala fechar, volta ao menu com um aviso.
 // Ao iniciar: o anfitrião grava a ordem final dos jogadores (idx 0, 1, 2...) e põe a sala em 'jogando'. Todos recebem `Lobby.aoIniciar(cfg)` com cfg = { nomes, bots, first, uids, meuIdx, host } (o mesmo formato de A.new). Sem aoIniciar definido, mostra "Partida iniciada" (o jogo online em si é a Fase 7).
 // Fase 9: "Fechar sala" põe a sala em 'fim', espera um instante (os convidados são avisados) e APAGA a sala (Rede.removerSala). Quando a partida começa, o online.js desliga os ouvintes do lobby (Lobby.desliga) para o lobby não brigar com ele.
@@ -25,14 +25,14 @@ const Lobby = (() => {
 
     // ---------- telas ----------
     telaCriar() { return `<h2>Criar Sala</h2><label>Seu nome <input id="lbNome" maxlength="20" placeholder="Seu nome"></label>
-      <label>Jogadores na sala (2 a 8, contando bots) <input id="lbVagas" type="number" min="2" max="8" value="4"></label>${mb('Criar sala', 'Lobby.criar()')}${mb('Voltar', "Menu.ir('online')", 'sec')}${mavs}`; },
+      <label>Jogadores na sala (2 a 10, contando bots) <input id="lbVagas" type="number" min="2" max="10" value="4"></label>${mb('Criar sala', 'Lobby.criar()')}${mb('Voltar', "Menu.ir('online')", 'sec')}${mavs}`; },
     telaAchar() { const c = (typeof Rede !== 'undefined' && Rede.convite) || '';
       return `<h2>Achar Sala</h2>${c ? `<p>Convite para a sala <b>${esc(c)}</b></p>` : ''}<label>Seu nome <input id="nomeSala" maxlength="20" placeholder="Seu nome"></label>
       <label>Código da sala <input id="cod" maxlength="8" placeholder="Código" value="${esc(c)}" oninput="this.value=this.value.toUpperCase()"></label>${mb('Conectar', 'Lobby.entrar()')}${mb('Voltar', "Menu.ir('online')", 'sec')}${mavs}`; },
     telaSala() { const host = L.papel === 'host', partilha = typeof navigator !== 'undefined' && navigator.share;
       return `<h2>Sala <span class="cod" id="lbCod"></span></h2><div class="sala"><div id="lbInfo"></div>${mb('Copiar código', "Lobby.copiar('cod')", 'sec')}${mb('Copiar link de convite', "Lobby.copiar('link')", 'sec')}${partilha ? mb('Compartilhar convite', 'Lobby.compartilha()', 'sec') : ''}</div>
       <div id="lbLista"></div>
-      ${host ? `<div id="lbCtl"><label>Jogadores na sala (2 a 8, contando bots) <input id="lbVagas" type="number" min="2" max="8" onchange="Lobby.vagas(this.value)"></label>
+      ${host ? `<div id="lbCtl"><label>Jogadores na sala (2 a 10, contando bots) <input id="lbVagas" type="number" min="2" max="10" onchange="Lobby.vagas(this.value)"></label>
         <label>Quem começa <select id="lbQuem" onchange="Lobby.quem=this.value"></select></label>
         <button class="mb" id="lbIniciar" onclick="Lobby.iniciar()">Iniciar partida</button>${mb('Fechar sala', 'Lobby.fechar()', 'sec')}</div>`
         : `<p id="lbEspera">Aguardando o anfitrião iniciar a partida…</p><div id="lbSair">${mb('Sair da sala', 'Lobby.sair()', 'sec')}</div>`}
@@ -76,7 +76,7 @@ const Lobby = (() => {
       return Promise.resolve().then(fn).catch(e => Menu.aviso((e && e.message) || String(e))).then(() => { L.ocupado = false; L.pinta(); }); },
 
     // ---------- ações do anfitrião ----------
-    criar() { return L.ocupa(async () => { const nome = limpa(val('lbNome')), vagas = Math.max(2, Math.min(8, parseInt(val('lbVagas'), 10) || 4));
+    criar() { return L.ocupa(async () => { const nome = limpa(val('lbNome')), vagas = Math.max(2, Math.min(10, parseInt(val('lbVagas'), 10) || 4));
       if (!nome) throw new Error('Digite o seu nome.');
       Menu.aviso('Conectando…'); await Rede.iniciar(); await Rede.criar(nome, vagas); L.papel = 'host'; L.ligar(); Menu.ir('sala'); }); },
     bot(nivel) { return L.ocupa(() => Rede.adicionarBot(nivel)); },

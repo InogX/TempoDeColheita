@@ -15,7 +15,7 @@
             ".validate": "newData.isString() && newData.val().matches(/^(lobby|jogando|fim)$/)"
           },
           "vagas": {
-            ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 8"
+            ".validate": "newData.isNumber() && newData.val() >= 2 && newData.val() <= 10"
           },
           "criadaEm": {
             ".validate": "newData.isNumber()"
@@ -77,7 +77,36 @@
           ".read": "auth != null && root.child('salas/' + $sala + '/meta/host').val() === auth.uid",
           ".write": "auth != null && root.child('salas/' + $sala + '/meta/host').val() === auth.uid"
         },
-        ".write": "auth != null && data.child('meta/host').val() === auth.uid && !newData.exists()"
+        ".write": "auth != null && data.child('meta/host').val() === auth.uid && !newData.exists()",
+        "chat": {
+          ".read": "auth != null && root.child('salas/' + $sala + '/jogadores/' + auth.uid).exists()",
+          "$id": {
+            ".write": "auth != null && ((!data.exists() && newData.exists() && root.child('salas/' + $sala + '/jogadores/' + auth.uid).exists() && !root.child('salas/' + $sala + '/mudos/' + auth.uid).exists()) || (!newData.exists() && root.child('salas/' + $sala + '/meta/host').val() === auth.uid))",
+            ".validate": "newData.hasChildren(['de', 'nome', 'txt', 'ts'])",
+            "de": {
+              ".validate": "newData.val() === auth.uid"
+            },
+            "nome": {
+              ".validate": "newData.isString() && newData.val() === root.child('salas/' + $sala + '/jogadores/' + auth.uid + '/nome').val()"
+            },
+            "txt": {
+              ".validate": "newData.isString() && newData.val().length >= 1 && newData.val().length <= 200"
+            },
+            "ts": {
+              ".validate": "newData.isNumber()"
+            },
+            "$outro": {
+              ".validate": false
+            }
+          }
+        },
+        "mudos": {
+          ".read": "auth != null && root.child('salas/' + $sala + '/jogadores/' + auth.uid).exists()",
+          "$uid": {
+            ".write": "auth != null && root.child('salas/' + $sala + '/meta/host').val() === auth.uid",
+            ".validate": "newData.val() === true"
+          }
+        }
       }
     }
   }

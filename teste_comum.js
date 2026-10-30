@@ -100,7 +100,7 @@ function nextRound() { S.round++; const vivos = S.players.map((p, i) => i).filte
 const D = { i: () => 0 };
 const AVISOS = [];
 `, 'prelude');
-  ['estado.js', 'consultas.js', 'acoes-turno.js', 'acoes-economia.js', 'acoes-plantio.js', 'acoes-mercado.js', 'comandos.js', 'bot.js', 'menu.js', 'lobby.js', 'pecas-tela.js', 'visao.js', 'janelas.js', 'tela.js', 'zoom.js', 'online.js']
+  ['estado.js', 'consultas.js', 'acoes-turno.js', 'acoes-economia.js', 'acoes-plantio.js', 'acoes-mercado.js', 'comandos.js', 'bot.js', 'menu.js', 'lobby.js', 'pecas-tela.js', 'visao.js', 'janelas.js', 'tela.js', 'zoom.js', 'online.js', 'chat.js']
     .forEach(f => run(fs.readFileSync(dir + f, 'utf8'), f));
   run('Menu.aviso = m => { AVISOS.push(String(m)); }; Bot.delay = 0; Z.open = (...a) => { OPENS.push(a); return mkEl("div"); };', 'ajustes');
   if (opc.tempos) run('Object.assign(Online, ' + JSON.stringify(opc.tempos) + ')', 'tempos'); // encurta os tempos de espera (Fase 9)

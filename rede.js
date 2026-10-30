@@ -46,10 +46,16 @@
      Rede.adicionarBot(nivel)    'facil' | 'normal'; põe um bot numa vaga livre; devolve a chave.
      Rede.removerJogador(chave)  tira um bot ou uma pessoa (o host não se tira).
      Rede.fixarJogadores(ordem)  ordem = chaves em ordem final; grava idx = 0, 1, 2...; recusa se a lista mudou.
-     Rede.definirVagas(n)        2 a 8 (bots contam); não pode ser menor que os presentes.
+     Rede.definirVagas(n)        2 a 10 (bots contam); não pode ser menor que os presentes.
      Rede.sair()                 desliga ouvintes e sai da sala (no lobby o convidado libera a vaga; em jogo só fica online:false; se a sala já foi apagada não recria nada).
      -- Fase 9 --
      Rede.aoConexao(fn)          fn(true|false): ESTE aparelho está conectado ao banco? (devolve a função que desliga)
+     -- Chat (Fase 12) --
+     Rede.enviarChat(txt, nome)  grava a mensagem (até 200 caracteres); `nome` TEM de ser o seu nome na lista de jogadores (as regras conferem). Não passa pelo anfitrião.
+     Rede.aoChat(fn)             fn({ id, de, nome, txt, ts }) para cada mensagem (as antigas primeiro)
+     Rede.silenciar(uid, sim)    (host) silencia (sim !== false) ou libera um jogador
+     Rede.aoMudos(fn)            fn({ uid: true, ... }) a cada mudança dos silenciados
+     Rede.apagarChat(ids)        (host) apaga mensagens antigas
      Rede.removerSala()          (host) apaga a sala inteira (meta, jogadores, ações, visões, estado) e sai dela. Sem Rede.sair() depois.
      Rede.limparAntigas()        apaga as salas que ESTE aparelho criou e que já acabaram ('fim') ou têm mais de 24 h (lista em tc_salas, no próprio aparelho). Chamada sozinha ao criar uma sala.
      Rede.lerConvite(busca)      (síncrono) lê ?sala=CODIGO; guarda em Rede.convite.
@@ -193,7 +199,7 @@
 
     Rede.criar = envolve(function (nome, vagas) {
       return Rede.iniciar().then(function () {
-        vagas = Math.max(2, Math.min(8, parseInt(vagas, 10) || 4));
+        vagas = Math.max(2, Math.min(10, parseInt(vagas, 10) || 4));
         nome = limpaNome(nome);
         return sala ? Rede.sair() : null;
       }).then(function () {
@@ -242,7 +248,7 @@
         if (meta.estado !== 'lobby') desfaz(falha(meta.estado === 'fim' ? 'Esta sala foi encerrada.' : 'A partida já começou.'));
         var usados = {}, n = 0, k;
         for (k in js) { n++; usados[js[k].idx] = true; }
-        if (n >= (meta.vagas || 8)) desfaz(falha('Sala cheia.'));
+        if (n >= (meta.vagas || 10)) desfaz(falha('Sala cheia.'));
         var idx = 0; while (usados[idx]) idx++;
         return M.db.set(ref_eu, { nome: nome, idx: idx, online: true, bot: '' })
           .then(function () { return fim(idx); }, desfaz);
@@ -312,6 +318,31 @@
       return guarda(M.db.onValue(rs('meta'), function (s) { fn(s.val() || null); }, erroOuvinte));
     };
 
+    /* ---- Chat (Fase 12): texto curto entre os jogadores da sala. Cada um grava a própria mensagem (o anfitrião só apaga as antigas e silencia). ---- */
+    Rede.enviarChat = envolve(function (txt, nome) {
+      return Promise.resolve().then(function () {
+        exigeSala();
+        txt = String(txt == null ? '' : txt).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 200);
+        if (!txt) throw falha('Digite uma mensagem.');
+        var r = M.db.push(rs('chat'));
+        return M.db.set(r, { de: uid, nome: String(nome || ''), txt: txt, ts: Date.now() }).then(function () { return r.key; });
+      });
+    });
+    Rede.aoChat = function (fn) {
+      exigeSala();
+      return guarda(M.db.onChildAdded(rs('chat'), function (s) { var m = s.val() || {}; fn({ id: s.key, de: m.de, nome: m.nome, txt: m.txt, ts: m.ts }); }, erroOuvinte));
+    };
+    Rede.silenciar = envolve(function (alvo, sim) {
+      return Promise.resolve().then(function () { exigeHost(); return sim === false ? M.db.remove(rs('mudos/' + alvo)) : M.db.set(rs('mudos/' + alvo), true); });
+    });
+    Rede.aoMudos = function (fn) {
+      exigeSala();
+      return guarda(M.db.onValue(rs('mudos'), function (s) { fn(s.val() || {}); }, erroOuvinte));
+    };
+    Rede.apagarChat = envolve(function (ids) {
+      return Promise.resolve().then(function () { exigeHost(); return Promise.all((ids || []).map(function (id) { return M.db.remove(rs('chat/' + id)); })); });
+    });
+
     Rede.aoConexao = function (fn) { // Fase 9: este aparelho está conectado ao banco?
       exigeSala();
       return guarda(M.db.onValue(ref('.info/connected'), function (s) { fn(s.val() === true); }, erroOuvinte));
@@ -367,7 +398,7 @@
       }).then(function (l) {
         var usados = {}, nomes = {}, n = 0, k, i;
         for (k in l.js) { n++; usados[l.js[k].idx] = true; nomes[l.js[k].nome] = true; }
-        if (n >= (l.meta.vagas || 8)) throw falha('Sala cheia.');
+        if (n >= (l.meta.vagas || 10)) throw falha('Sala cheia.');
         var idx = 0; while (usados[idx]) idx++;
         i = 1; while (nomes['Bot ' + i]) i++;
         var chave = 'bot' + gerarCodigo();
@@ -394,11 +425,11 @@
         return M.db.update(rs('jogadores'), up);
       });
     });
-    /* Muda o número de vagas (2 a 8, contando bots). Não pode ser menor que o número de jogadores presentes. */
+    /* Muda o número de vagas (2 a 10, contando bots). Não pode ser menor que o número de jogadores presentes. */
     Rede.definirVagas = envolve(function (n) {
       n = parseInt(n, 10);
       return lobbyAtual().then(function (l) {
-        if (!(n >= 2 && n <= 8)) throw falha('Número de jogadores inválido (de 2 a 8).');
+        if (!(n >= 2 && n <= 10)) throw falha('Número de jogadores inválido (de 2 a 10).');
         var qtd = Object.keys(l.js).length;
         if (n < qtd) throw falha('Há ' + qtd + ' jogadores na sala: remova alguém antes de reduzir as vagas.');
         return M.db.update(rs('meta'), { vagas: n });
