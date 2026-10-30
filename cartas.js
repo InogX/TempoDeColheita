@@ -154,7 +154,7 @@ const ASSETS = {
   "cofrePorJogador": 1000,
   "emprestimo": 100,
   "juros": 5,
-  "limiteDivida": 500,
+  "limiteDivida": 1000,
   "precoRecursoGoverno": {
    "soja": 1,
    "milho": 1,
@@ -165,9 +165,9 @@ const ASSETS = {
   "eventoIndividualCada": 5,
   "noturnoPct": 50,
   "maxCamposPorJogador": 0,
-  "maxCompraCamposPorTurno": 2,
-  "camposMin": 2,
-  "camposMax": 2,
+  "maxCompraCamposPorTurno": 3,
+  "camposMin": 3,
+  "camposMax": 3,
   "camposRefresh": "turno",
   "devAtivo": 1
  },
