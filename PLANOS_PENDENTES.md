@@ -2,7 +2,7 @@
 
 **Situação:** o online está **finalizado (Fases 0 a 11), pendente testes do dono**. Este arquivo lista (1) o que falta **testar** e (2) o que falta **desenvolver**, com a complexidade de cada coisa, para decidirmos o que faz sentido começar.
 
-**Como usar numa conversa nova:** envie este arquivo + `PLANO_MOBILE_BOT_ONLINE (finalizado - pendente testes).md` + `FICHAS_TECNICAS.md` + os arquivos que o item pede. Uma etapa por conversa.
+**Como usar numa conversa nova:** envie este arquivo + `PLANO_MOBILE_BOT_ONLINE (finalizado - pendente testes).md` + `FICHAS_TECNICAS.md` + os arquivos que o item pede (ver a **seção 5**, com a lista por item). Uma etapa por conversa.
 
 **Escala de complexidade** (estimativa minha; onde eu ainda não vi os arquivos, está dito):
 - **Baixa:** uma conversa curta, poucos arquivos, poucas decisões.
@@ -62,8 +62,10 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 | C | **Tutorial** | Conteúdo + tela | **Baixa (texto) a alta (guiado)** | depende do formato; `menu.js`, `tela.js`, `style.css` | Não |
 | D | **`qa.html`** | Ferramenta do dono | **Baixa a média** | o próprio `qa.html` + os arquivos atuais | Não (adiado pelo dono) |
 | E | **Buscar Partida** | Online / social | **Alta** | `rede.js`, `lobby.js`, `menu.js`, regras do banco | Não |
+| F | **Campos do centro mudam a cada turno (com trava)** | Regras / design | **Média** (mexe em regra, comandos, bot e tela; sem mexer nas regras do banco, a confirmar) | `rodada.js`, `acoes-economia.js`, `comandos.js`, `visao.js`, `tela.js`, `bot.js`, `consultas.js`, `acoes-turno.js`, `style.css`, `online.js` | Não, mas **afeta o balanceamento (A)**: decidir antes de medir de novo |
 
 ### A. Balanceamento — **2 rodadas feitas** (ver `RELATORIO_BALANCEAMENTO.md`)
+- **Atenção:** se o item **F** (centro que muda a cada turno) for feito, ele muda o ritmo da economia (preço e disponibilidade de campos). Por isso, **faça o F antes da próxima medição** (A3 a A6), senão a medição vale para um jogo que deixou de existir.
 - **Feito:** causa confirmada (dinheiro total fixo = 1500 × nº de jogadores); metas em moedas escalam com isso (e com as regras de moedas do editor); números ajustados; decisões do dono aplicadas (`mAll`/`mSellTo` só com 6+ jogadores; `mBuys`/`mProfit` desligados com `minJ` 99; `allLvl` com regra nova + correção do bot; `lvl3n` = 1); `editor.html` conferido. Verificação com os arquivos reais: 900 partidas de bots, 0 erros; bateria de testes 12 de 12.
 - **Falta (dono):** trocar os 5 arquivos do jogo (`cartas.js`, `cartas-visual.js`, `objetivos.js`, `bot.js`, `config.js`), **começar partida nova**, **jogar** algumas de 2 jogadores (e, se der, uma de 6) e dizer se o ritmo agradou. Antes de publicar: mudar o `VERSAO` em `online.js`.
 - **Sub-itens que sobraram (cada um pequeno e independente):**
@@ -101,6 +103,18 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
   - Mais conexões simultâneas e mais download (limites do Spark: 100 conexões, 360 MB/dia).
 - **Alternativa mais barata:** continuar só com código e link (já funciona e é o que o jogo foi desenhado para fazer).
 
+### F. Campos do centro mudam a cada turno, com opção de travar — complexidade **média**
+- **O que é:** hoje os campos à venda no centro só são repostos na virada de rodada (`rodada.js`). A ideia nova: o centro **se renova a cada turno**, mas o jogador pode **travar** os campos para que eles continuem lá na rodada seguinte.
+- **Por que é média:** é uma regra nova que passa por todas as camadas: ação nova (`Cmd`, com linha na tabela `CMD` e nome na lista permitida da rede), regra de renovação, visão pública (`travado`), botão/cadeado na tela, bot que precisa decidir quando travar, e testes. Não precisa de nó novo no banco: os campos à venda já são públicos. **Conferir** em `regras_firebase.json` se o tipo de ação é validado lá; se for, vira mudança nas regras.
+- **Decisões do dono (antes de começar), minha sugestão entre parênteses:**
+  1. **"A cada turno" = a cada vez de jogador ou a cada rodada?** (a cada vez de jogador dá mais variedade, mas o jogador seguinte vê o que sobrou do anterior; a cada rodada é mais simples de entender)
+  2. **Renova todos os campos ou só os que ninguém comprou?** E o que acontece com as cartas devolvidas: voltam ao baralho/descarte? (importante, porque o baralho de campos agora pode ser finito, Fase 12)
+  3. **Quem pode travar, quantos e quanto custa?** O centro é compartilhado: se um jogador trava, trava para todos. (um limite, como "uma trava por rodada", e/ou um custo pequeno em moedas, para ninguém travar sempre o campo bom)
+  4. **A trava vale para todos os campos do centro ou para um só?** (um só é mais estratégico e menos abusivo)
+  5. **A trava dura só a rodada seguinte** e depois volta a renovar? (sim, como você descreveu)
+- **Efeitos colaterais:** o preço/disponibilidade de campos entra no ritmo da economia, então **remedir o balanceamento (A)** depois; o bot precisa aprender a travar (`bot.js`); mudar o `VERSAO` em `online.js` ao publicar; o texto das regras (e o tutorial, item C) precisa ser atualizado.
+- **Teste:** `teste_fase4.js` (comandos) e a bateria do balanceamento; no online, conferir que a trava e a renovação aparecem iguais em todos os aparelhos.
+
 ---
 
 ## 3. Ideias menores e opcionais (só se fizerem falta)
@@ -111,11 +125,34 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 
 ---
 
-## 4. Ordem que eu sugeriria (é uma sugestão, a decisão é sua)
-1. **Sessão 1 de testes** (segurança, 15 min) antes de divulgar.
-2. **A. Balanceamento** (já aprovado, afeta a qualidade do jogo em si).
-3. **B. VFX** (baixo risco, dá resultado visível rápido) e **C. Tutorial** em formato simples.
-4. **D. `qa.html`** quando você quiser retomar.
-5. **E. Buscar Partida**: só se o jogo ganhar público; hoje o convite por link cumpre o papel.
+## 4. Ordem por prioridade estratégica (é uma sugestão, a decisão é sua)
 
-A **Sessão 2** de testes pode acontecer a qualquer momento, em paralelo a qualquer item acima.
+| Ordem | Item | Por quê nessa posição |
+|---|---|---|
+| 1 | **Sessão 1 de testes** (segurança, ~15 min) | Barata e é pré-requisito para divulgar a desconhecidos: regras do banco, chave de API, HTTPS. Nada mais vale se isso estiver aberto. |
+| 2 | **F. Campos do centro mudam a cada turno** | É uma mudança de **regra central**. Quanto antes decidir, menos retrabalho: ela afeta o balanceamento, o bot, o tutorial e os testes. |
+| 3 | **A. Balanceamento** (trocar os 5 arquivos, jogar 2 jogadores e uma de 6, depois A5/A3/A4) | Define a qualidade do jogo em si. Só faz sentido medir **depois do F**. |
+| 4 | **Sessão 2 de testes** (partida longa, consumo, sala lotada) | Vale mais feita **na versão final de regras** (com F e A): uma partida só cobre tudo. Se quiser divulgar antes, pode fazer já e repetir depois. |
+| 5 | **C. Tutorial** (começar pelo formato simples, de texto) | Ensina as regras, então só depois de F e A estabilizarem. É o que mais ajuda quem chega sem conhecer ninguém. |
+| 6 | **B. VFX** | Baixo risco e resultado visível, mas é acabamento: não muda se o jogo é bom ou não. |
+| 7 | **D. `qa.html`** | Rede de segurança para regras; mais útil depois que as regras pararem de mudar. Pode subir de posição se você quiser testar F e A sem Node. |
+| 8 | **E. Buscar Partida** | O mais caro e arriscado (regras do banco, salas fantasma, estranhos jogando juntos). Só se o jogo ganhar público; o convite por link cumpre o papel hoje. |
+
+A **Sessão 2** pode acontecer a qualquer momento, em paralelo.
+
+---
+
+## 5. Arquivos para enviar em cada item
+
+**Sempre enviar (em toda conversa):** `PLANOS_PENDENTES.md` (este), `PLANO_MOBILE_BOT_ONLINE (finalizado - pendente testes).md` e `FICHAS_TECNICAS.md`.
+
+| Item | Arquivos extras |
+|---|---|
+| **Sessão 1** (segurança) | `ROTEIRO_FASE10.md`, `PUBLICACAO_FASE11.md`. Só se algo falhar: `regras_firebase.json` e `teste_regras.js`. |
+| **F. Centro que muda com trava** | `rodada.js` (renovação), `acoes-turno.js` (começar/encerrar turno), `acoes-economia.js` (comprar campo), `comandos.js` (comando novo da trava), `consultas.js`, `visao.js` (campo `travado`), `tela.js` (cadeado e botão), `bot.js` (quando travar), `style.css`, `online.js` (`VERSAO`), `estado.js`. Para o número de travas/custo editável: `config.js`, `cartas.js`, `editor.html`. Para conferir as regras do banco: `regras_firebase.json`. Testes: `teste_fase4.js`. |
+| **A. Balanceamento** | `RELATORIO_BALANCEAMENTO.md`, `balanceamento_medicao.zip`, `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`, `cartas-visual.js`, `bot.js`, `comandos.js`, `acoes-turno.js`, `acoes-economia.js`, `acoes-plantio.js`, `acoes-mercado.js`, `estado.js`, `consultas.js`, `editor.html`, `online.js` (para mudar o `VERSAO` ao publicar). Se o F já foi feito, envie as versões novas desses arquivos. |
+| **Sessão 2** (partida longa) | Nenhum arquivo. Leve a anotação da aba **Uso** antes/depois e prints dos problemas. Se algo falhar, aí envie o que o item pedir: `online.js`, `tela.js`, `janelas.js`, `style.css` (Mercado/teclado), `zoom.js` (melhorar plantio). |
+| **C. Tutorial** | **Formato texto:** `menu.js`, `style.css`, `index.html` (se criar arquivo novo) e o **texto das regras aprovado por você**. **Guiado:** além disso `tela.js`, `acoes-turno.js`, `comandos.js`, `bot.js`, `estado.js`, `config.js`, `cartas.js`. **Interativo com bloqueio de botões:** acrescente `janelas.js` e `zoom.js`. |
+| **B. VFX** | `zoom.js` (gancho `Z.fx`), `style.css`, `cartas-visual.js`, `tela.js`. Para efeitos de produção/vitória/eventos: `rodada.js`, `acoes-turno.js`. Para conferir o redesenho online: `online.js`. |
+| **D. `qa.html`** | `qa.html` (atual), `acoes-turno.js`, `acoes-economia.js`, `acoes-plantio.js`, `acoes-mercado.js`, `comandos.js`, `estado.js`, `menu.js`, e o pacote `testes_tempo_de_colheita.zip` para comparar. |
+| **E. Buscar Partida** | `rede.js`, `lobby.js`, `menu.js`, `online.js`, `chat.js` (moderação), `regras_firebase.json`, `teste_regras.js`, `PUBLICACAO_FASE11.md`, `style.css`. |
