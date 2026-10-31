@@ -71,6 +71,7 @@ input,select{padding:5px;margin:2px;background:var(--box);color:var(--ink);borde
 .cards .card{width:100%;min-width:0;margin:0;overflow:hidden}
 .center .cards{justify-content:center}
 .fs{display:flex;flex-direction:column;gap:4px}                                       /* campo à venda: carta + botão de compra ABAIXO dela */
+.fsb{display:flex;gap:4px}.fsb button{flex:1;width:auto}.fsb .lk{flex:0 0 40px;background:#7a7a72}.fsb .lk.on{background:#c98a1b}  /* botão de comprar + botão de travar */
 .fs button{width:100%;margin:0;padding:6px}                                                    /* colunas definidas pelo fit() */
 
 /* ---------- 7. SPRITES E ESTADOS ---------- */

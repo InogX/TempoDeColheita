@@ -1,15 +1,20 @@
 // ===== FICHA TÉCNICA =====
-// acoes-economia.js: (recusas via recusa(): devolvem false e dizem o motivo) Ações de dinheiro com o Governo: comprar campo (com Incentivo Fiscal), pegar empréstimo, pagar dívida, comprar carta extra, vender recursos ao Governo e comprar na Feira Regional. A.sell(k, qtd) e A.buyFeira(k, qtd) aceitam a quantidade como parâmetro opcional (o bot usa); sem ela, funcionam como sempre (vende tudo / lê o campo da tela).
+// acoes-economia.js: (comprar campo agora é da SUA loja, p.loja; A.trava(i) trava/destrava um campo dela) (recusas via recusa(): devolvem false e dizem o motivo) Ações de dinheiro com o Governo: comprar campo (com Incentivo Fiscal), pegar empréstimo, pagar dívida, comprar carta extra, vender recursos ao Governo e comprar na Feira Regional. A.sell(k, qtd) e A.buyFeira(k, qtd) aceitam a quantidade como parâmetro opcional (o bot usa); sem ela, funcionam como sempre (vende tudo / lê o campo da tela).
 // ========================
 
 Object.assign(A, {
-  buyF(i) { const p = cur(), c = S.center[i]; if (!c) return recusa('Esse campo não está mais à venda');
+  buyF(i) { const p = cur(), c = lojaDe(p)[i]; if (!c) return recusa('Esse campo não está mais à venda');
     if ((p.compras || 0) >= REG.maxCompraCamposPorTurno) return recusa('Limite de compras de campo neste turno');
     if (REG.maxCamposPorJogador > 0 && p.fields.length >= REG.maxCamposPorJogador) return recusa('Limite de campos por jogador atingido');
     const e = campoGratis(p, c), pr = e ? 0 : price(c); // Incentivo Fiscal: o 1º campo de até 100 moedas sai de graça
     if (p.coins < pr) return recusa('Moedas insuficientes');
     if (e) { (e.used = e.used || []).push(S.players.indexOf(p)); log(`${p.n} levou o campo de graça (Incentivo Fiscal)`); }
-    p.coins -= pr; S.gov += pr; p.fields.push({ c, plots: [] }); S.center.splice(i, 1); p.compras = (p.compras || 0) + 1; after(); },
+    p.coins -= pr; S.gov += pr; p.fields.push({ c, plots: [] }); p.loja.splice(i, 1); p.compras = (p.compras || 0) + 1; after(); },
+  trava(i) { const p = cur(), c = lojaDe(p)[i]; if (!c) return recusa('Esse campo não está mais à venda'); // trava/destrava um campo da SUA loja: ele continua lá no seu próximo turno
+    if (c.trava) { c.trava = false; return after(); }
+    if (travaMax() < 1) return recusa('A trava de campos está desligada');
+    if (travados(p) >= travaMax()) return recusa(travaMax() === 1 ? 'Você só pode travar 1 campo: destrave o outro antes' : `Você só pode travar ${travaMax()} campos: destrave um antes`);
+    c.trava = true; after(); },
   loan() { if (S.gov < LOAN) return recusa('O governo está sem moedas'); S.gov -= LOAN; cur().coins += LOAN; cur().debt += LOAN; cur().st.loans = (cur().st.loans || 0) + 1; after(); },
   pay() { const p = cur(), a = Math.min(LOAN, p.debt, Math.max(0, p.coins)); if (!a) return recusa(p.debt ? 'Você não tem moedas para pagar' : 'Você não tem dívida'); p.coins -= a; p.debt -= a; S.gov += a; after(); },
   extra() { const p = cur(); if (p.hand.length >= REG.maxMao || p.coins < EXTRA) return recusa('Mão cheia ou sem moedas');

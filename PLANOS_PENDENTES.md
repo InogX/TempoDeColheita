@@ -62,7 +62,7 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 | C | **Tutorial** | Conteúdo + tela | **Baixa (texto) a alta (guiado)** | depende do formato; `menu.js`, `tela.js`, `style.css` | Não |
 | D | **`qa.html`** | Ferramenta do dono | **Baixa a média** | o próprio `qa.html` + os arquivos atuais | Não (adiado pelo dono) |
 | E | **Buscar Partida** | Online / social | **Alta** | `rede.js`, `lobby.js`, `menu.js`, regras do banco | Não |
-| F | **Campos do centro mudam a cada turno (com trava)** | Regras / design | **Média** (mexe em regra, comandos, bot e tela; sem mexer nas regras do banco, a confirmar) | `rodada.js`, `acoes-economia.js`, `comandos.js`, `visao.js`, `tela.js`, `bot.js`, `consultas.js`, `acoes-turno.js`, `style.css`, `online.js` | Não, mas **afeta o balanceamento (A)**: decidir antes de medir de novo |
+| F ✅ | **Loja de campos por jogador, muda a cada turno (com trava)** | Regras / design | **Média** (mexe em regra, comandos, bot e tela; sem mexer nas regras do banco, a confirmar) | `rodada.js`, `acoes-economia.js`, `comandos.js`, `visao.js`, `tela.js`, `bot.js`, `consultas.js`, `acoes-turno.js`, `style.css`, `online.js` | Não, mas **afeta o balanceamento (A)**: decidir antes de medir de novo |
 
 ### A. Balanceamento — **2 rodadas feitas** (ver `RELATORIO_BALANCEAMENTO.md`)
 - **Atenção:** se o item **F** (centro que muda a cada turno) for feito, ele muda o ritmo da economia (preço e disponibilidade de campos). Por isso, **faça o F antes da próxima medição** (A3 a A6), senão a medição vale para um jogo que deixou de existir.
@@ -103,17 +103,14 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
   - Mais conexões simultâneas e mais download (limites do Spark: 100 conexões, 360 MB/dia).
 - **Alternativa mais barata:** continuar só com código e link (já funciona e é o que o jogo foi desenhado para fazer).
 
-### F. Campos do centro mudam a cada turno, com opção de travar — complexidade **média**
-- **O que é:** hoje os campos à venda no centro só são repostos na virada de rodada (`rodada.js`). A ideia nova: o centro **se renova a cada turno**, mas o jogador pode **travar** os campos para que eles continuem lá na rodada seguinte.
-- **Por que é média:** é uma regra nova que passa por todas as camadas: ação nova (`Cmd`, com linha na tabela `CMD` e nome na lista permitida da rede), regra de renovação, visão pública (`travado`), botão/cadeado na tela, bot que precisa decidir quando travar, e testes. Não precisa de nó novo no banco: os campos à venda já são públicos. **Conferir** em `regras_firebase.json` se o tipo de ação é validado lá; se for, vira mudança nas regras.
-- **Decisões do dono (antes de começar), minha sugestão entre parênteses:**
-  1. **"A cada turno" = a cada vez de jogador ou a cada rodada?** (a cada vez de jogador dá mais variedade, mas o jogador seguinte vê o que sobrou do anterior; a cada rodada é mais simples de entender)
-  2. **Renova todos os campos ou só os que ninguém comprou?** E o que acontece com as cartas devolvidas: voltam ao baralho/descarte? (importante, porque o baralho de campos agora pode ser finito, Fase 12)
-  3. **Quem pode travar, quantos e quanto custa?** O centro é compartilhado: se um jogador trava, trava para todos. (um limite, como "uma trava por rodada", e/ou um custo pequeno em moedas, para ninguém travar sempre o campo bom)
-  4. **A trava vale para todos os campos do centro ou para um só?** (um só é mais estratégico e menos abusivo)
-  5. **A trava dura só a rodada seguinte** e depois volta a renovar? (sim, como você descreveu)
-- **Efeitos colaterais:** o preço/disponibilidade de campos entra no ritmo da economia, então **remedir o balanceamento (A)** depois; o bot precisa aprender a travar (`bot.js`); mudar o `VERSAO` em `online.js` ao publicar; o texto das regras (e o tutorial, item C) precisa ser atualizado.
-- **Teste:** `teste_fase4.js` (comandos) e a bateria do balanceamento; no online, conferir que a trava e a renovação aparecem iguais em todos os aparelhos.
+### F. Loja de campos por jogador, sorteada a cada turno, com trava — ✅ **código pronto e testado em Node; falta o dono jogar**
+- **Decisão do dono:** cada jogador tem a **sua loja** (visível só para ele), sorteada de novo no início de cada turno dele, para um jogador nunca impedir a compra de outro. O centro compartilhado deixou de existir.
+- **Trava:** um botão 🔓/🔒 sob cada campo. O campo travado continua na loja do jogador **no turno seguinte** (e destrava sozinho; para guardar de novo é preciso travar outra vez). Comprar o campo tira a trava. Por padrão pode-se travar **1** campo; no `editor.html` há "Campos que o jogador pode travar" (0 = sem trava; número igual ao tamanho da loja = trava tudo). Tamanho da loja = o maior entre "mínimo" e "máximo" de campos à venda. A opção antiga "Reposição dos campos à venda (turno/rodada)" saiu do editor (não faz mais sentido).
+- **Bot:** compra da própria loja como antes e **trava** o campo que quer e não consegue pagar agora (ou que não pode comprar mais neste turno); o nível fácil só às vezes.
+- **Arquivos mudados:** `consultas.js` (`lojaTam`, `travaMax`, `lojaDe`, `travados`, `novaLoja`), `acoes-turno.js`, `acoes-economia.js` (`buyF` da loja, `A.trava`), `comandos.js` (comando `trava`; agora são 16), `visao.js`, `tela.js`, `style.css`, `bot.js`, `config.js`, `editor.html`, `online.js` (`VERSAO` = `2026-10-31a`), `teste_fase4.js` (15 → 16 comandos) e **novo** `teste_loja.js`. Regras do banco: **não mudaram** (o tipo de ação é só um texto de até 30 caracteres).
+- **Testes feitos aqui:** `teste_loja.js` 98 de 98 (cada jogador tem a sua loja, compra, trava e destrava, limite, trava desligada ou com 2, volta no turno seguinte, privacidade da visão, save antigo, 30 partidas só de bots sem erro). O `teste_fase4.js` completo **não rodei** (faltaram `acoes-plantio.js` e `acoes-mercado.js`): rode `node teste_fase4.js` e `node teste_loja.js` na sua pasta.
+- **Falta (dono):** trocar os arquivos, **começar partida nova** (saves e salas antigas têm o centro velho), jogar local e online e dizer se o ritmo e a trava agradaram.
+- **Pontas soltas (não travam nada):** (1) `rodada.js` ainda chama `refillCenter`, que enche um `S.center` que ninguém mais usa; inofensivo, mas quando enviar o `rodada.js` eu limpo. (2) `qa.html` e `dev.js`, se mexerem em `S.center`, precisam apontar para `p.loja`. (3) Online: a janela "Ver jogador" não mostra a loja dos outros (de propósito).
 
 ---
 

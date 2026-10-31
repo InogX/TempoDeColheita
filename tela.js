@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// tela.js: Desenha a tela principal do jogo (render; mostra o jogador deste aparelho, me(), e quem está na vez, cur(); na vez de um bot mostra a tela do bot e chama Bot.agenda(); na vez de um bot o evento individual mostrado é o DELE, é público). Os botões de jogo chamam Cmd.* (comandos.js), nunca A.* direto: barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
+// tela.js: Desenha a tela principal do jogo (a área do centro mostra a SUA loja de campos, p.loja, com o botão 🔒 de trava; render; mostra o jogador deste aparelho, me(), e quem está na vez, cur(); na vez de um bot mostra a tela do bot e chama Bot.agenda(); na vez de um bot o evento individual mostrado é o DELE, é público). Os botões de jogo chamam Cmd.* (comandos.js), nunca A.* direto: barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
 // ONLINE (Fase 12): a tela de espera e a vez do bot ganharam o botão 🎯 Objetivo (abre a janela do SEU objetivo) e a espera mostra "objetivo cumprido".
 // ONLINE (Fase 9): fora da sua vez o jogador vê a tela de ESPERA ("X está jogando...": só o registro, os eventos e o botão Mercado), igual à vez de um bot; o quadro completo só aparece na sua vez.
 // ONLINE (Fase 8): na vez de um bot dá para abrir o Mercado (a janela é desenhada junto da tela do bot); comprar campo fica desativado fora da sua vez.
@@ -41,7 +41,7 @@ function render() {
     ${sel ? `<b class="pickmsg">Escolha o campo para plantar ${CROPS[sel.crop]} <button onclick="A.cancelPick()">Cancelar</button></b>` : ''}</div>
     <div class="seats"><div class="side sideL">${tabs(oth.slice(0, half))}</div><div class="side sideR">${tabs(oth.slice(half))}</div></div>
     ${evb}
-    <div class="board"><div class="center"><h3>Campos sendo vendidos</h3><div class="cards">${S.center.map((c, i) => `<div class="fs">${cardHTML(c)}<button class="${p.coins >= buyPrice(p, c) ? 'ok' : 'no'}"${mv ? '' : ' disabled'} onclick="Cmd.buyF(${i})">${buyPrice(p, c) || 'Grátis'}</button></div>`).join('') || 'Nenhum'}</div></div>
+    <div class="board"><div class="center"><h3>Sua loja de campos${travaMax() ? ` <small>(🔒 ${travados(p)}/${travaMax()}: o campo travado volta no seu próximo turno)</small>` : ''}</h3><div class="cards">${lojaDe(p).map((c, i) => `<div class="fs">${cardHTML(c)}<div class="fsb"><button class="${p.coins >= buyPrice(p, c) ? 'ok' : 'no'}"${mv ? '' : ' disabled'} onclick="Cmd.buyF(${i})">${buyPrice(p, c) || 'Grátis'}</button>${travaMax() ? `<button class="lk${c.trava ? ' on' : ''}"${mv ? '' : ' disabled'} title="${c.trava ? 'Destravar' : 'Travar para o próximo turno'}" onclick="Cmd.trava(${i})">${c.trava ? '🔒' : '🔓'}</button>` : ''}</div></div>`).join('') || 'Nenhum'}</div></div>
     <div class="cards mine">${mine || '<i>Você ainda não tem campos</i>'}</div></div>
     <div class="hand">${hand}</div>
     <p class="log">${S.log.join('<br>')}</p>${modal()}`;

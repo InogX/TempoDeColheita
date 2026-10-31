@@ -1,7 +1,7 @@
 // ===== FICHA TÉCNICA =====
 // bot.js: Jogador controlado pelo computador (bot), níveis 'facil' e 'normal' (p.bot). Joga SÓ pelos comandos do jogador (Cmd.run, comandos.js: as mesmas regras de vez e de fase de um humano), como um humano: planta, evolui, vende ao Governo, compra campos e cartas, usa Feira, Mercado e empréstimos e persegue o próprio objetivo, sem trapacear (não lê mão nem objetivo dos outros). Também tem a tela "Bot X está jogando..." (Bot.tela) e o teste Bot.simular(), que roda partidas só com bots e confere erros.
 // Como entra no jogo: tela.js chama Bot.agenda() quando a vez é de um bot (online, só o anfitrião roda; no convidado agenda() não faz nada); menu.js marca quem é bot (select .bt); A.new (acoes-turno.js) grava p.bot.
-// Depende de (em outros arquivos): Cmd (comandos.js), A.quit/A.new, exec, cur, alive, log, plotsOf, lvOf, fits, evFind, evOn, govPreco, jurosPct, manutOf, feiraMax, mercadoFechado, buyPrice (consultas.js); done (objetivos.js); free, NV, vef, nm, evDesc (cartas-visual.js); ASSETS, REG, LOAN, EXTRA, K (cartas.js / config.js / estado.js).
+// Depende de (em outros arquivos): Cmd (comandos.js), A.quit/A.new, exec, cur, alive, log, plotsOf, lvOf, fits, evFind, evOn, govPreco, jurosPct, manutOf, feiraMax, mercadoFechado, buyPrice, lojaDe, travados, travaMax (consultas.js); done (objetivos.js); free, NV, vef, nm, evDesc (cartas-visual.js); ASSETS, REG, LOAN, EXTRA, K (cartas.js / config.js / estado.js).
 // ========================
 
 const Bot = {
@@ -34,7 +34,7 @@ const Bot = {
   // ---------- apoio ----------
   pf(p) { return this.PF[p.bot] || this.PF.normal; },
   eu(p) { return S.players.indexOf(p); },
-  sig() { const p = cur(); return [p.coins, p.debt, p.hand.length, p.fields.length, plotsOf(p).length, plotsOf(p).reduce((a, x) => a + lvOf(x), 0), K.map(k => p.res[k] || 0).join(), S.mk.length, S.mk.reduce((a, l) => a + (l.qty || 0), 0), S.gov, S.center.length].join('|'); }, // "foto" do que uma ação pode mudar
+  sig() { const p = cur(); return [p.coins, p.debt, p.hand.length, p.fields.length, plotsOf(p).length, plotsOf(p).reduce((a, x) => a + lvOf(x), 0), K.map(k => p.res[k] || 0).join(), S.mk.length, S.mk.reduce((a, l) => a + (l.qty || 0), 0), S.gov, lojaDe(p).length, travados(p)].join('|'); }, // "foto" do que uma ação pode mudar
   // Pede um comando como o jogador p (Cmd.run, em silêncio). Se for recusado, lança erro (acao() trata e destrava o turno).
   cmd(p, nome, args = []) { const r = Cmd.run(this.eu(p), nome, args); if (!r.ok) throw new Error(`comando ${nome} recusado: ${r.msg}`); return r; },
   // Pede um comando em silêncio e confere o resultado. Se foi recusado ou nada mudou, anota a chave em 'negados' e não tenta de novo neste turno.
@@ -72,15 +72,22 @@ const Bot = {
     return Math.random() < this.pf(p).erra ? op[Math.floor(Math.random() * op.length)] : op.sort((a, b) => b.s - a.s)[0]; },
   melhorUp(p) { const o = p.obj, lv = this.NIVEIS.includes(o.t), pl = plotsOf(p);
     return this.ups(p).filter(u => u.pode).map(u => ({ ...u, s: Math.random() * 0.3 + (lv ? u.L + (o.t === 'lvl3crops' && !pl.some(x => x.c.crop === u.k && lvOf(x) >= 3) ? 2 : 0) : u.gan * 10) })).sort((a, b) => b.s - a.s)[0]; },
-  melhorCampo(p) { const o = p.obj, lv = this.NIVEIS.includes(o.t);
-    if ((p.compras || 0) >= REG.maxCompraCamposPorTurno || (REG.maxCamposPorJogador > 0 && p.fields.length >= REG.maxCamposPorJogador)) return null;
+  notaCampo(p, c, semCampo) { const o = p.obj, lv = this.NIVEIS.includes(o.t), pr = buyPrice(p, c); // quanto o bot quer este campo da loja dele
+    let s = (pr === 0 ? 5 : -pr / 100) + (semCampo.some(h => c.any || c.types.includes(h.crop)) ? 3 : 0) + (p.fields.length < 2 ? 2 : 0);
+    if (o.t === 'chrome' && c.any) s += 4; if (o.t === 'slots') s += c.slots * 1.5; if (lv) s += c.slots * 0.8;
+    if (p.coins - pr > this.reserva(p) + 250) s += 1.5; // dinheiro parado: cresce
+    return { s, pr }; },
+  podeComprarCampo(p) { return (p.compras || 0) < REG.maxCompraCamposPorTurno && !(REG.maxCamposPorJogador > 0 && p.fields.length >= REG.maxCamposPorJogador); },
+  melhorCampo(p) { if (!this.podeComprarCampo(p)) return null;
     const semCampo = p.hand.filter(c => !p.fields.some(f => fits(f, c) && free(f) >= NV(c).espacos)); let best = null;
-    S.center.forEach((c, i) => { const pr = buyPrice(p, c);
-      let s = (pr === 0 ? 5 : -pr / 100) + (semCampo.some(h => c.any || c.types.includes(h.crop)) ? 3 : 0) + (p.fields.length < 2 ? 2 : 0);
-      if (o.t === 'chrome' && c.any) s += 4; if (o.t === 'slots') s += c.slots * 1.5; if (lv) s += c.slots * 0.8;
-      if (p.coins - pr > this.reserva(p) + 250) s += 1.5; // dinheiro parado: cresce
-      if (!best || s > best.s) best = { i, s, pr }; });
+    lojaDe(p).forEach((c, i) => { const { s, pr } = this.notaCampo(p, c, semCampo); if (!best || s > best.s) best = { i, s, pr }; });
     return best && best.s >= 1.5 ? best : null; },
+  // trava o campo bom que ele quer mas não consegue pagar agora (ou que não pode comprar mais neste turno), para tentar de novo no próximo turno
+  travarCampo(p) { if (travaMax() < 1 || travados(p) >= travaMax()) return null;
+    const semCampo = p.hand.filter(c => !p.fields.some(f => fits(f, c) && free(f) >= NV(c).espacos)); let best = null;
+    lojaDe(p).forEach((c, i) => { if (c.trava) return; const { s, pr } = this.notaCampo(p, c, semCampo);
+      if (s >= 1.5 && (!this.podeComprarCampo(p) || p.coins - pr < this.reserva(p)) && (!best || s > best.s)) best = { i, s }; });
+    return best; },
   // vende estoque ao Governo até chegar a 'alvo' moedas (uma venda por chamada). todo=false respeita o estoque guardado (evoluções/objetivo)
   vender(p, alvo, todo) { const kp = todo ? {} : this.keep(p);
     const ks = K.map(k => ({ k, q: Math.max(0, (p.res[k] || 0) - (kp[k] || 0)), v: govPreco(k) })).filter(x => x.q > 0).sort((a, b) => b.v - a.v || b.q - a.q);
@@ -136,9 +143,12 @@ const Bot = {
     if ((this.MOEDAS.includes(o.t) || p.coins < R + 150 || evOn('govPaga')) && this.vender(p, Infinity)) return true;
     // 10. compra campo
     const C = this.melhorCampo(p);
-    if (C && (pf.buy === 1 || rnd() < pf.buy)) { const c = S.center[C.i];
+    if (C && (pf.buy === 1 || rnd() < pf.buy)) { const c = lojaDe(p)[C.i];
       if (C.pr === 0 || p.coins - C.pr >= R) { if (this.tenta('buyF:' + c.uid, 'buyF', [C.i], `comprou o campo ${nm(c)}${C.pr ? ' por ' + C.pr : ' (grátis)'}`)) return true; }
       else if (this.vender(p, C.pr + R)) return true; }
+    // 10b. trava o campo que quer e não pôde pagar agora (o nível fácil só às vezes)
+    const T = this.travarCampo(p);
+    if (T && (pf.buy === 1 || rnd() < pf.buy) && this.tenta('trava:' + lojaDe(p)[T.i].uid, 'trava', [T.i])) return true;
     // 11. carta extra (só se há vaga para plantar)
     const vagas = p.fields.reduce((a, f) => a + free(f), 0);
     if (p.hand.length < REG.maxMao && p.hand.length < Math.min(3, vagas) && p.coins - EXTRA >= R && (pf.buy === 1 || rnd() < pf.buy) && this.tenta('extra:' + p.hand.length, 'extra', [], 'comprou uma carta extra')) return true;

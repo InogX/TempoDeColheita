@@ -20,17 +20,19 @@ const A = {
     const semDev = !!(cfg && cfg.online), dv = id => semDev ? '' : (() => { const e = document.getElementById(id); return e ? e.value : (typeof Menu !== 'undefined' && Menu.cfg[id] != null ? String(Menu.cfg[id]) : ''); })(); // campos Dev: da tela, ou da tela Configurações (Menu.cfg)
     const nomes = cfg ? cfg.nomes : [...document.querySelectorAll('.nm')].map(e => e.value), bots = cfg ? cfg.bots || [] : [...document.querySelectorAll('.bt')].map(e => e.value);
     const n = cfg ? nomes.length : Math.min(REG.maxJogadores, Math.max(REG.minJogadores, +$('#n').value || REG.minJogadores)), ob = [], pool = CARDS.objetivo.filter(c => !c.minJ || c.minJ <= n); while (ob.length < n) ob.push(...sh(pool.length ? pool : CARDS.objetivo));
-    S = { round: 0, t: 0, uid: 0, gov: REG.cofrePorJogador * n, ev: [], center: [], mk: [], log: [], dk: {}, hide: true, win: null, peekPend: null, auxDone: false, mudas: 0,
+    S = { round: 0, t: 0, uid: 0, gov: REG.cofrePorJogador * n, ev: [], center: [] /* antigo centro compartilhado: não é mais usado (cada jogador tem p.loja) */, mk: [], log: [], dk: {}, hide: true, win: null, peekPend: null, auxDone: false, mudas: 0,
       players: nomes.map((nome, i) => ({ n: nome || (bots[i] ? 'Bot ' : 'Jogador ') + (i + 1), bot: bots[i] || '', coins: dv('dvCoins') !== '' ? +dv('dvCoins') : START_COINS,
-        debt: 0, res: Object.fromEntries(K.map(k => [k, (REG.recursosIniciais[k] || 0) + (+dv('dvRes') || 0)])), fields: [], hand: [], compras: 0, obj: CARDS.objetivo.find(c => c.id === dv('dvObj' + i)) || ob[i], ind: null, turns: 0, out: false, nightUntil: 0, pubUntil: 0,
+        debt: 0, res: Object.fromEntries(K.map(k => [k, (REG.recursosIniciais[k] || 0) + (+dv('dvRes') || 0)])), fields: [], hand: [], loja: [], compras: 0, obj: CARDS.objetivo.find(c => c.id === dv('dvObj' + i)) || ob[i], ind: null, turns: 0, out: false, nightUntil: 0, pubUntil: 0,
         st: { inc: 0, hc: Object.fromEntries(K.map(k => [k, 0])), pu: Object.fromEntries(K.map(k => [k, 0])), loans: 0, ms: 0, mb: 0, mp: 0, mu: 0, partners: [], buyers: [], azar: 0, noites: 0 } })) };
     ligaUI(); Object.keys(CARDS).forEach(k => S.dk[k] = sh(CARDS[k]));
     S.devAll = !semDev && !!(document.getElementById('dvAll') ? document.getElementById('dvAll').checked : typeof Menu !== 'undefined' && Menu.cfg.dvAll);
-    S.first = cfg && cfg.first !== undefined ? cfg.first : +$('#f').value; nextRound(); while (S.center.length < Math.max(REG.camposMax, REG.camposMin)) S.center.push(pull('campo')); render();
+    S.first = cfg && cfg.first !== undefined ? cfg.first : +$('#f').value; nextRound(); S.center = []; render();
   },
   cont() { S = JSON.parse(localStorage.getItem('tc_save')); UIreset();
     if (S.modal === 'peek') S.peekPend = S.order[S.t]; ['modal', 'plantSel', 'viewing', 'viewRes', 'actor', 'devP', 'dv'].forEach(k => delete S[k]); // saves antigos: a interface não faz mais parte de S
-    ligaUI(); render(); },
+    S.players.forEach(p => lojaDe(p)); // saves antigos: o centro compartilhado virou a loja de cada jogador
+    if (S.center && S.center.length && !S.hide && !lojaDe(cur()).length) cur().loja = S.center.map(c => ({ ...c }));
+    S.center = []; ligaUI(); render(); },
   quit() { if (window.Online && Online.ativo) return Online.sair(); // online: sai da sala (não mexe no jogo salvo)
     S = null; UIreset(); localStorage.removeItem('tc_save'); if (typeof Menu !== 'undefined') Menu.tela = 'main'; render(); }, // volta ao menu principal
   go() {
@@ -46,7 +48,7 @@ const A = {
       if (e.reveal == 'self') p.pubUntil = S.round + (e.dur || 1) - 1;
       if (e.reveal == 'peek') S.peekPend = S.order[S.t]; }
     for (let i = p.turns == 1 ? REG.cartasPrimeiroTurno : REG.cartasPorTurno; i > 0 && p.hand.length < REG.maxMao; i--) p.hand.push(pull('plantacao'));
-    if (REG.camposRefresh === 'turno') refillCenter();
+    novaLoja(p); // a loja deste jogador: sorteada de novo, menos o que ele travou no turno anterior
     S.hide = false; after();
   },
   modal(m) { if (m === 'dev' && window.Online && Online.ativo) return; // online não tem painel Dev

@@ -1,7 +1,7 @@
 // ===== FICHA TÉCNICA =====
 // comandos.js: CAMADA DE COMANDOS (Fase 4). É o ÚNICO ponto por onde uma ação de jogo é pedida: botões da tela, janelas, zoom, bots e (no online, Fase 7) mensagens da rede. Antes de executar a ação (A.*), confere: quem pediu, se a partida está rodando, se é a vez dele, em que fase do turno está (começar / jogar / escolher quem espiar) e se os argumentos fazem sentido. Se algo estiver errado, recusa com um motivo e NADA muda.
 // Dois jeitos de usar:  Cmd.run(quem, 'sell', ['soja', 5])  → { ok, msg } em silêncio (bots, testes, rede; `quem` = índice do jogador que pediu).   Cmd.sell('soja', 5) etc. → o jogador DESTE aparelho (botões da tela): mostra o alert se recusar, lê os campos da tela (#rq…, #rp…, #pr…, #fq…) e devolve { ok, msg }.
-// Comandos de JOGO (passam por aqui): go, end, buyF, loan, pay, extra, sell, buyFeira, plantIn, up, peek, listRes, list, cancel, buyM. Ações de INTERFACE (ficam em A.* e valem só neste aparelho, nunca vão pela rede): modal, act, view, pick, cancelPick, new, cont, quit.
+// Comandos de JOGO (passam por aqui): go, end, buyF, trava, loan, pay, extra, sell, buyFeira, plantIn, up, peek, listRes, list, cancel, buyM. Ações de INTERFACE (ficam em A.* e valem só neste aparelho, nunca vão pela rede): modal, act, view, pick, cancelPick, new, cont, quit.
 // Regras por tipo (CMD[nome].q):  'inicio' = só na vez dele e antes de "Estou pronto" (go) · 'jogo' = só na vez dele, depois de começar e sem espiar pendente · 'peek' = só quem tem o espiar pendente · 'mercado' = qualquer jogador vivo, a qualquer hora (atua pelo remetente, não pelo "atuar como" do anfitrião).
 // Os argumentos são sempre EXPLÍCITOS (a rede não pode ler campos da tela de ninguém). Exceção: no uso local (Cmd.nome(...)) os campos vazios são completados pela tela, como antes.
 // Online (Fase 7): ANFITRIÃO = executa tudo aqui mesmo; um pedido de outro jogador (EU != null e remetente != EU) guarda e devolve a interface deste aparelho (UI, e o que estava digitado: Fase 8) e redesenha a tela (o anfitrião não perde a janela aberta, o que digitou nem vê dados de outro jogador). CONVIDADO = nunca executa: Cmd.nome(...) confere vez, fase e argumentos na hora (resposta imediata) e, se estiver certo, manda o comando ao anfitrião por Online.pede (online.js); devolve { ok: true, pendente: true } e a resposta real chega depois (recibo na visão). No online o remetente é SEMPRE este aparelho (eu()): o "atuar como" do Mercado não vale.
@@ -19,6 +19,7 @@ const Cmd = (() => {
     go:       { q: 'inicio',  a: () => [] },
     end:      { q: 'jogo',    a: () => [] },
     buyF:     { q: 'jogo',    a: ([i]) => INT(i) ? [i] : 'Esse campo não está mais à venda' },
+    trava:    { q: 'jogo',    a: ([i]) => INT(i) ? [i] : 'Esse campo não está mais à venda' }, // trava/destrava um campo da SUA loja
     loan:     { q: 'jogo',    a: () => [] },
     pay:      { q: 'jogo',    a: () => [] },
     extra:    { q: 'jogo',    a: () => [] },

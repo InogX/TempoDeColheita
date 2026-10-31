@@ -58,7 +58,7 @@ Se algo "se comporta errado" → use a tabela "Onde mexer" no fim deste arquivo.
 
 ## Comandos (Fase 4)
 **Regra:** tudo que muda o jogo é pedido por `Cmd`. Botões, janelas, zoom, bots e (no online) a rede NUNCA chamam `A.*` de jogo direto. As ações `A.*` ficam como a "execução": só o `Cmd` as chama, depois de conferir.
-- **Comandos de jogo (15):** `go`, `end`, `buyF`, `loan`, `pay`, `extra`, `sell`, `buyFeira`, `plantIn`, `up`, `peek`, `listRes`, `list`, `cancel`, `buyM`. A lista está em `Cmd.nomes` (é a lista permitida da rede).
+- **Comandos de jogo (16):** `go`, `end`, `buyF`, `loan`, `pay`, `extra`, `sell`, `buyFeira`, `plantIn`, `up`, `peek`, `listRes`, `list`, `cancel`, `buyM`. A lista está em `Cmd.nomes` (é a lista permitida da rede).
 - **Ações de interface (ficam em `A.*`, valem só neste aparelho, nunca vão pela rede):** `modal`, `act`, `view`, `pick`, `cancelPick`, `new`, `cont`, `quit`.
 - **Quando cada um vale** (campo `q` da tabela `CMD`, dentro de comandos.js): `inicio` (`go`) só na vez do jogador e antes de "Estou pronto"; `jogo` (`end`, `buyF`, `loan`, `pay`, `extra`, `sell`, `buyFeira`, `plantIn`, `up`) só na vez dele, depois de começar e sem "espiar" pendente; `peek` só para quem tem o espiar pendente; `mercado` (`listRes`, `list`, `cancel`, `buyM`) qualquer jogador vivo, a qualquer hora, atuando pelo REMETENTE (o "atuar como" do aparelho não conta).
 - **Argumentos sempre explícitos:** `plantIn(fi, h)` leva a posição da carta na mão; `listRes(k, qtd, preco)`, `list(tipo, uid, preco)`; `sell` e `buyFeira` aceitam quantidade opcional (sem ela: vende tudo / compra o máximo). Números viram inteiros positivos (até 1 bilhão); texto, `NaN`, `Infinity` e negativos são recusados. No uso local (`Cmd.sell('soja')`) o que faltar é completado pela tela, como antes (carta escolhida em `UI.plantSel`; campos `#fq…`, `#rq…`, `#rp…`, `#pr…`).
@@ -158,7 +158,16 @@ Cada carta tem `dur` (rodadas) e, quando tem efeito especial, o campo `fx`. Os n
 
 Regras de detalhe: o Auxílio só sai da rodada 10 em diante, uma vez por jogo e com 3+ jogadores (carta barrada volta ao baralho). Entrega de mudas passa do limite da mão. Recessão e Imposto vão para o cofre do Governo. O Governo paga 1 moeda por recurso por padrão (editável em "Governo paga por unidade").
 
-## Onde mexer (guia rápido)
+
+## Loja de campos por jogador (Fase 13)
+- **Cada jogador tem a SUA loja** (`p.loja`: lista de cartas de campo). Ela é sorteada de novo no início do turno dele (`A.go` chama `novaLoja(p)`, em consultas.js). O antigo centro compartilhado (`S.center`) ficou sempre vazio e não é mais usado. Tamanho da loja = `lojaTam()` = o maior entre `camposMin` e `camposMax`.
+- **Trava:** `Cmd.trava(i)` → `A.trava(i)` (acoes-economia.js) liga/desliga `c.trava` num campo da própria loja, até `travaMax()` (`REG.camposTrava`, padrão 1; 0 desliga). No início do próximo turno do dono, o campo travado fica na loja e destrava; os outros voltam ao baralho e são sorteados de novo. Comprar um campo (`A.buyF(i)`) tira da loja. Comando `trava`: vale só na vez do jogador, depois de começar o turno (como `buyF`).
+- **Privacidade:** `viewFor` entrega `p.loja` só ao dono (vem junto com o resto do próprio jogador); os outros e o espectador não recebem. A tela (tela.js) desenha a loja de `me()` com o botão de comprar e o de travar (🔓/🔒), e mostra "🔒 n/máx".
+- **Bot:** `Bot.notaCampo`, `Bot.melhorCampo` e `Bot.travarCampo` trabalham sobre `p.loja`; o passo 10b trava o campo que quer e não pôde pagar.
+- **Editor/regras:** `camposTrava` novo; `camposRefresh` saiu do editor e do `DEFAULT_RULES` (se ainda existir num `cartas.js` antigo, é ignorado).
+- **Saves antigos:** `A.cont()` converte o centro do save na loja do jogador da vez. Partidas online antigas devem ser recomeçadas.
+- **Teste:** `teste_loja.js` (Node, arquivos reais + peças falsas): `node teste_loja.js`.
+
 | Quero mudar... | Arquivo |
 |---|---|
 | Valores, preços, regras, sprites, números dos eventos | editor.html |
@@ -172,7 +181,8 @@ Regras de detalhe: o Auxílio só sai da rodada 10 em diante, uma vez por jogo e
 | Condição para vencer um objetivo | objetivos.js |
 | O que acontece na virada de rodada / efeitos imediatos dos eventos | rodada.js |
 | Produção/manutenção no início do turno | acoes-turno.js (e consultas.js para os efeitos dos eventos) |
-| Empréstimo, juros pagos, venda ao Governo, compra de campo, Feira | acoes-economia.js |
+| Empréstimo, juros pagos, venda ao Governo, compra de campo, trava de campo, Feira | acoes-economia.js |
+| Tamanho da loja de campos, quantos campos travar | editor.html (regras `camposMin/camposMax/camposTrava`) e consultas.js (`lojaTam`, `travaMax`, `novaLoja`) |
 | Plantar ou evoluir | acoes-plantio.js |
 | Mercado entre jogadores (Embargo, Taxa) | acoes-mercado.js |
 | Como o bot decide, níveis fácil/normal, velocidade | bot.js (`Bot.PF`, `Bot.delay`) |

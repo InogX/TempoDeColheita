@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// consultas.js: Pequenas perguntas rápidas sobre a partida: quem joga agora (cur), quem sou eu neste aparelho (eu/me; EU fica null no jogo local e será fixo no online), quem ainda está vivo, comprar carta do baralho, a carta cabe no campo, registro (log), achar item do mercado e as consultas dos eventos gerais ativos (manutenção, produção bloqueada, preço do Governo, juros, taxa, campo grátis, Feira).
+// consultas.js: (inclui a LOJA de campos de cada jogador: lojaTam, travaMax, lojaDe, travados, novaLoja) Pequenas perguntas rápidas sobre a partida: quem joga agora (cur), quem sou eu neste aparelho (eu/me; EU fica null no jogo local e será fixo no online), quem ainda está vivo, comprar carta do baralho, a carta cabe no campo, registro (log), achar item do mercado e as consultas dos eventos gerais ativos (manutenção, produção bloqueada, preço do Governo, juros, taxa, campo grátis, Feira).
 // ========================
 
 const cur = () => S.players[S.order[S.t]]; // o jogador da VEZ
@@ -26,5 +26,14 @@ const taxaMercado = v => { const e = evFind('taxa'); return e ? Math.floor(v * e
 const mercadoFechado = () => evOn('embargo');
 const campoGratis = (p, c) => S.ev.find(e => e.c.fx === 'incentivo' && e.left === e.c.dur && price(c) <= e.c.campoMax && !(e.used || []).includes(S.players.indexOf(p))); // Incentivo Fiscal: 1 campo de até campoMax grátis por jogador, só na 1ª rodada do evento
 const buyPrice = (p, c) => campoGratis(p, c) ? 0 : price(c);
+// ----- loja de campos de CADA jogador (p.loja): cartas de campo sorteadas no início do turno dele; só ele vê. c.trava = guardado para o próximo turno -----
+const lojaTam = () => Math.max(REG.camposMax, REG.camposMin, 1); // quantos campos cada loja tem
+const travaMax = () => Number.isFinite(REG.camposTrava) ? Math.max(0, Math.floor(REG.camposTrava)) : 1; // quantos campos o jogador pode travar (0 = trava desligada)
+const lojaDe = p => Array.isArray(p.loja) ? p.loja : (p.loja = []);
+const travados = p => lojaDe(p).filter(c => c.trava).length;
+function novaLoja(p) { // início do turno: o que foi travado no turno anterior fica (e destrava); o resto volta ao baralho e é sorteado de novo
+  const fica = lojaDe(p).filter(c => c.trava).slice(0, lojaTam()).map(c => ({ ...c, trava: false }));
+  while (fica.length < lojaTam()) fica.push(pull('campo'));
+  p.loja = fica; }
 const feiraComprado = (e, p, k) => ((e.bought || {})[S.players.indexOf(p)] || {})[k] || 0;
 const feiraMax = (e, p, k) => Math.max(0, Math.min(e.c.limite - feiraComprado(e, p, k), (e.stock || {})[k] || 0, Math.floor(Math.max(0, p.coins) / e.c.preco)));

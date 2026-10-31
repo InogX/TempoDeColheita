@@ -33,7 +33,7 @@ const novo = (bots = ['', '', '']) => { A.new({ nomes: bots.map((b, i) => 'J' + 
 
 // ---------- 1. vez e fase do turno ----------
 novo(); let r;
-ok(Cmd.nomes.length === 15, 'a lista tem 15 comandos');
+ok(Cmd.nomes.length === 16, 'a lista tem 16 comandos (com trava)');
 r = Cmd.run(1, 'go'); ok(dica(r, /vez/), 'go fora da vez recusado: ' + r.msg);
 r = Cmd.run(0, 'end'); ok(dica(r, /Comece/), 'end antes do go recusado: ' + r.msg);
 r = Cmd.run(0, 'sell', ['trigo']); ok(dica(r, /Comece/), 'sell antes do go recusado');
