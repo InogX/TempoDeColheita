@@ -1,4 +1,4 @@
-# Balanceamento — relatório (rodadas 1 e 2)
+# Balanceamento — relatório (rodadas 1, 2 e 3)
 
 Medido com o **jogo real** (cartas.js, config.js, objetivos.js, rodada.js, bot.js, comandos.js, acoes-*.js...) rodando em Node, só com bots, sorteio reprodutível. **Bot não é humano:** onde o resultado depende de como o bot joga, está dito.
 
@@ -95,3 +95,48 @@ Reproduzi em Node o que ele faz (abrir, `migrate`, salvar) com os arquivos novos
 
 ## 7. Como reproduzir as medidas
 `balanceamento_medicao.zip` (veja o `LEIA-ME.md`; o comando mais simples é `node medir_tudo.js`).
+
+
+---
+
+# Rodada 3 — com a LOJA DE CAMPOS POR JOGADOR (item F) e partidas de 3 a 6 jogadores
+
+Medido como antes: jogo real, só bots normais, 2000 partidas por tamanho (`node medir.js natural 200`, com `NJOG=2,3,4,6`) e cada objetivo isolado. **Bot não é humano.**
+
+## 1. Achados que não eram do balanceamento
+- **O `config.js` e o `bot.js` que estavam no jogo não tinham as correções da rodada 2:** o texto do `allLvl` aparecia como "A partir da rodada undefined, tenha undefined+ plantios…" e o bot ainda lotava os campos de 2+ vagas. Recoloquei as duas (texto novo no `config.js`; 1 linha no `bot.js` em `plantio`).
+- O `rodada.js` ainda enchia o antigo centro compartilhado. Limpei (`refillCenter` saiu).
+
+## 2. Efeito da loja por jogador
+Partida de 2 jogadores: mediana 17 → 16 rodadas. `chrome` foi de 61% para 87% de vitórias (a loja mostra mais campos cromados) e vários objetivos isolados ficaram mais rápidos que o alvo de ~20 rodadas (`chrome` 13, `slots` 15, `prodEach` 16, `lvlsum` 17).
+
+## 3. Descoberta sobre 3 a 6 jogadores
+O ritmo de ganhar moedas depende da **renda de cada jogador**, não do dinheiro total da mesa: a meta que dá ~20 rodadas é quase a mesma (1400 a 1600) em qualquer tamanho. A regra antiga (meta proporcional ao dinheiro total) deixava `coins`, `clean` e `noLoan` com 0 a 10% de vitórias a partir de 3 jogadores. Além disso, em partida grande o jogo termina quando o primeiro de N jogadores fecha o objetivo, então objetivos lentos perdem sempre.
+
+## 4. O que foi mudado
+| Onde | Mudança |
+|---|---|
+| `cartas-visual.js` | Metas em moedas (`coins`, `clean`, `noLoan`, `noites`, `azar`): escala por tabela `FMOEDA` = 40% (2 jog.), 37,5% (3), 35% (4+) do `v`. `floorUntil` tem a própria tabela `FFLOOR` (40/45/50/50%) e a rodada-alvo encurta com mais jogadores (`rEf`: 90/80/75/65% do `r`). Metas de construção (`chrome`, `slots`, `lvlsum`, `prodEach`) × 100/100/90/80% (`FBUILD`). |
+| `objetivos.js`, `bot.js` | `floorUntil` usa `rEf(o)` em vez de `o.r`. |
+| `cartas.js` | `chrome` 6→10, `slots` 32→44, `prodEach` 500→750, `lvlsum` 36→44, `noLoan` 3000→4000, `clean` 3500→4000, `noites` 3 noites/2000 → **2 noites/4000**, `azar` v2 2500→3500, `mSales` 16→24, `mUnits` 600→1000. |
+| `config.js` | Texto do `allLvl` (correção) e regra nova `camposTrava`. |
+
+Com 2 jogadores os valores efetivos das metas de moedas ficam iguais aos da rodada 2 (40%).
+
+## 5. Resultado (vitórias por objetivo, partidas de bots)
+Referência justa: 50% com 2 jogadores, 33% com 3, 25% com 4, 17% com 6.
+
+| Jogadores | Mediana da partida | Faixa de vitórias por objetivo | Fora da faixa |
+|---|---|---|---|
+| 2 | 18 rodadas | 33% a 71% | `lvl3crops` 9% |
+| 3 | 16 | 17% a 62% | `lvl3crops` 1% |
+| 4 | 16 | 10% a 46% | `lvl3crops` 1% |
+| 6 | 13 | 6% a 67% | `lvl3crops` 0%; `mSellTo` 67% e `mAll` 43% |
+
+Isolados (2 jogadores): 18 a 22 rodadas para os objetivos de construção e dinheiro; `lvl3crops` 26 e `lvl3n` 22. Verificação de segurança: 0 erros em 2 a 10 jogadores e textos corretos. `teste_loja.js`: 98 de 98.
+
+## 6. Pendências (decisões do dono)
+1. **Mercado (A4):** `mSales` (71%), `mUnits` (69%), `mAll` e `mSellTo` ficam altos porque os bots negociam entre si com facilidade. Só dá para calibrar com humanos. Para desligar: `minJ` 99 na carta.
+2. **`lvl3crops` (A3):** 0 a 9%. Continua sendo um objetivo "de partida longa" (mediana isolada 26). Decidir: mantê-lo assim, trocar a regra ou aliviar a carta (`v` 2 → 1 deixa igual ao `lvl3n`).
+3. **Partidas de 5 a 6+ jogadores (A5):** os objetivos de construção (`lvlsum`, `prodEach`, `stockN`) têm 5 a 8% com 6 jogadores. A partida acaba em ~13 rodadas; vale medir jogando antes de mexer mais.
+4. **Arquivos a trocar juntos:** `cartas.js`, `cartas-visual.js`, `objetivos.js`, `rodada.js`, `bot.js`, `config.js` (e os do item F). **Comece partida nova.**

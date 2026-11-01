@@ -2,7 +2,7 @@
 
 **Situação:** o online está **finalizado (Fases 0 a 11), pendente testes do dono**. Este arquivo lista (1) o que falta **testar** e (2) o que falta **desenvolver**, com a complexidade de cada coisa, para decidirmos o que faz sentido começar.
 
-**Como usar numa conversa nova:** envie este arquivo + `PLANO_MOBILE_BOT_ONLINE (finalizado - pendente testes).md` + `FICHAS_TECNICAS.md` + os arquivos que o item pede. Uma etapa por conversa.
+**Como usar numa conversa nova:** envie este arquivo + `PLANO_MOBILE_BOT_ONLINE (finalizado - pendente testes).md` + `FICHAS_TECNICAS.md` + os arquivos que o item pede (ver a **seção 5**, com a lista por item). Uma etapa por conversa.
 
 **Escala de complexidade** (estimativa minha; onde eu ainda não vi os arquivos, está dito):
 - **Baixa:** uma conversa curta, poucos arquivos, poucas decisões.
@@ -62,17 +62,17 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 | C | **Tutorial** | Conteúdo + tela | **Baixa (texto) a alta (guiado)** | depende do formato; `menu.js`, `tela.js`, `style.css` | Não |
 | D | **`qa.html`** | Ferramenta do dono | **Baixa a média** | o próprio `qa.html` + os arquivos atuais | Não (adiado pelo dono) |
 | E | **Buscar Partida** | Online / social | **Alta** | `rede.js`, `lobby.js`, `menu.js`, regras do banco | Não |
-| F | **Mesa (visão superior), Chat e Botão de Objetivo** (plano próprio) | Visual / online | **Chat feito; Mesa: grande** (M2 e M3 altas) | `visao.js`, `tela.js`, `zoom.js`, `bot.js`, `janelas.js`, `pecas-tela.js`, `online.js`, `style.css`, `cartas-visual.js` + os arquivos atuais do chat | Não |
+| F ✅ | **Loja de campos por jogador, muda a cada turno (com trava)** | Regras / design | **Média** (mexe em regra, comandos, bot e tela; sem mexer nas regras do banco, a confirmar) | `rodada.js`, `acoes-economia.js`, `comandos.js`, `visao.js`, `tela.js`, `bot.js`, `consultas.js`, `acoes-turno.js`, `style.css`, `online.js` | Não, mas **afeta o balanceamento (A)**: decidir antes de medir de novo |
 
-### A. Balanceamento — **2 rodadas feitas** (ver `RELATORIO_BALANCEAMENTO.md`)
-- **Feito:** causa confirmada (dinheiro total fixo = 1500 × nº de jogadores); metas em moedas escalam com isso (e com as regras de moedas do editor); números ajustados; decisões do dono aplicadas (`mAll`/`mSellTo` só com 6+ jogadores; `mBuys`/`mProfit` desligados com `minJ` 99; `allLvl` com regra nova + correção do bot; `lvl3n` = 1); `editor.html` conferido. Verificação com os arquivos reais: 900 partidas de bots, 0 erros; bateria de testes 12 de 12.
-- **Falta (dono):** trocar os 5 arquivos do jogo (`cartas.js`, `cartas-visual.js`, `objetivos.js`, `bot.js`, `config.js`), **começar partida nova**, **jogar** algumas de 2 jogadores (e, se der, uma de 6) e dizer se o ritmo agradou. Antes de publicar: mudar o `VERSAO` em `online.js`.
-- **Sub-itens que sobraram (cada um pequeno e independente):**
-  - **A3. `lvl3crops` (~10%):** piso de ~23–28 rodadas por causa de comprar campo de 3 vagas e juntar recursos; precisa de decisão de design (objetivo "de partida longa"?) ou de outra regra. *Média.*
-  - **A4. `mSales`/`mUnits` (76% e 74% contra bots):** dependem do Mercado. Esperar o teste com humanos; se o Mercado continuar duvidoso, desligar com `minJ` 99 (1 linha cada). *Baixa.*
-  - **A5. Calibrar 3 a 6+ jogadores:** nos jogos grandes os objetivos de dinheiro têm piso de ~24 rodadas qualquer que seja o valor e a partida dura 10–16 rodadas (com 6 jogadores `coins`/`clean`/`noLoan` ~0%). Nova rodada de medição por tamanho de partida. *Média.*
-  - **A6. Concentração de dinheiro / cofre que zera:** característica da economia fechada; só olhar se as partidas parecerem "decididas cedo". *Média a alta (mexe na economia).*
-- **Ferramentas:** `balanceamento_medicao.zip` (`node medir_tudo.js`; LEIA-ME em linguagem simples). Medir de novo depois de qualquer mudança.
+### A. Balanceamento — **3 rodadas feitas** (ver `RELATORIO_BALANCEAMENTO.md`, seção "Rodada 3")
+- **Feito (rodada 3, já com a loja por jogador):** recoloquei duas correções que faltavam no jogo (`allLvl` texto e bot); calibrei 2 a 6 jogadores; números novos no `cartas.js`; metas de moedas por tabela (`FMOEDA`), `floorUntil` e metas de construção por tamanho. Verificação com os arquivos reais: 0 erros de 2 a 10 jogadores; `teste_loja.js` 98 de 98.
+- **Falta (dono):** trocar os arquivos (`cartas.js`, `cartas-visual.js`, `objetivos.js`, `rodada.js`, `bot.js`, `config.js` + os do item F), **começar partida nova**, jogar de 2 e de 4 a 6 jogadores e dizer se o ritmo agradou.
+- **Sub-itens que sobraram:**
+  - **A3. `lvl3crops` (0 a 9%):** mediana isolada 26 rodadas; decidir se vira objetivo de partida longa, se muda a regra ou se é aliviado. *Média.*
+  - **A4. Mercado (`mSales`, `mUnits`, `mAll`, `mSellTo`):** inflados por bots; esperar o teste com humanos ou desligar com `minJ` 99. *Baixa.*
+  - **A5. Partidas de 5 a 6+ jogadores:** objetivos de construção com 5 a 8% (a partida acaba em ~13 rodadas). Medir de novo depois de jogar. *Média.*
+  - **A6. Concentração de dinheiro:** só olhar se as partidas parecerem "decididas cedo". *Média a alta.*
+- **Ferramentas:** `balanceamento_medicao.zip` (agora com `solo_nx.js`, que escolhe o tamanho da partida; sem o `dev.js`, crie um arquivo vazio com esse nome).
 
 ### B. VFX — complexidade **baixa a média**
 - **O que é:** efeitos visuais. Já existe um **gancho vazio** `Z.fx(el)` no `zoom.js` para a animação de melhoria (a animação em si já existe).
@@ -102,13 +102,14 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
   - Mais conexões simultâneas e mais download (limites do Spark: 100 conexões, 360 MB/dia).
 - **Alternativa mais barata:** continuar só com código e link (já funciona e é o que o jogo foi desenhado para fazer).
 
-### F. Mesa (visão superior), Chat e Botão de Objetivo — plano próprio: `Plano de Desenvolvimento Mesa, Chat e Botão de Objetivo`
-- **Status informado pelo dono:** **Chat (C1 a C4) ✅ finalizado** em outra conversa. **Mesa (M1 a M6): ⬜ não feita** (a visão superior ainda não foi ajustada no jogo). **M0 (protótipo v2, 2 a 10 jogadores): recebido**, falta confirmar se foi aprovado no celular. **O1 (botão 🎯 Objetivo na espera): não confirmado.**
-- **Complexidade:** M1 (dados na visão + testes de privacidade) *baixa*; M2 (mesa na tela de espera) *alta*; M3 (mesa na sua vez) *alta*; M4 (ergonomia no celular) *média*; M5 (animações) *média, opcional*.
-- **Cuidado de coordenação:** o chat mexeu em arquivos que eu também alterei nesta fase (`online.js`, `menu.js` e possivelmente `rede.js`, `lobby.js`, `index.html`, `style.css`, `regras_firebase.json`). Antes de começar a mesa, enviar as **versões atuais** desses arquivos e do pacote de testes.
-- **Feito nesta conversa:** o **Editor controla a arte da mesa** (seção "Mesa" do `editor.html` + `MESA_DEFAULTS` no `config.js`): fundo, verso das cartas na mão e verso/cor de cada baralho. Testado em Node. **Falta:** M1 (dados na visão) e M2 (mesa na espera), que dependem dos arquivos atuais (ver o pedido na conversa: `tela.js` e `bot.js` com o O1, `teste_comum.js` atual etc.).
-- **Decisão pendente de privacidade:** o protótipo v2 mostra "usados/vagas" nos campos de TODOS; hoje isso é informação escondida dos outros (`visao.js`). Proposta: para os outros mostrar só o tamanho do campo; "usados/vagas" só para você e para quem você espiou.
-- **Relação com o VFX (B):** o M5 (animações) cobre parte do que o B faria.
+### F. Loja de campos por jogador, sorteada a cada turno, com trava — ✅ **código pronto e testado em Node; falta o dono jogar**
+- **Decisão do dono:** cada jogador tem a **sua loja** (visível só para ele), sorteada de novo no início de cada turno dele, para um jogador nunca impedir a compra de outro. O centro compartilhado deixou de existir.
+- **Trava:** um botão 🔓/🔒 sob cada campo. O campo travado continua na loja do jogador **no turno seguinte** (e destrava sozinho; para guardar de novo é preciso travar outra vez). Comprar o campo tira a trava. Por padrão pode-se travar **1** campo; no `editor.html` há "Campos que o jogador pode travar" (0 = sem trava; número igual ao tamanho da loja = trava tudo). Tamanho da loja = o maior entre "mínimo" e "máximo" de campos à venda. A opção antiga "Reposição dos campos à venda (turno/rodada)" saiu do editor (não faz mais sentido).
+- **Bot:** compra da própria loja como antes e **trava** o campo que quer e não consegue pagar agora (ou que não pode comprar mais neste turno); o nível fácil só às vezes.
+- **Arquivos mudados:** `consultas.js` (`lojaTam`, `travaMax`, `lojaDe`, `travados`, `novaLoja`), `acoes-turno.js`, `acoes-economia.js` (`buyF` da loja, `A.trava`), `comandos.js` (comando `trava`; agora são 16), `visao.js`, `tela.js`, `style.css`, `bot.js`, `config.js`, `editor.html`, `online.js` (`VERSAO` = `2026-10-31a`), `teste_fase4.js` (15 → 16 comandos) e **novo** `teste_loja.js`. Regras do banco: **não mudaram** (o tipo de ação é só um texto de até 30 caracteres).
+- **Testes feitos aqui:** `teste_loja.js` 98 de 98 (cada jogador tem a sua loja, compra, trava e destrava, limite, trava desligada ou com 2, volta no turno seguinte, privacidade da visão, save antigo, 30 partidas só de bots sem erro). O `teste_fase4.js` completo **não rodei** (faltaram `acoes-plantio.js` e `acoes-mercado.js`): rode `node teste_fase4.js` e `node teste_loja.js` na sua pasta.
+- **Falta (dono):** trocar os arquivos, **começar partida nova** (saves e salas antigas têm o centro velho), jogar local e online e dizer se o ritmo e a trava agradaram.
+- **Pontas soltas (não travam nada):** (1) `rodada.js` ainda chama `refillCenter`, que enche um `S.center` que ninguém mais usa; inofensivo, mas quando enviar o `rodada.js` eu limpo. (2) `qa.html` e `dev.js`, se mexerem em `S.center`, precisam apontar para `p.loja`. (3) Online: a janela "Ver jogador" não mostra a loja dos outros (de propósito).
 
 ---
 
@@ -120,11 +121,34 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 
 ---
 
-## 4. Ordem que eu sugeriria (é uma sugestão, a decisão é sua)
-1. **Sessão 1 de testes** (segurança, 15 min) antes de divulgar.
-2. **A. Balanceamento** (já aprovado, afeta a qualidade do jogo em si).
-3. **B. VFX** (baixo risco, dá resultado visível rápido) e **C. Tutorial** em formato simples.
-4. **D. `qa.html`** quando você quiser retomar.
-5. **E. Buscar Partida**: só se o jogo ganhar público; hoje o convite por link cumpre o papel.
+## 4. Ordem por prioridade estratégica (é uma sugestão, a decisão é sua)
 
-A **Sessão 2** de testes pode acontecer a qualquer momento, em paralelo a qualquer item acima.
+| Ordem | Item | Por quê nessa posição |
+|---|---|---|
+| 1 | **Sessão 1 de testes** (segurança, ~15 min) | Barata e é pré-requisito para divulgar a desconhecidos: regras do banco, chave de API, HTTPS. Nada mais vale se isso estiver aberto. |
+| 2 | **F. Campos do centro mudam a cada turno** | É uma mudança de **regra central**. Quanto antes decidir, menos retrabalho: ela afeta o balanceamento, o bot, o tutorial e os testes. |
+| 3 | **A. Balanceamento** (trocar os 5 arquivos, jogar 2 jogadores e uma de 6, depois A5/A3/A4) | Define a qualidade do jogo em si. Só faz sentido medir **depois do F**. |
+| 4 | **Sessão 2 de testes** (partida longa, consumo, sala lotada) | Vale mais feita **na versão final de regras** (com F e A): uma partida só cobre tudo. Se quiser divulgar antes, pode fazer já e repetir depois. |
+| 5 | **C. Tutorial** (começar pelo formato simples, de texto) | Ensina as regras, então só depois de F e A estabilizarem. É o que mais ajuda quem chega sem conhecer ninguém. |
+| 6 | **B. VFX** | Baixo risco e resultado visível, mas é acabamento: não muda se o jogo é bom ou não. |
+| 7 | **D. `qa.html`** | Rede de segurança para regras; mais útil depois que as regras pararem de mudar. Pode subir de posição se você quiser testar F e A sem Node. |
+| 8 | **E. Buscar Partida** | O mais caro e arriscado (regras do banco, salas fantasma, estranhos jogando juntos). Só se o jogo ganhar público; o convite por link cumpre o papel hoje. |
+
+A **Sessão 2** pode acontecer a qualquer momento, em paralelo.
+
+---
+
+## 5. Arquivos para enviar em cada item
+
+**Sempre enviar (em toda conversa):** `PLANOS_PENDENTES.md` (este), `PLANO_MOBILE_BOT_ONLINE (finalizado - pendente testes).md` e `FICHAS_TECNICAS.md`.
+
+| Item | Arquivos extras |
+|---|---|
+| **Sessão 1** (segurança) | `ROTEIRO_FASE10.md`, `PUBLICACAO_FASE11.md`. Só se algo falhar: `regras_firebase.json` e `teste_regras.js`. |
+| **F. Centro que muda com trava** | `rodada.js` (renovação), `acoes-turno.js` (começar/encerrar turno), `acoes-economia.js` (comprar campo), `comandos.js` (comando novo da trava), `consultas.js`, `visao.js` (campo `travado`), `tela.js` (cadeado e botão), `bot.js` (quando travar), `style.css`, `online.js` (`VERSAO`), `estado.js`. Para o número de travas/custo editável: `config.js`, `cartas.js`, `editor.html`. Para conferir as regras do banco: `regras_firebase.json`. Testes: `teste_fase4.js`. |
+| **A. Balanceamento** | `RELATORIO_BALANCEAMENTO.md`, `balanceamento_medicao.zip`, `cartas.js`, `config.js`, `objetivos.js`, `rodada.js`, `cartas-visual.js`, `bot.js`, `comandos.js`, `acoes-turno.js`, `acoes-economia.js`, `acoes-plantio.js`, `acoes-mercado.js`, `estado.js`, `consultas.js`, `editor.html`, `online.js` (para mudar o `VERSAO` ao publicar). Se o F já foi feito, envie as versões novas desses arquivos. |
+| **Sessão 2** (partida longa) | Nenhum arquivo. Leve a anotação da aba **Uso** antes/depois e prints dos problemas. Se algo falhar, aí envie o que o item pedir: `online.js`, `tela.js`, `janelas.js`, `style.css` (Mercado/teclado), `zoom.js` (melhorar plantio). |
+| **C. Tutorial** | **Formato texto:** `menu.js`, `style.css`, `index.html` (se criar arquivo novo) e o **texto das regras aprovado por você**. **Guiado:** além disso `tela.js`, `acoes-turno.js`, `comandos.js`, `bot.js`, `estado.js`, `config.js`, `cartas.js`. **Interativo com bloqueio de botões:** acrescente `janelas.js` e `zoom.js`. |
+| **B. VFX** | `zoom.js` (gancho `Z.fx`), `style.css`, `cartas-visual.js`, `tela.js`. Para efeitos de produção/vitória/eventos: `rodada.js`, `acoes-turno.js`. Para conferir o redesenho online: `online.js`. |
+| **D. `qa.html`** | `qa.html` (atual), `acoes-turno.js`, `acoes-economia.js`, `acoes-plantio.js`, `acoes-mercado.js`, `comandos.js`, `estado.js`, `menu.js`, e o pacote `testes_tempo_de_colheita.zip` para comparar. |
+| **E. Buscar Partida** | `rede.js`, `lobby.js`, `menu.js`, `online.js`, `chat.js` (moderação), `regras_firebase.json`, `teste_regras.js`, `PUBLICACAO_FASE11.md`, `style.css`. |
