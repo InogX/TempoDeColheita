@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// config.js: Guarda os nomes das culturas, os textos dos objetivos, os valores padrão (regras, níveis, preços de campo), os baralhos novos e a função 'migrate' que completa arquivos antigos.
+// config.js: Guarda os nomes das culturas, os padrões da mesa (MESA_DEFAULTS: fundo e versos dos baralhos), os textos dos objetivos, os valores padrão (regras, níveis, preços de campo), os baralhos novos e a função 'migrate' que completa arquivos antigos.
 // ========================
 
 // ===== CONFIGURAÇÕES GERAIS =====
@@ -26,7 +26,7 @@ const T = {
  "azar": "Passe por {v} eventos de azar geral sem ficar abaixo de {floor} moedas (abaixo disso elimina) e tenha {v2} moedas",
  "noites": "Tenha {v} moedas depois de {n} noites",
  "floorUntil": "Nunca fique abaixo de {floor} moedas até a rodada {r} (abaixo disso elimina) e tenha {v} moedas",
- "allLvl": "A partir da rodada {r}, tenha {n}+ plantios, todos acima do nível 1, e {v} moedas"
+ "allLvl": "Tenha {v}+ plantios, com mais da metade acima do nível 1"
 };
 
 
@@ -44,6 +44,15 @@ const FIELD_DEFAULTS = {
   2: { nome: 'Campo 2 Vagas', preco: 140, nomeCromada: 'Campo Cromado 2 Vagas', precoCromada: 270 },
   3: { nome: 'Campo 3 Vagas', preco: 180, nomeCromada: 'Campo Cromado 3 Vagas', precoCromada: 330 }
 };
+// ===== Mesa (visão superior, mesa.js): fundo e versos dos baralhos. Imagem vazia = usa a cor (CSS). Editável no editor.html (seção "Mesa") =====
+const MESA_DEFAULTS = {
+  fundo: '', corFundo: '#2f5a3b', versoMao: '', // versoMao = verso das cartas na mão dos outros jogadores (vazio = usa o verso do baralho de Recursos)
+  baralhos: { // só os baralhos que de fato são sacados durante a partida (o de objetivos só é dado no início)
+    plantacao: { nome: 'Recursos', verso: '', cor: '#e0262f' },
+    campo: { nome: 'Terrenos (campos)', verso: '', cor: '#6a4c93' },
+    geral: { nome: 'Eventos gerais', verso: '', cor: '#1da1e6' },
+    individual: { nome: 'Eventos individuais', verso: '', cor: '#4752cf' } }
+};
 // ===== Regras essenciais (editáveis no editor.html; valem para partidas novas) =====
 const DEFAULT_RULES = {
   minJogadores: 2, maxJogadores: 10,
@@ -53,7 +62,7 @@ const DEFAULT_RULES = {
   precoRecursoGoverno: { ...CROP_PRICE },
   eventoIndividualCada: 5, noturnoPct: 50,
   maxCamposPorJogador: 0, maxCompraCamposPorTurno: 2,       // 0 = sem limite de campos por jogador
-  camposMin: 2, camposMax: 2, camposTrava: 1,                // loja de campos DE CADA JOGADOR (sorteada de novo a cada turno dele): tamanho = o maior entre camposMin e camposMax; camposTrava = quantos campos ele pode travar para o turno seguinte (0 = sem trava)
+  camposMin: 2, camposMax: 2, camposRefresh: 'turno',        // área de compra: repõe até o máximo quando cair abaixo do mínimo ('turno' ou 'rodada')
   devAtivo: 1
 };
 // ===== Baralhos novos: 10 eventos gerais (5 sorte + 5 azar) e 10 individuais (5 sorte + 5 azar) =====
@@ -136,6 +145,9 @@ function migrate(CARDS, ASSETS) {
     ['sprite', 'sprite2', 'sprite3'].forEach(k => { if (c[k] === undefined) c[k] = ''; });
     delete c.qtd; delete c.custo; delete c.grow; delete c.yield; // agora vêm da tabela de níveis
   });
+  const ms = ASSETS.mesa = ASSETS.mesa || {}; // mesa: completa o que faltar sem apagar o que o dono já escolheu
+  for (const k in MESA_DEFAULTS) if (k !== 'baralhos' && ms[k] === undefined) ms[k] = MESA_DEFAULTS[k];
+  ms.baralhos = ms.baralhos || {}; for (const b in MESA_DEFAULTS.baralhos) ms.baralhos[b] = { ...MESA_DEFAULTS.baralhos[b], ...ms.baralhos[b] };
   const g = ASSETS.regras = ASSETS.regras || {};
   for (const k in DEFAULT_RULES) g[k] = typeof DEFAULT_RULES[k] === 'object' ? { ...DEFAULT_RULES[k], ...g[k] } : (g[k] === undefined ? DEFAULT_RULES[k] : g[k]);
   if (!(ASSETS.deckVersion >= 2)) { // troca os baralhos uma única vez (mantém nome e sprite de quem já existia com o mesmo id)

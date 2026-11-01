@@ -14,15 +14,16 @@ img{width:44px;height:44px;object-fit:cover;border-radius:4px;vertical-align:mid
 .n{width:80px}.w{width:100%}.s{width:150px}
 </style></head><body>
 <h1>🛠 Editor de Cartas — Tempo de Colheita</h1>
-<p>Abra no <b>Chrome ou Edge</b>, clique em "Abrir pasta do jogo" e escolha a pasta que contém o <code>index.html</code>. Tudo é gravado em <code>cartas.js</code> e as imagens vão para <code>img/</code>. Se o arquivo for de uma versão antiga, o editor completa os dados novos sozinho: depois é só clicar em Salvar.</p>
+<p>Abra no <b>Chrome ou Edge</b>, clique em "Abrir pasta do jogo" e escolha a pasta que contém o <code>index.html</code>. Tudo é gravado em <code>cartas.js</code> e as imagens vão para <code>img/</code>. A seção <b>Mesa</b> controla o fundo da mesa e o verso dos baralhos. Se o arquivo for de uma versão antiga, o editor completa os dados novos sozinho: depois é só clicar em Salvar.</p>
 <p><b>Medidas das sprites:</b> campos 1248×832 (horizontal, 3:2) · demais cartas 576×1032 (vertical) · símbolos de cultura e ouro 256×256 (quadrado).</p>
 <button id="open">📂 Abrir pasta do jogo</button> <button id="save" disabled>💾 Salvar</button> <b id="st"></b>
 <div id="list"></div>
 <script>
 const $=s=>document.querySelector(s);
 const TIT={objetivo:'Objetivos',campo:'Campos (culturas aceitas)',plantacao:'Cartas de recurso (plantações) — uma por recurso',geral:'Eventos Gerais',individual:'Eventos Individuais'};
-const LAB={price:'Preço',slots:'Vagas',qtd:'Quantidade por rodada',custo:'Custo por rodada (manutenção)',dur:'Duração (rodadas)',mult:'Multiplicador',coins:'Moedas',v:'Valor',
- valor:'Valor (moedas)',teto:'Preço máx. pago pelo Governo (moedas/un.)',pct:'Percentual (%)',fator:'Fator (x)',estoque:'Estoque por jogador na partida (x nº de jogadores)',limite:'Limite por jogador (de cada recurso)',preco:'Preço por unidade (moedas)',campoMax:'Campo grátis: custo máximo (moedas)',minRound:'Só a partir da rodada'};
+const LAB={price:'Preço',slots:'Vagas',qtd:'Quantidade por rodada',custo:'Custo por rodada (manutenção)',dur:'Duração (rodadas)',mult:'Multiplicador',coins:'Moedas',v:'Valor / meta (nos objetivos é o valor para 5+ jogadores: com menos jogadores as metas em moedas e de mercado diminuem sozinhas)',
+ valor:'Valor (moedas)',teto:'Preço máx. pago pelo Governo (moedas/un.)',pct:'Percentual (%)',fator:'Fator (x)',estoque:'Estoque por jogador na partida (x nº de jogadores)',limite:'Limite por jogador (de cada recurso)',preco:'Preço por unidade (moedas)',campoMax:'Campo grátis: custo máximo (moedas)',minRound:'Só a partir da rodada',
+ minJ:'Objetivo: só entra no sorteio a partir de quantos jogadores (99 = desligado)',n:'Objetivo: quantidade extra (n)',r:'Objetivo: rodada limite (r)',v2:'Objetivo azar: meta de moedas (para 5+ jogadores)',floor:'Objetivo: piso de moedas (abaixo disso elimina)',elim:'Objetivo: violar elimina (1 = sim)',esc:'Objetivo: meta escala com o nº de adversários (1 = sim)'};
 const CNAME={soja:'Soja',milho:'Milho',cana:'Cana-de-açúcar',cafe:'Café',algodao:'Algodão'};
 let dir,data,assets;
 const msg=t=>$('#st').textContent=t;
@@ -31,6 +32,7 @@ const ref=d=>{if(d.a){const p=d.a.split('.'),f=p.pop();return[p.reduce((o,k)=>o[
 const esc=v=>String(v??'').replace(/"/g,'&quot;');
 const tx=(at,v)=>`<input class="s" ${at} value="${esc(v)}">`;
 const nu=(at,v)=>`<input class="n" type="number" min="0" step="any" ${at} value="${esc(v)}">`;
+const co=(at,v)=>`<input type="color" ${at} value="${esc(v||'#000000')}">`;
 const sp=(at,v)=>`<img data-p="${esc(v)}"> <input class="s" ${at} value="${esc(v)}" placeholder="img/arquivo.png"><button data-up ${at}>📁</button>`;
 $('#open').onclick=async()=>{
   if(!window.showDirectoryPicker)return alert('Seu navegador não suporta. Use Chrome ou Edge.');
@@ -39,15 +41,15 @@ $('#open').onclick=async()=>{
     const o=new Function(cfg+';'+t+';migrate(CARDS,ASSETS);return{CARDS,ASSETS}')();data=o.CARDS;assets=o.ASSETS;
     $('#save').disabled=false;msg('Pasta carregada. Clique em Salvar para gravar qualquer atualização.');draw();
   }catch(e){alert('Não consegui ler cartas.js/config.js nessa pasta.\n'+e.message)}};
-const RN=[['minJogadores','Mínimo de jogadores'],['maxJogadores','Máximo de jogadores'],['moedasIniciais','Moedas iniciais de cada jogador'],
+const RN=[['minJogadores','Mínimo de jogadores'],['maxJogadores','Máximo de jogadores'],['moedasIniciais','Moedas iniciais de cada jogador (as metas em moedas dos objetivos acompanham este valor + o cofre)'],
  ...['soja','milho','cana','cafe','algodao'].map(k=>['recursosIniciais.'+k,'Recurso inicial: '+CNAME[k]]),
  ['maxMao','Máximo de cartas na mão'],['cartasPrimeiroTurno','Cartas sacadas no 1º turno'],['cartasPorTurno','Cartas sacadas de graça por turno'],['cartaExtra','Preço da carta extra (moedas)'],
- ['cofrePorJogador','Moedas do cofre do governo por jogador'],['emprestimo','Valor de cada empréstimo'],['juros','Juros do governo por rodada (%)'],['limiteDivida','Dívida máxima antes de falir'],
+ ['cofrePorJogador','Moedas do cofre do governo por jogador (as metas em moedas dos objetivos acompanham este valor + as moedas iniciais)'],['emprestimo','Valor de cada empréstimo'],['juros','Juros do governo por rodada (%)'],['limiteDivida','Dívida máxima antes de falir'],
  ...['soja','milho','cana','cafe','algodao'].map(k=>['precoRecursoGoverno.'+k,'Governo paga por unidade de '+CNAME[k]]),
  ['eventoIndividualCada','Evento individual a cada quantas rodadas'],['noturnoPct','Produção de plantações noturnas (% da normal)'],
  ['maxCamposPorJogador','Limite de campos por jogador (0 = sem limite)'],['maxCompraCamposPorTurno','Campos que cada jogador pode comprar por turno'],
- ['camposMin','Loja de campos de cada jogador: mínimo (o tamanho é o maior entre mínimo e máximo)'],['camposMax','Loja de campos de cada jogador: máximo'],['camposTrava','Campos que o jogador pode travar para o próximo turno (0 = sem trava)']];
-const RS=[['devAtivo','Painel Dev dentro do jogo',[[1,'ligado'],[0,'desligado']],1]];
+ ['camposMin','Campos à venda: mínimo (repõe quando cair abaixo)'],['camposMax','Campos à venda: máximo (até quanto repõe)']];
+const RS=[['camposRefresh','Reposição dos campos à venda',[['turno','no início de cada turno'],['rodada','no início de cada rodada']],0],['devAtivo','Painel Dev dentro do jogo',[[1,'ligado'],[0,'desligado']],1]];
 function regrasHTML(){const R=assets.regras,g=p=>p.split('.').reduce((o,k)=>o[k],R);
   return '<h2>Regras do jogo</h2><p>Valem para as partidas novas (recarregue o jogo depois de salvar).</p><table>'+RN.map(([p,l])=>`<tr><td>${l}</td><td>${nu(`data-a="regras.${p}"`,g(p))}</td></tr>`).join('')+
    RS.map(([p,l,o,num])=>`<tr><td>${l}</td><td><select data-a="regras.${p}" ${num?'data-num="1"':''}>${o.map(([v,t])=>`<option value="${v}"${g(p)==v?' selected':''}>${t}</option>`).join('')}</select></td></tr>`).join('')+'</table>';}
@@ -58,6 +60,11 @@ function draw(){
       <td>${sp(a('noite'),m.noite)}</td><td>Nome: ${tx(a('nomeCromada'),m.nomeCromada)}<br>Custo: ${nu(a('precoCromada'),m.precoCromada)}<br>${sp(a('cromada'),m.cromada)}</td></tr>`}).join('')+'</table>';
   h+='<h2>Símbolos (culturas e ouro)</h2><p>Só o ícone da cultura. Aparece nos círculos sobre os campos. A arte das cartas de plantação é definida na tabela de Plantações.</p><table>'+
     Object.keys(assets.cultura).map(k=>`<tr><td>${CNAME[k]||k}</td><td>${sp(`data-a="cultura.${k}"`,assets.cultura[k])}</td></tr>`).join('')+`<tr><td>Ouro (moedas)</td><td>${sp('data-a="ouro"',assets.ouro)}</td></tr></table>`;
+  const M=assets.mesa,mb=(k,f)=>`data-a="mesa.baralhos.${k}.${f}"`;
+  h+='<h2>Mesa (visão superior)</h2><p>Fundo da mesa e verso dos baralhos. <b>Imagem vazia = usa a cor.</b> Versos: 576×1032 (vertical, como as demais cartas); fundo: qualquer tamanho (cobre a mesa toda). Só entram os baralhos que são sacados durante a partida.</p><table><tr><th>Item</th><th>Imagem</th><th>Cor (quando não há imagem)</th></tr>'+
+    `<tr><td>Fundo da mesa</td><td>${sp('data-a="mesa.fundo"',M.fundo)}</td><td>${co('data-a="mesa.corFundo"',M.corFundo)}</td></tr>`+
+    `<tr><td>Verso das cartas na mão dos outros jogadores<br><small>(vazio = usa o verso de Recursos)</small></td><td>${sp('data-a="mesa.versoMao"',M.versoMao)}</td><td>—</td></tr>`+
+    Object.keys(M.baralhos).map(k=>`<tr><td>Verso: ${M.baralhos[k].nome}</td><td>${sp(mb(k,'verso'),M.baralhos[k].verso)}</td><td>${co(mb(k,'cor'),M.baralhos[k].cor)}</td></tr>`).join('')+'</table>';
   const L=(n,f)=>`data-a="niveis.${n}.${f}"`;
   h+='<h2>Níveis das cartas de recurso</h2><p>Valem para todas as cartas de recurso. Espaços = vagas do campo que a carta ocupa. Só o nível 1 pode ser sacado; os níveis 2 e 3 só por evolução.</p><table><tr><th>Nível</th><th>Espaços consumidos</th><th>Produção por rodada</th><th>Custo para evoluir (do recurso que a carta gera)</th><th>Manutenção por rodada (moedas)</th></tr>'+
     Object.keys(assets.niveis).map(n=>`<tr><td>Nível ${n}</td><td>${nu(L(n,'espacos'),assets.niveis[n].espacos)}</td><td>${nu(L(n,'producao'),assets.niveis[n].producao)}</td><td>${n==3?'— (nível máximo)':nu(L(n,'evolucao'),assets.niveis[n].evolucao)}</td><td>${nu(L(n,'manut'),assets.niveis[n].manut)}</td></tr>`).join('')+'</table>';
