@@ -1,5 +1,5 @@
 // ===== FICHA TÉCNICA =====
-// janelas.js: (Governo, Objetivo, Espiar e Ver jogador mostram o jogador DESTE aparelho, me(); no jogo local é a mesma pessoa de cur(). ONLINE (Fase 8): o Mercado atua sempre pelo jogador deste aparelho (sem "atuar como"), os botões que só valem na vez (Governo) ficam desativados fora dela e o painel Dev não existe) Monta as janelas (modais): Governo, Mercado, Objetivo secreto, Espiar, Ver jogador e painel Dev. Os botões de jogo (espiar, empréstimo, vender, Feira, Mercado) chamam Cmd.* (comandos.js); abrir/fechar janelas e "atuar como" são interface (A.modal, A.act).
+// janelas.js: ("Ver jogador" mostra sempre as vagas livres/total dos campos e quantas cartas há na mão de qualquer jogador (números públicos); a SUA mão aparece só para você) (Governo, Objetivo, Espiar e Ver jogador mostram o jogador DESTE aparelho, me(); no jogo local é a mesma pessoa de cur(). ONLINE (Fase 8): o Mercado atua sempre pelo jogador deste aparelho (sem "atuar como"), os botões que só valem na vez (Governo) ficam desativados fora dela e o painel Dev não existe) Monta as janelas (modais): Governo, Mercado, Objetivo secreto, Espiar, Ver jogador e painel Dev. Os botões de jogo (espiar, empréstimo, vender, Feira, Mercado) chamam Cmd.* (comandos.js); abrir/fechar janelas e "atuar como" são interface (A.modal, A.act).
 // (Celular: o botão redondo ✕ (.mx) fica no fim do HTML para não mudar a ordem dos botões; o CSS o fixa no canto da tela.)
 // ========================
 
@@ -11,8 +11,8 @@ function modal() {
   else if (S.modal == 'obj') h = `<h3>🎯 Seu objetivo (secreto)</h3>${cardHTML(me().obj)}`;
   else if (S.modal == 'view') { const q = S.players[S.viewing], v = sees(me(), q), plantados = q.fields.flatMap(f => f.plots.map(x => x.c));
     if (S.viewRes && v) h = `<h3>${q.n} — recursos plantados</h3><div class="gal">${plantados.map(c => cardHTML(c)).join('') || 'Nenhum plantio'}</div><br><button onclick="S.viewRes=false;render()">Voltar às fazendas</button>`;
-    else h = `<h3>${q.n}</h3>${v ? infoHTML(q) + `<small>Cartas na mão: ${q.hand.length}</small>` : '<small>🔒 Moedas, dívida, mão e estoque ocultos</small>'}
-    <h4>Fazendas</h4><div class="cards vw">${q.fields.map(f => cardHTML(f.c, '', isNight(q, f), '', '', v ? `${free(f)}/${f.c.slots}` : '')).join('') || 'Nenhuma'}</div>${v ? '<br><button onclick="S.viewRes=true;render()">Ver recursos</button>' : ''}`;
+    else h = `<h3>${q.n}</h3>${v ? infoHTML(q) : '<small>🔒 Moedas, dívida e estoque ocultos</small>'}<br><small>Cartas na mão: ${nMao(q)}</small>
+    <h4>Fazendas</h4><div class="cards vw">${q.fields.map(f => cardHTML(f.c, '', isNight(q, f), '', '', `${f.c.slots - usados(f)}/${f.c.slots}`)).join('') || 'Nenhuma'}</div>${v ? '<br><button onclick="S.viewRes=true;render()">Ver recursos</button>' : ''}${q === me() ? '<h4>Sua mão</h4><div class="cards vw">' + (q.hand.map(c => cardHTML(c)).join('') || 'Sem cartas') + '</div>' : ''}`;
   } else if (S.modal == 'dev') { const p = S.players[D.i()], dv = S.dv = S.dv || {};
     const sel = (id, items) => `<select id="${id}" onchange="S.dv.${id}=this.value">${items.map(([v, t]) => `<option value="${v}"${dv[id] == v ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
     const row = (t, x) => `<div class="dvr"><b>${t}</b> ${x}</div>`;

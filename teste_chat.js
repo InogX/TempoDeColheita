@@ -59,7 +59,7 @@ const msgs = d => d.v('Chat.msgs.map(m => m.nome + ": " + m.txt)');
   ok(host.v('Chat.cod') === cod && conv.v('Chat.cod') === cod && host.v('Chat.msgs.length') >= n0, 'mesmo chat e mesmas mensagens depois de iniciar (sem religar nem duplicar)');
   await conv.v('Chat.envia("boa sorte")'); await ate(() => host.v('Chat.msgs.some(m => m.txt === "boa sorte")'), 'mensagem durante a partida');
   host.v('render(); render(); render()'); ok(host.v('!!document.getElementById("onl-chatbtn")') && !/onl-chat/.test(host.html()), 'o redesenho do jogo não derruba o chat: ele fica FORA do #app');
-  ok(/Ana está jogando/.test(conv.html()) && /🎯 Objetivo/.test(conv.html()), 'convidado esperando: a tela de espera tem o botão 🎯 Objetivo');
+  ok(/Ana está jogando|vez de <b>Ana/.test(conv.html()) && /🎯 Objetivo/.test(conv.html()), 'convidado esperando: a tela de espera tem o botão 🎯 Objetivo');
   conv.v('A.modal("obj")'); ok(conv.v('UI.modal') === 'obj' && /<div class="card/.test(conv.html() + '<div class="card') && /Objetivo/.test(conv.html()), 'o botão abre o SEU objetivo'); conv.v('A.modal(null)');
 
   console.log('6. o anfitrião mantém só as últimas 60 mensagens');

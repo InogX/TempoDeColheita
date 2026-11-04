@@ -22,7 +22,7 @@ const done = p => { const o = p.obj, v = vef(o), st = p.st, pl = plotsOf(p), g =
     case 'mUnits': return g('mu') >= v;
     case 'azar': return g('azar') >= o.v && p.coins >= vef2(o);
     case 'noites': return g('noites') >= o.n && p.coins >= v;
-    case 'floorUntil': return S.round >= o.r && p.coins >= v;
+    case 'floorUntil': return S.round >= rEf(o) && p.coins >= v;
     case 'allLvl': return pl.length >= v && pl.filter(x => lvOf(x) >= 2).length * 2 > pl.length; // n+ plantios e MAIS da metade acima do nível 1
   }
   return false; };
@@ -30,7 +30,7 @@ const done = p => { const o = p.obj, v = vef(o), st = p.st, pl = plotsOf(p), g =
 const violou = p => { const o = p.obj, st = p.st; if (!o || !o.elim) return false;
   if (o.t === 'noLoan') return (st.loans || 0) > 0;
   if (o.t === 'azar') return (st.azar || 0) < o.v && p.coins < o.floor;
-  if (o.t === 'floorUntil') return S.round <= o.r && p.coins < o.floor;
+  if (o.t === 'floorUntil') return S.round <= rEf(o) && p.coins < o.floor;
   return false; };
 // fim da rodada: quem estiver com o objetivo cumprido vence; empate: mais moedas > menos dívida > maior valor do estoque > sorteio
 const vencedorDaRodada = () => { const c = alive().filter(done); if (!c.length) return null;

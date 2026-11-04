@@ -1,5 +1,6 @@
 // ===== FICHA TÉCNICA =====
 // tela.js: Desenha a tela principal do jogo (a área do centro mostra a SUA loja de campos, p.loja, com o botão 🔒 de trava; render; mostra o jogador deste aparelho, me(), e quem está na vez, cur(); na vez de um bot mostra a tela do bot e chama Bot.agenda(); na vez de um bot o evento individual mostrado é o DELE, é público). Os botões de jogo chamam Cmd.* (comandos.js), nunca A.* direto: barra de topo, campos à venda, seus campos, sua mão, abas dos jogadores, e ajusta o tamanho das cartas do centro (fit).
+// MESA (M2): online, quando você NÃO está jogando (espera e vez de um bot) a tela é a MESA (mesa.js: visão superior com uma zona por jogador); `Mesa.sai()` no começo de render() desliga a cena nas outras telas; "🪑 Mesa" volta a ligar a mesa depois de usar a tela simples.
 // ONLINE (Fase 12): a tela de espera e a vez do bot ganharam o botão 🎯 Objetivo (abre a janela do SEU objetivo) e a espera mostra "objetivo cumprido".
 // ONLINE (Fase 9): fora da sua vez o jogador vê a tela de ESPERA ("X está jogando...": só o registro, os eventos e o botão Mercado), igual à vez de um bot; o quadro completo só aparece na sua vez.
 // ONLINE (Fase 8): na vez de um bot dá para abrir o Mercado (a janela é desenhada junto da tela do bot); comprar campo fica desativado fora da sua vez.
@@ -10,6 +11,7 @@
 let EVB_OPEN = false; // #evb aberto/fechado no celular (fora de S, para não ir ao save)
 function render() {
   const m = $('#app');
+  if (typeof Mesa !== 'undefined') Mesa.sai(); // a mesa só existe na espera/vez do bot; qualquer outra tela a desliga
   if (!S) return menu();
   const on = !!(window.Online && Online.ativo); // jogo online (anfitrião ou convidado)
   if (on && Online.host) Online.aposRender(); // anfitrião: manda a visão de cada jogador se o estado mudou
@@ -20,8 +22,9 @@ function render() {
   const evb = `<div id="evb"${EVB_OPEN ? ' class="open"' : ''}><div class="evh" onclick="EVB_OPEN=!EVB_OPEN;this.parentNode.classList.toggle('open',EVB_OPEN)"><span>📅 ${S.ev.map(e => nm(e.c)).join(' · ') || 'Sem evento geral ativo'}</span><span class="car">▾</span></div>
     <div class="evc"><b>Evento Geral Ativo</b>${S.ev.map(e => `<div>${nm(e.c)}: ${evDesc(e)} (${e.left} rod.)</div>`).join('')}
     <b>Evento Individual Ativo${vez.bot ? ' (' + vez.n + ')' : ''}</b><div>${!S.hide && ie.ind ? nm(ie.ind) + ': ' + desc(ie.ind) : '—'}</div></div></div>`;
-  if (vez.bot) { if (!on || Online.host) Bot.agenda(); const bt = Bot.tela(vez, evb), sair = '<button onclick="A.quit()">Sair</button>', obj = '<button onclick="A.modal(\'obj\')">🎯 Objetivo</button>'; return m.innerHTML = (on ? (bt.includes(sair) ? bt.replace(sair, obj + sair) : bt + '<p>' + obj + '</p>') : bt) + (on ? modal() : ''); } // online: botão de objetivo também na vez do bot // vez de um bot (bot.js): ele joga sozinho; nada de "Passe o dispositivo"
-  if (on && !mv) return m.innerHTML = `<h2>⏳ ${vez.n} está jogando...</h2><p>Rodada ${S.round}. ${p.out ? '☠ Você foi eliminado: acompanhe a partida. ' : ''}<button onclick="A.modal('mkt')">🤝 Mercado</button><button onclick="A.modal('obj')">🎯 Objetivo</button><button onclick="A.quit()">Sair</button>${(!Online.host ? S.extra && S.extra.feito : done(p)) ? ' ✔ Seu objetivo está cumprido (vale no fim da rodada).' : ''}</p>
+  if (vez.bot) { if (!on || Online.host) Bot.agenda(); if (on && typeof Mesa !== 'undefined' && Mesa.ativa()) return m.innerHTML = Mesa.tela(vez, p) + modal(); /* online: a mesa */ const bt = Bot.tela(vez, evb), sair = '<button onclick="A.quit()">Sair</button>', obj = '<button onclick="A.modal(\'obj\')">🎯 Objetivo</button>' + (typeof Mesa !== 'undefined' ? '<button onclick="Mesa.opcao(\'mesa\')">🪑 Mesa</button>' : ''); return m.innerHTML = (on ? (bt.includes(sair) ? bt.replace(sair, obj + sair) : bt + '<p>' + obj + '</p>') : bt) + (on ? modal() : ''); } // online: botão de objetivo também na vez do bot // vez de um bot (bot.js): ele joga sozinho; nada de "Passe o dispositivo"
+  if (on && !mv && typeof Mesa !== 'undefined' && Mesa.ativa()) return m.innerHTML = Mesa.tela(vez, p) + modal(); // online, fora da sua vez: a MESA no lugar da tela de espera
+  if (on && !mv) return m.innerHTML = `<h2>⏳ ${vez.n} está jogando...</h2><p>Rodada ${S.round}. ${p.out ? '☠ Você foi eliminado: acompanhe a partida. ' : ''}<button onclick="A.modal('mkt')">🤝 Mercado</button><button onclick="A.modal('obj')">🎯 Objetivo</button>${typeof Mesa !== 'undefined' ? '<button onclick="Mesa.opcao(\'mesa\')">🪑 Mesa</button>' : ''}<button onclick="A.quit()">Sair</button>${(!Online.host ? S.extra && S.extra.feito : done(p)) ? ' ✔ Seu objetivo está cumprido (vale no fim da rodada).' : ''}</p>
     <p class="log">${S.log.join('<br>')}</p>${evb}${modal()}`; // online, fora da sua vez: tela de espera, igual à vez do bot (só o registro do que acontece)
   if (S.hide && on) return m.innerHTML = `<h2>Sua vez, ${vez.n}!</h2><p>Rodada ${S.round}. Clique para começar o seu turno.</p>
     <button onclick="Cmd.go()">Começar meu turno</button><button onclick="A.modal('mkt')">🤝 Mercado</button><button class="quit" onclick="A.quit()">Sair</button><p class="log">${S.log.join('<br>')}</p>${evb}${modal()}`;

@@ -1,9 +1,8 @@
 // ===== FICHA TÉCNICA =====
-// rodada.js: Cuida da virada de rodada: sorteia o evento geral (e aplica os efeitos imediatos), cobra juros, define a ordem dos jogadores, elimina quem violou o objetivo, repõe os campos à venda e executa a Alta demanda no fim da rodada.
+// rodada.js: Cuida da virada de rodada: sorteia o evento geral (e aplica os efeitos imediatos), cobra juros, define a ordem dos jogadores, elimina quem violou o objetivo e executa a Alta demanda no fim da rodada.
 // ========================
 
 const temNoite = p => p.fields.some(f => !f.c.any && f.plots.length) && (S.ev.some(e => e.c.night) || p.nightUntil >= S.round);
-function refillCenter() { const mx = Math.max(REG.camposMax, REG.camposMin); if (S.center.length < REG.camposMin) while (S.center.length < mx) S.center.push(pull('campo')); }
 
 // Auxílio aos pequenos só sai a partir da rodada 10, uma única vez por partida (e só com 3+ jogadores, senão ninguém receberia). Carta barrada volta ao baralho embaralhada.
 const geralOk = c => c.fx !== 'auxilio' || (S.round >= (c.minRound || 10) && !S.auxDone && S.players.length >= 3);
@@ -47,6 +46,5 @@ function nextRound() {
   const vivos = alive(); if (vivos.length === 1) S.win = { n: vivos[0].n, why: 'Último sobrevivente' }; else if (!vivos.length) S.win = { n: S.players.reduce((a, b) => b.coins > a.coins ? b : a).n, why: 'Todos eliminados: maior saldo' };
   const n = S.players.length;
   S.order = [...Array(n)].map((_, i) => (S.first + i) % n).filter(i => !S.players[i].out);
-  if (REG.camposRefresh === 'rodada') refillCenter();
   S.t = 0; S.hide = true; log(`Rodada ${S.round}: evento ${nm(c)}`);
 }

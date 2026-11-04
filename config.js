@@ -62,7 +62,7 @@ const DEFAULT_RULES = {
   precoRecursoGoverno: { ...CROP_PRICE },
   eventoIndividualCada: 5, noturnoPct: 50,
   maxCamposPorJogador: 0, maxCompraCamposPorTurno: 2,       // 0 = sem limite de campos por jogador
-  camposMin: 2, camposMax: 2, camposRefresh: 'turno',        // área de compra: repõe até o máximo quando cair abaixo do mínimo ('turno' ou 'rodada')
+  camposMin: 2, camposMax: 2, camposTrava: 1,                // loja de campos DE CADA JOGADOR (sorteada de novo a cada turno dele): tamanho = o maior entre camposMin e camposMax; camposTrava = quantos campos ele pode travar para o turno seguinte (0 = sem trava)
   devAtivo: 1
 };
 // ===== Baralhos novos: 10 eventos gerais (5 sorte + 5 azar) e 10 individuais (5 sorte + 5 azar) =====

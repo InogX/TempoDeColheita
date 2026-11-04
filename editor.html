@@ -48,8 +48,8 @@ const RN=[['minJogadores','Mínimo de jogadores'],['maxJogadores','Máximo de jo
  ...['soja','milho','cana','cafe','algodao'].map(k=>['precoRecursoGoverno.'+k,'Governo paga por unidade de '+CNAME[k]]),
  ['eventoIndividualCada','Evento individual a cada quantas rodadas'],['noturnoPct','Produção de plantações noturnas (% da normal)'],
  ['maxCamposPorJogador','Limite de campos por jogador (0 = sem limite)'],['maxCompraCamposPorTurno','Campos que cada jogador pode comprar por turno'],
- ['camposMin','Campos à venda: mínimo (repõe quando cair abaixo)'],['camposMax','Campos à venda: máximo (até quanto repõe)']];
-const RS=[['camposRefresh','Reposição dos campos à venda',[['turno','no início de cada turno'],['rodada','no início de cada rodada']],0],['devAtivo','Painel Dev dentro do jogo',[[1,'ligado'],[0,'desligado']],1]];
+ ['camposMin','Loja de campos de cada jogador: mínimo (o tamanho é o maior entre mínimo e máximo)'],['camposMax','Loja de campos de cada jogador: máximo'],['camposTrava','Campos que o jogador pode travar para o próximo turno (0 = sem trava)']];
+const RS=[['devAtivo','Painel Dev dentro do jogo',[[1,'ligado'],[0,'desligado']],1]];
 function regrasHTML(){const R=assets.regras,g=p=>p.split('.').reduce((o,k)=>o[k],R);
   return '<h2>Regras do jogo</h2><p>Valem para as partidas novas (recarregue o jogo depois de salvar).</p><table>'+RN.map(([p,l])=>`<tr><td>${l}</td><td>${nu(`data-a="regras.${p}"`,g(p))}</td></tr>`).join('')+
    RS.map(([p,l,o,num])=>`<tr><td>${l}</td><td><select data-a="regras.${p}" ${num?'data-num="1"':''}>${o.map(([v,t])=>`<option value="${v}"${g(p)==v?' selected':''}>${t}</option>`).join('')}</select></td></tr>`).join('')+'</table>';}

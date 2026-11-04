@@ -49,7 +49,7 @@ const { aparelho, ok, espera, ate, partida, avanca, resumo } = require('./teste_
   conv.v('A.modal("gov")');
   ok(/<button disabled onclick="Cmd\.loan\(\)"/.test(conv.html()) && /<button disabled onclick="Cmd\.sell\(/.test(conv.html()) && /Aguarde a sua vez/.test(conv.html()), 'Governo fora da vez: botões desativados e aviso');
   conv.v('A.modal("mkt")'); ok(/<button onclick="Cmd\.listRes\('trigo'\)">/.test(conv.html()), 'Mercado fora da vez continua ativo'); conv.v('A.modal(null)');
-  ok(/Ana está jogando/.test(conv.html()) && !/Cmd\.buyF/.test(conv.html()) && !/Encerrar turno/.test(conv.html()) && /Cmd\.listRes|🤝 Mercado/.test(conv.html()), 'fora da vez a tela é a de ESPERA: sem campos à venda, sem mão, sem "Encerrar turno", com o botão Mercado');
+  ok(/Ana está jogando|vez de <b>Ana/.test(conv.html()) && !/Cmd\.buyF/.test(conv.html()) && !/Encerrar turno/.test(conv.html()) && /Cmd\.listRes|🤝 Mercado/.test(conv.html()), 'fora da vez a tela é a de ESPERA: sem campos à venda, sem mão, sem "Encerrar turno", com o botão Mercado');
   ok(/Aguarde a sua vez para plantar/.test(conv.v('zoomExtra({ dataset: { plant: "0", ok: "1" } })')), 'zoom da carta: "Plantar" indisponível fora da vez');
   host.v('S.players[1].fields.push({ c: { id: "cx", any: true, slots: 3, types: K, uid: 50 }, plots: [{ c: { id: "px", crop: "trigo", nivel: 1, uid: 51 } }] }); render()'); await ate(() => conv.v('S.players[1].fields.length >= 1'), 'campo chegou');
   const fi = conv.v('S.players[1].fields.length - 1'); conv.v('OPENS.length = 0'); conv.v(`Z.field(${fi})`);
@@ -80,8 +80,8 @@ const { aparelho, ok, espera, ate, partida, avanca, resumo } = require('./teste_
   // ====================== F. Mercado na vez do bot ======================
   console.log('F. vez do bot');
   host.v('Bot.delay = 400'); ok(await avanca(host, conv, 2), 'chegou a vez do bot'); await ate(() => conv.v('S.order[S.t] === 2'), 'convidado vê a vez do bot');
-  ok(/está jogando/.test(conv.html()) && /🤝 Mercado/.test(conv.html()) && /🤝 Mercado/.test(host.html()), 'na vez do bot os dois têm o botão Mercado');
-  conv.v('A.modal("mkt")'); ok(/Mercado entre jogadores/.test(conv.html()) && /está jogando/.test(conv.html()), 'a janela do Mercado abre por cima da tela do bot');
+  ok(/está jogando|vez de <b>/.test(conv.html()) && /🤝 Mercado/.test(conv.html()) && /🤝 Mercado/.test(host.html()), 'na vez do bot os dois têm o botão Mercado');
+  conv.v('A.modal("mkt")'); ok(/Mercado entre jogadores/.test(conv.html()) && /está jogando|vez de <b>/.test(conv.html()), 'a janela do Mercado abre por cima da tela do bot');
   conv.v('__inp.rqtrigo.value = "2"; __inp.rqtrigo.focus()'); const n0 = conv.v('Online.n'); await ate(() => conv.v('Online.n') > n0 + 1, 'o bot agiu e a visão mudou', 6000);
   ok(conv.v('__inp.rqtrigo.value') === '2' && conv.v('S.order[S.t] === 2 || true'), 'enquanto o bot joga, o que o convidado digita no Mercado não é apagado');
   conv.v('A.modal(null)'); host.v('Bot.delay = 0'); await ate(() => host.v('S.order[S.t] !== 2'), 'bot terminou', 12000);
@@ -101,7 +101,7 @@ const { aparelho, ok, espera, ate, partida, avanca, resumo } = require('./teste_
   ok(!/disabled onclick="Cmd\.buyF/.test(L.html()) && /Encerrar turno/.test(L.html()), 'local: comprar campo ativo');
   L.v('A.modal("dev")'); ok(L.v('UI.modal') === 'dev', 'local: o painel Dev continua abrindo'); L.v('A.modal(null)');
   L.v('A.new({ nomes: ["Bot", "Humano"], bots: ["normal", ""], first: 0 })');
-  ok(/está jogando/.test(L.html()) && !/🤝 Mercado/.test(L.html()), 'local: na vez do bot a tela NÃO ganhou o botão Mercado (só online)');
+  ok(/está jogando|vez de <b>/.test(L.html()) && !/🤝 Mercado/.test(L.html()), 'local: na vez do bot a tela NÃO ganhou o botão Mercado (só online)');
   L.v('Bot.parar()');
 
   const { certos, falhas } = resumo(); console.log(`\n== Fase 8: ${certos} conferências certas, ${falhas} falhas ==`); process.exit(falhas ? 1 : 0);

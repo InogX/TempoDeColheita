@@ -2,6 +2,8 @@
 
 **SITUAÇÃO: online FINALIZADO (Fases 0 a 11) — pendente testes do dono.** O que falta testar e o que falta desenvolver (balanceamento, `qa.html`, Buscar Partida, Tutorial, VFX, com a complexidade de cada um) está em **`PLANOS_PENDENTES.md`**.
 
+**Fases posteriores ao roteiro original (registradas na Ficha e em `PLANOS_PENDENTES.md`):** Fase 12 — **Chat** ✅ e botão 🎯 Objetivo na espera ✅; Fase 13 — **Loja de campos por jogador com trava** ✅ (falta o dono jogar); Fase 14 — **Mesa (visão superior)**: M1 (números públicos na visão) e M2 (mesa na espera e na vez do bot) ✅ prontos e testados em Node, falta o teste no celular; M3 a M5 ⬜. `VERSAO` atual: 2026-11-02a.
+
 **Como usar numa conversa nova:** envie este arquivo + o `FICHAS_TECNICAS.md` atualizado + os arquivos da lista da etapa. **Uma etapa por conversa.** Sempre envie a versão mais recente dos arquivos.
 
 **Legenda de status:** ✅ confirmado · 🔄 em andamento (sendo feito em outra conversa, **ainda não entregue/confirmado**) · ⬜ não iniciado · ❓ a conferir

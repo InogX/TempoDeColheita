@@ -45,7 +45,7 @@ const Bot = {
     return true; },
   manut(p) { return plotsOf(p).reduce((a, x) => a + manutOf(x), 0); },
   piso(p) { const o = p.obj, st = p.st; if (!o || !o.elim) return 0; // moedas mínimas que o objetivo exige (ficar abaixo elimina)
-    if (o.t === 'floorUntil' && S.round <= o.r) return o.floor;
+    if (o.t === 'floorUntil' && S.round <= rEf(o)) return o.floor;
     if (o.t === 'azar' && (st.azar || 0) < o.v) return o.floor;
     return 0; },
   reserva(p) { const piso = this.piso(p); return (piso ? piso + 120 : this.pf(p).folga) + Math.min(this.manut(p), 150); }, // moedas que ele evita gastar
@@ -63,6 +63,7 @@ const Bot = {
   // ---------- escolhas ----------
   plantio(p) { const o = p.obj, lv = this.NIVEIS.includes(o.t), pu = p.st.pu || {}, op = [];
     p.hand.forEach((c, h) => p.fields.forEach((f, fi) => { if (!fits(f, c) || free(f) < NV(c).espacos) return;
+      if (o.t === 'allLvl' && f.c.slots > 1 && free(f) - NV(c).espacos < 1) return; // allLvl: não lota o último espaço livre de campos de 2+ vagas (sem vaga livre nenhum plantio consegue evoluir)
       let s = Math.random() * 0.5 - (f.c.any ? 0.4 : 0);
       if (!plotsOf(p).some(x => x.c.crop === c.crop)) s += 1.5; // variedade
       if (o.t === 'prodEach') s += 2 - Math.min(2, (pu[c.crop] || 0) / Math.max(1, vef(o)) * 2);

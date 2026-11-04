@@ -10,12 +10,12 @@ const alerta = a => a.v('ALERTS.slice(-1)[0] || ""');
   console.log('1. tela de espera e lobby');
   let P = await partida({ first: 0, tempos: T }), { host, conv, banco } = P; await ate(() => conv.v('S !== null'), 'convidado iniciou');
   ok(host.v('Lobby.offs.length') === 0 && conv.v('Lobby.offs.length') === 0, 'depois de iniciar, o lobby NÃO está mais ouvindo a sala (nos dois aparelhos)');
-  ok(/Ana está jogando/.test(conv.html()) && !/Cmd\.buyF/.test(conv.html()) && !/Encerrar turno/.test(conv.html()) && /🤝 Mercado/.test(conv.html()), 'convidado fora da vez: tela de ESPERA (só o registro, eventos e Mercado), sem loja nem mão');
+  ok(/Ana está jogando|vez de <b>Ana/.test(conv.html()) && !/Cmd\.buyF/.test(conv.html()) && !/Encerrar turno/.test(conv.html()) && /🤝 Mercado/.test(conv.html()), 'convidado fora da vez: tela de ESPERA (só o registro, eventos e Mercado), sem loja nem mão');
   host.v('Cmd.go()'); await ate(() => conv.v('S.hide === false'), 'turno começou');
-  ok(/Ana está jogando/.test(conv.html()) && /class="log"/.test(conv.html()), 'a espera continua enquanto o outro joga, com o registro');
+  ok(/Ana está jogando|vez de <b>Ana/.test(conv.html()) && /class="log"|ms-cena/.test(conv.html()), 'a espera continua enquanto o outro joga, com o registro');
   ok(await avanca(host, conv, 1), 'vez do convidado'); await ate(() => conv.v('S.order[S.t] === 1'), 'convidado vê a vez'); if (conv.v('S.hide')) { conv.v('Cmd.go()'); await ate(() => conv.v('S.hide === false && Online.pend === null'), 'go'); }
   ok(/Encerrar turno/.test(conv.html()) && /Cmd\.buyF/.test(conv.html()), 'na SUA vez aparece o quadro completo (loja, mão, encerrar)');
-  ok(/Beto está jogando/.test(host.html()) && !/Cmd\.buyF/.test(host.html()), 'o ANFITRIÃO fora da vez também vê a espera');
+  ok(/Beto está jogando|vez de <b>Beto/.test(host.html()) && !/Cmd\.buyF/.test(host.html()), 'o ANFITRIÃO fora da vez também vê a espera');
 
   // ====================== 2. Anfitrião sai (o relato do dono): convidado é avisado e a sala é apagada sem lixo ======================
   console.log('2. anfitrião sai');

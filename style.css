@@ -264,3 +264,42 @@ input,select{padding:5px;margin:2px;background:var(--box);color:var(--ink);borde
 .menu .lbj .pt{flex:none;width:10px;height:10px;border-radius:50%;background:#999}
 .menu .lbj .pt.on{background:#3a9d4a}
 .menu #lbCtl input[type=number],.menu #lbCtl select{display:block;width:100%}
+
+/* ---------- 12. MESA (visão superior; mesa.js; só no online, na espera e na vez do bot) ----------
+   Protótipo v2. Tudo em cqw (container query): a cena sempre se desenha como PAISAGEM; no celular em pé ela gira 90° (body.ms-gira). z-index 7: abaixo de #modal (8), .mx (9) e #zoom (30). */
+body.ms-on{overflow:hidden}
+.ms-cena{--ms-zona:#2b2d28;--ms-zt:#f1ede2;--ms-bd:#0d0d0d;--ms-vez:#e8a900;position:fixed;left:0;top:0;width:100vw;height:100vh;width:100dvw;height:100dvh;z-index:7;container-type:size;background:var(--bg);color:var(--ink)}
+body.ms-gira .ms-cena{width:100dvh;height:100dvw;transform-origin:0 0;transform:translateX(100dvw) rotate(90deg)}
+.ms-cena *{box-sizing:border-box}
+.ms-mesa{position:absolute;inset:1cqw;border:.5cqw solid var(--ms-bd);border-radius:2cqw;padding:1cqw;display:grid;grid-template-rows:auto 1fr auto;gap:1cqw}
+.ms-topo,.ms-base{display:flex;gap:1cqw;justify-content:center}
+.ms-base{align-items:flex-end}
+.ms-meio{display:grid;grid-template-columns:auto 1fr auto;gap:1cqw;min-height:0}
+.ms-lado{display:flex;gap:1cqw}.ms-esq{flex-direction:column-reverse}.ms-dir{flex-direction:column}
+.ms-zona{background:var(--ms-zona);color:var(--ms-zt);border:.3cqw solid var(--ms-bd);border-radius:.9cqw;padding:.5cqw .7cqw;font-size:1.3cqw;min-width:0;cursor:pointer}
+.ms-zona b{display:block;font-size:1.45cqw;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ms-zona.vez{outline:.5cqw solid var(--ms-vez)}
+.ms-zona.ms-out{opacity:.45}.ms-eli{margin-top:.6cqw;font-size:1.2cqw;opacity:.8}
+.ms-topo .ms-zona,.ms-base .ms-zona{width:17.5cqw}.ms-lado .ms-zona{width:12.5cqw;flex:1}
+.ms-lin{display:flex;gap:.6cqw;align-items:flex-start;margin-top:.4cqw}
+.ms-mao{display:flex;flex-direction:column;align-items:center;gap:.2cqw;flex:none}.ms-mao small{font-size:1.1cqw}
+.ms-mc{display:block;width:2.6cqw;height:.55cqw;border:.12cqw solid #fff;border-radius:.2cqw}
+.ms-fts{display:flex;flex-wrap:wrap;gap:.4cqw}
+.ms-ft{min-width:3.4cqw;min-height:3.4cqw;padding:.2cqw .3cqw;background:#6a4c93;color:#fff;border-radius:.5cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:1.4cqw;line-height:1.1}
+.ms-ft small{font-size:.9cqw;font-weight:600;opacity:.9}.ms-ft.cheio{background:#8a5a2b}.ms-ft.ms-mais{background:#555}
+.ms-din{margin-top:.3cqw;font-size:1.3cqw}.ms-est{margin-top:.2cqw;font-size:1.05cqw;opacity:.85}
+.ms-canto{display:flex;gap:.7cqw;align-items:flex-end}
+.ms-baralho{width:4.6cqw;height:6.4cqw;color:#fff;border:.25cqw solid #fff;border-radius:.5cqw;display:flex;flex-direction:column;align-items:center;justify-content:center;font-weight:700;font-size:1.8cqw;box-shadow:.3cqw .3cqw 0 rgba(0,0,0,.35);text-shadow:0 0 .4cqw #000}
+.ms-baralho small{font-size:1.1cqw;font-weight:600}
+.ms-centro{display:flex;align-items:center;justify-content:center;gap:1.2cqw;min-height:0}
+.ms-compra{flex:1;max-width:60cqw;align-self:stretch;margin:1cqw 0;background:rgba(255,255,255,.13);border:.3cqw dashed #fff;border-radius:1cqw;color:#fff;font-size:1.5cqw;text-align:center;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:.8cqw;padding:.6cqw;min-height:0;overflow:hidden}
+.ms-st{font-size:1.6cqw}.ms-t{font-size:1.3cqw;opacity:.9}
+.ms-fila{display:flex;gap:1.2cqw;justify-content:center}
+.ms-cp{width:13cqw;display:flex;flex-direction:column;gap:.3cqw;align-items:center}
+.ms-cp .card{width:100%;margin:0;padding:.5cqw;font-size:1.05cqw;cursor:zoom-in}.ms-cp b{font-size:1.4cqw}
+.ms-ev{background:#fff;color:#222;border:.3cqw solid var(--ms-bd);border-radius:.7cqw;padding:.4cqw .7cqw;font-size:1.3cqw;max-width:11cqw}
+.ms-barra{display:flex;flex-wrap:wrap;gap:.4cqw;justify-content:center}
+.ms-cena button{font-size:1.6cqw;margin:.1cqw;padding:.55cqw 1.1cqw;background:#fff;color:#222;border:.25cqw solid var(--ms-bd);border-radius:.8cqw;touch-action:manipulation}
+.ms-painel{position:absolute;z-index:4;right:2.2cqw;top:2.2cqw;width:36cqw;max-height:90cqh;overflow:auto;background:var(--ms-zona);color:var(--ms-zt);border:.3cqw solid var(--ms-bd);border-radius:1.2cqw;padding:1.2cqw;font-size:1.5cqw}
+.ms-painel div{margin:.4cqw 0}.ms-painel b{display:block;margin-top:.6cqw}.ms-ph{display:flex;justify-content:space-between;align-items:center}.ms-ph b{margin:0}
+.ms-log{font-size:1.3cqw;opacity:.9}

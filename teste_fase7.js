@@ -13,7 +13,7 @@ const { LAT, aparelho, criaBanco, ok, espera, ate, partida, avanca, resumo } = r
   ok(conv.v('Bot.on === false && Bot.timer === null'), 'convidado NÃO roda bot');
   ok(host.v('LSW.length === 0') && conv.v('LSW.length === 0'), 'online não grava tc_save em nenhum dos dois: host=' + host.v('LSW.length') + ' conv=' + conv.v('LSW.length'));
   ok(!/Dev/.test(host.html()) && !/Dev/.test(conv.html()), 'sem botão Dev online (REG.devAtivo=true)');
-  ok(/Ana está jogando/.test(conv.html()) && !/Começar meu turno/.test(conv.html()) && !/Cmd\.buyF/.test(conv.html()), 'convidado na vez da Ana: tela de ESPERA ("Ana está jogando..."), sem campos à venda. HTML: ' + conv.html().slice(0, 140));
+  ok(/Ana está jogando|vez de <b>Ana/.test(conv.html()) && !/Começar meu turno/.test(conv.html()) && !/Cmd\.buyF/.test(conv.html()), 'convidado na vez da Ana: tela de ESPERA ("Ana está jogando..."), sem campos à venda. HTML: ' + conv.html().slice(0, 140));
   ok(/Estou pronto|Começar meu turno/.test(host.html()), 'anfitrião (vez dele): botão de começar');
 
   // ====================== 2. Privacidade no transporte ======================
@@ -39,7 +39,7 @@ const { LAT, aparelho, criaBanco, ok, espera, ate, partida, avanca, resumo } = r
   console.log('4. turno do anfitrião');
   host.v('S.players[0].hand = []; S.players[0].ind = null; S.players[0].obj = CARDS.objetivo[0]; S.players[0].coins = 300;');
   host.v('Cmd.go()'); await ate(() => conv.v('S.hide === false'), 'convidado vê o turno começado');
-  ok(/Ana está jogando/.test(conv.html()) && /class="log"/.test(conv.html()), 'convidado vê a espera com o registro da jogada da Ana');
+  conv.v('Mesa.alterna("reg")'); ok(/Ana está jogando|vez de <b>Ana/.test(conv.html()) && /class="log"|ms-log/.test(conv.html()), 'convidado vê a espera (a mesa) com o registro da jogada da Ana (painel 📜)'); conv.v('Mesa.alterna(null)');
   // o convidado tenta se passar pelo anfitrião durante a vez DELE: o remetente vem do uid, nunca do que o jogador escreve
   host.v(`Online.recebeAcao({ de: 'uidCONV', id: '-idSP', tipo: 'end', args: { eu: 0, quem: 0, idx: 0 } })`);
   ok(host.v('S.order[S.t] === 0 && S.hide === false') && host.v('Online.ack[1].ok') === false && /vez/.test(host.v('Online.ack[1].msg')), 'convidado se passando pelo anfitrião: recusado ("Não é a sua vez"), a vez do anfitrião continua: ' + host.v('JSON.stringify(Online.ack[1])'));
@@ -86,10 +86,10 @@ const { LAT, aparelho, criaBanco, ok, espera, ate, partida, avanca, resumo } = r
   host.v('Bot.delay = 150; S.players[2].ind = { id: "IND_BOT", nm: "EVENTO_BOT", coins: 0 }; render()');
   ok(await avanca(host, conv, 2), 'chegou a vez do bot');
   await ate(() => conv.v('S.order[S.t] === 2'), 'convidado vê a vez do bot');
-  ok(/está jogando/.test(conv.html()), 'convidado vê a tela "Bot X está jogando": ' + conv.html().slice(0, 100));
+  ok(/está jogando|vez de <b>/.test(conv.html()), 'convidado vê a tela "Bot X está jogando" (a mesa): ' + conv.html().slice(0, 100));
   ok(!/Velocidade/.test(conv.html()) && /Velocidade/.test(host.html()), 'botão ⏩ só no anfitrião');
   ok(conv.v('Bot.on === false && Bot.timer === null'), 'convidado continua sem rodar bot');
-  ok(conv.v('S.players[2].ind && S.players[2].ind.id') === 'IND_BOT' && /EVENTO_BOT/.test(conv.html()), 'evento individual do BOT é público: chega ao convidado e aparece na caixa de eventos');
+  conv.v('Mesa.alterna("reg")'); ok(conv.v('S.players[2].ind && S.players[2].ind.id') === 'IND_BOT' && /EVENTO_BOT/.test(conv.html()), 'evento individual do BOT é público: chega ao convidado e aparece na caixa de eventos (painel 📜 da mesa)'); conv.v('Mesa.alterna(null)');
   await ate(() => host.v('S.order[S.t] !== 2'), 'bot terminou o turno sozinho', 10000);
   ok(host.v('S.order[S.t] !== 2'), 'bot jogou e passou a vez (rodada ' + host.v('S.round') + ')');
   await ate(() => conv.v('S.order[S.t]') === host.v('S.order[S.t]'), 'convidado acompanha a vez depois do bot'); host.v('Bot.delay = 0');
