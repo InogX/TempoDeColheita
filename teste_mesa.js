@@ -113,7 +113,8 @@ const cont = (h, re) => (h.match(re) || []).length;
   L.v('S.players[3].fields = [...Array(15)].map((_, i) => ({ c: { id: "c" + i, slots: 2, types: K, uid: 100 + i }, plots: [] }))');
   const mesa10 = L.v('Mesa.tela(cur(), me())');
   ok(cont(mesa10, /class="ms-zona/g) === 10 && nomes.every((nm, i) => mesa10.includes(`${i + 1}. ${nm}`) || mesa10.includes(`. ${nm}`)), '10 jogadores: 10 zonas, uma por jogador');
-  ok(/\+3/.test(mesa10) && cont(mesa10, /class="ms-ft/g) <= 10 * 12 + 1, 'um jogador com 15 campos: a zona mostra 12 e "+3" (não estoura a mesa)');
+  ok((/ms-mais">\+\d+/.test(mesa10) || /ms-sum/.test(mesa10)) && cont(mesa10, /class="ms-ft/g) < 10 * 15, 'um jogador com 15 campos: a zona mostra só alguns ("+N" ou o resumo nas zonas pequenas) e não estoura a mesa');
+  ok(/ms-mao c/.test(mesa10) && /ms-sum/.test(mesa10), 'mesa de 10: as zonas laterais pequenas mostram só o número de cartas na mão e o resumo dos campos');
   ok(/data-i="0"[^>]*ms-eu|ms-eu[^>]*data-i="0"/.test(mesa10), 'no assento 1 está o jogador 0 (quem está na vez no jogo local de teste)');
 
   const { certos, falhas } = resumo(); console.log(`\n== Mesa: ${certos} conferências certas, ${falhas} falhas ==`); process.exit(falhas ? 1 : 0);

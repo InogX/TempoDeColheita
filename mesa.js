@@ -1,8 +1,8 @@
 // ===== FICHA TÉCNICA =====
 // mesa.js: MESA (visão superior, etapa M2). Só no ONLINE e só quando você NÃO está jogando (tela de espera e vez de um bot): no lugar do texto "X está jogando…" mostra a mesa: uma zona por jogador em volta, VOCÊ sempre embaixo (assento 1, à esquerda), os assentos em ordem de turno no sentido horário; no centro a SUA loja de campos (só você vê), os baralhos e a barra de botões. Um só nome global: Mesa.
-// Protótipo aprovado: "Mesa — protótipo v2 (2 a 10 jogadores)". Layout por nº de jogadores em `Mesa.L` ([base, esquerda, topo, direita] = assentos em cada lado). Tudo é medido em `cqw` (container query) e a cena toda gira 90° no celular em pé (opção ⚙ para desligar).
+// Protótipo aprovado: "Mesa — protótipo v2 (2 a 10 jogadores)". Layout por nº de jogadores em `Mesa.L` ([base, esquerda, topo, direita] = assentos em cada lado). PALCO de proporção FIXA 2:1 (`.ms-palco`): tudo é medido em `cqw` do palco, que escala por inteiro e fica centralizado (faixas nas sobras) em qualquer janela; abaixo de 640 px de largura ele para de encolher e a tela rola. O CENTRO (`.ms-compra`) é um container próprio e se adapta à altura que sobrar. A cena toda gira 90° no celular em pé (opção ⚙ para desligar).
 // Informação: a mesa NÃO cria regra de informação. Para cada jogador mostra só o que `sees()` permite (moedas, dívida, estoque e o que está plantado só se você pode ver) mais os NÚMEROS públicos da visão: cartas na mão (nMao), vagas usadas de cada campo (usados) e cartas em cada baralho (dkN). Nada de HTML vindo da rede sem escapar.
-// Arte: ASSETS.mesa (editor.html, seção Mesa): fundo, cor do fundo, verso das cartas na mão e verso/cor de cada baralho. Sem imagem usa a cor; sem ASSETS.mesa usa os padrões de Mesa.DEF.
+// Arte: ASSETS.mesa (editor.html, seção Mesa): fundo (proporção 2:1, ex.: 1900×950), cor do fundo, verso das cartas na mão e verso/cor de cada baralho (recursos e eventos: 576×1032 vertical; campos: 1248×832 horizontal, igual às cartas de campo). Sem imagem usa a cor; sem ASSETS.mesa usa os padrões de Mesa.DEF.
 // Interface: zona = toque abre "Ver jogador" (A.view). Barra: 🎯 Objetivo, 🤝 Mercado, 📜 Registro (eventos e registro), ⚙ (girar a mesa; usar a tela simples), ⏩ (anfitrião, na vez de um bot), Sair. O chat (chat.js) tem o próprio botão 💬 fora do #app.
 // Preferências (localStorage, só deste aparelho): tc_mesa = 'off' usa a tela simples de antes; tc_mesa_gira = 'off' não gira a mesa no celular em pé.
 // Ganchos em tela.js: Mesa.sai() no começo de render(); Mesa.ativa() e Mesa.tela(vez, p) na espera e na vez do bot. O jogo local (passe o aparelho) não usa a mesa.
@@ -19,7 +19,9 @@ const Mesa = (() => {
     corFundo: '#2f5a3b',
     baralhos: { plantacao: { nome: 'Recursos', cor: '#e0262f' }, campo: { nome: 'Terrenos', cor: '#6a4c93' }, geral: { nome: 'Eventos gerais', cor: '#1da1e6' }, individual: { nome: 'Eventos individuais', cor: '#4752cf' } } };
   const LETRA = { plantacao: 'R', campo: 'T', geral: 'G', individual: 'I' };
-  const MAX_FT = 12; // campos desenhados por zona (o resto vira "+N")
+  // quantos campos cada zona desenha (o resto vira "+N"): depende do nº de jogadores porque a zona encolhe quando há mais gente
+  const maxFt = (lado, n) => lado === 'lado' ? (n <= 4 ? 12 : n <= 8 ? 8 : 0) : (n <= 4 ? 11 : n <= 6 ? 7 : 5); // 0 = zona pequena (mesa de 9 ou 10): só o resumo
+  const largura = n => n <= 4 ? ['26cqw', '16cqw'] : n <= 6 ? ['21cqw', '14cqw'] : ['17.5cqw', '12.5cqw']; // [topo/base, lados]
 
   const M = {
     // [base, esquerda, topo, direita]: quantos assentos em cada lado. Assento 1 = você, embaixo à esquerda; numeração no sentido horário.
@@ -52,19 +54,22 @@ const Mesa = (() => {
 
     // ---------- peças ----------
     baralho(k) { const a = M.baralhoArte(k), n = M.dkN(k);
-      return `<div class="ms-baralho" style="${a.st}" title="${esc(a.nome)}: ${n == null ? '?' : n} carta(s)">${a.img ? '' : LETRA[k]}<small>${n == null ? '?' : n}</small></div>`; },
-    zona(seat, c) {
+      return `<div class="ms-baralho${k === 'campo' ? ' h' : ''}" style="${a.st}" title="${esc(a.nome)}: ${n == null ? '?' : n} carta(s)">${a.img ? '' : LETRA[k]}<small>${n == null ? '?' : n}</small></div>`; },
+    comArte() { const A = M.arte(), r = M.baralhoArte('plantacao'); return okImg(A.versoMao) || !!r.img; }, // há imagem de verso para a mão?
+    mao(cnt, compacto) { if (compacto) return `<div class="ms-mao c"><small>🃏 ${cnt}</small></div>`; // zona pequena (mesa de 9 ou 10): só o número
+      const n = Math.min(cnt, M.comArte() ? 5 : 8), st = M.versoMao();
+      return `<div class="ms-mao${M.comArte() ? ' art' : ''}"><div class="ms-mcs">${[...Array(n)].map(() => `<i class="ms-mc" style="${st}"></i>`).join('')}</div><small>${cnt}</small></div>`; },
+    zona(seat, c, lado) {
       const { n, eu0, p } = c, i = M.quem(seat, n, eu0), q = S.players[i], eh = i === eu0, vis = eh || sees(p, q), vez = S.order && S.order[S.t] === i && !q.out;
       const nome = `${seat}. ${esc(q.n)}${q.bot ? ' 🤖' : ''}${q.out ? ' ☠' : ''}${!eh && vis && !q.out ? ' 👁' : ''}${vez ? ' ▶' : ''}`;
       if (q.out) return `<div class="ms-zona ms-out" data-i="${i}" onclick="A.view(${i})"><b>${nome}</b><div class="ms-eli">eliminado</div></div>`;
-      const cnt = nMao(q), barras = [...Array(Math.min(cnt, 10))].map(() => `<i class="ms-mc" style="${M.versoMao()}"></i>`).join('');
-      const fs = q.fields || [], mostra = fs.slice(0, MAX_FT), mais = fs.length - mostra.length;
+      const cnt = nMao(q), lim = maxFt(lado, n), fs = q.fields || [], resumo = lim === 0, mais = !resumo && fs.length > lim ? fs.length - lim + 1 : 0, mostra = resumo ? [] : fs.slice(0, mais ? lim - 1 : lim);
       const tiles = mostra.map(f => { const u = usados(f), pl = vis && f.plots && f.plots.length ? `<small>${f.plots.map(x => esc(CROPS[x.c.crop] ? CROPS[x.c.crop].slice(0, 1) : '?') + (x.c.nivel || 1)).join(' ')}</small>` : '';
-        return `<span class="ms-ft${u >= f.c.slots ? ' cheio' : ''}" title="${esc(nm(f.c))}: ${u} de ${f.c.slots} vagas usadas">${u}/${f.c.slots}${pl}</span>`; }).join('') + (mais > 0 ? `<span class="ms-ft ms-mais">+${mais}</span>` : '');
+        return `<span class="ms-ft${u >= f.c.slots ? ' cheio' : ''}" title="${esc(nm(f.c))}: ${u} de ${f.c.slots} vagas usadas">${u}/${f.c.slots}${pl}</span>`; }).join('') + (mais > 0 ? `<span class="ms-ft ms-mais">+${mais}</span>` : '') + (resumo ? `<span class="ms-ft ms-sum" title="${fs.length} campo(s): ${fs.reduce((a, f) => a + usados(f), 0)} de ${fs.reduce((a, f) => a + f.c.slots, 0)} vagas usadas">${fs.length} 🌾 ${fs.reduce((a, f) => a + usados(f), 0)}/${fs.reduce((a, f) => a + f.c.slots, 0)}</span>` : '');
       const din = vis && q.coins != null ? `<div class="ms-din">💰 ${q.coins}${q.debt ? ' · dív. ' + q.debt : ''}</div>` : '';
       const est = vis && q.res ? K.filter(k => (q.res[k] || 0) > 0).map(k => esc(CROPS[k].slice(0, 2)) + ' ' + q.res[k]).join(' · ') : '';
       return `<div class="ms-zona${vez ? ' vez' : ''}${eh ? ' ms-eu' : ''}" data-i="${i}" onclick="A.view(${i})"><b>${nome}</b>
-        <div class="ms-lin"><div class="ms-mao">${barras}<small>${cnt}</small></div><div class="ms-fts">${tiles || '<small>sem campos</small>'}</div></div>${din}${est ? `<div class="ms-est">${est}</div>` : ''}</div>`; },
+        <div class="ms-lin">${M.mao(cnt, resumo)}<div class="ms-fts">${tiles || '<small>sem campos</small>'}</div></div>${din}${est ? `<div class="ms-est">${est}</div>` : ''}</div>`; },
 
     painelHTML(vez, p) {
       if (M.painel === 'reg') { const ie = vez.bot ? vez : p;
@@ -87,17 +92,19 @@ const Mesa = (() => {
       const loja = p.out ? '' : (lojaDe(p) || []).map(k => `<div class="ms-cp">${cardHTML(k)}<b>${k.trava ? '🔒 ' : ''}${buyPrice(p, k) || 'Grátis'}</b></div>`).join('');
       const evs = S.ev.map(e => `<div class="ms-ev">${esc(nm(e.c))} · ${e.left} rod.</div>`).join('');
       const pn = M.painelHTML(vez, p);
-      return `<div class="ms-cena"><div class="ms-mesa" style="${M.fundo()}">
-        <div class="ms-topo">${a.topo.map(s => M.zona(s, c)).join('')}</div>
-        <div class="ms-meio"><div class="ms-lado ms-esq">${a.esq.map(s => M.zona(s, c)).join('')}</div>
-          <div class="ms-centro">${M.baralho('campo')}<div class="ms-compra">
-            <div class="ms-st">Rodada ${S.round} · vez de <b>${esc(vez.n)}</b>${p.out ? ' · ☠ você foi eliminado: acompanhe a partida' : ''}${feito ? ' · ✔ seu objetivo está cumprido' : ''}</div>
-            ${loja ? `<div class="ms-t">Sua loja de campos (só você vê)</div><div class="ms-fila">${loja}</div>` : (p.out ? '' : '<div class="ms-t">Sua loja de campos é sorteada no início do seu turno</div>')}
+      const [zw, sw] = largura(n);
+      return `<div class="ms-cena"><div class="ms-palco"><div class="ms-mesa" style="${M.fundo()};--zw:${zw};--sw:${sw}">
+        <div class="ms-topo">${a.topo.map(s => M.zona(s, c, 'topo')).join('')}</div>
+        <div class="ms-meio"><div class="ms-lado ms-esq">${a.esq.map(s => M.zona(s, c, 'lado')).join('')}</div>
+          <div class="ms-centro">${M.baralho('campo')}<div class="ms-compra"><div class="ms-ci">
+            <div class="ms-topc"><div class="ms-st">Rodada ${S.round} · vez de <b>${esc(vez.n)}</b>${p.out ? ' · ☠ você foi eliminado: acompanhe a partida' : ''}${feito ? ' · ✔ seu objetivo está cumprido' : ''}</div>
+            ${loja ? '<div class="ms-t">Sua loja de campos (só você vê)</div>' : (p.out ? '' : '<div class="ms-t">Sua loja de campos é sorteada no início do seu turno</div>')}</div>
+            <div class="ms-fila" style="--nc:${Math.max(1, (lojaDe(p) || []).length)}">${loja}</div>
             <div class="ms-barra"><button onclick="A.modal('obj')">🎯 Objetivo${feito ? ' ✔' : ''}</button><button onclick="A.modal('mkt')">🤝 Mercado</button><button onclick="Mesa.alterna('reg')">📜 Registro</button><button onclick="Mesa.alterna('cfg')" aria-label="Opções da mesa">⚙</button>${vez.bot && host ? '<button onclick="Bot.delay = Bot.delay > 300 ? 100 : 700" aria-label="Velocidade do bot">⏩</button>' : ''}<button onclick="A.quit()">Sair</button></div>
-          </div></div>
-          <div class="ms-lado ms-dir">${a.dir.map(s => M.zona(s, c)).join('')}</div></div>
-        <div class="ms-base"><div class="ms-canto">${M.baralho('plantacao')}</div>${a.base.map(s => M.zona(s, c)).join('')}<div class="ms-canto">${evs}${M.baralho('geral')}${M.baralho('individual')}</div></div>
-        </div>${pn ? `<div class="ms-painel">${pn}</div>` : ''}</div>`;
+          </div></div></div>
+          <div class="ms-lado ms-dir">${a.dir.map(s => M.zona(s, c, 'lado')).join('')}</div></div>
+        <div class="ms-base"><div class="ms-canto">${M.baralho('plantacao')}</div>${a.base.map(s => M.zona(s, c, 'base')).join('')}<div class="ms-canto">${evs}${M.baralho('geral')}${M.baralho('individual')}</div></div>
+        </div>${pn ? `<div class="ms-painel">${pn}</div>` : ''}</div></div>`;
     },
     sai() { if (!M.visivel) return; M.visivel = false; try { document.body.classList.remove('ms-on'); document.body.classList.remove('ms-gira'); } catch (e) { /* sem importância */ } },
 

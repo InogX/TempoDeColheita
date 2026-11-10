@@ -62,6 +62,7 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 | C | **Tutorial** | Conteúdo + tela | **Baixa (texto) a alta (guiado)** | depende do formato; `menu.js`, `tela.js`, `style.css` | Não |
 | D | **`qa.html`** | Ferramenta do dono | **Baixa a média** | o próprio `qa.html` + os arquivos atuais | Não (adiado pelo dono) |
 | E | **Buscar Partida** | Online / social | **Alta** | `rede.js`, `lobby.js`, `menu.js`, regras do banco | Não |
+| G | **Mesa (visão superior), Chat e Botão de Objetivo** (plano próprio) | Visual / online | **M1 e M2 feitos; M3 alta, M4 média, M5 média (opcional)** | `mesa.js`, `tela.js`, `visao.js`, `style.css`, `zoom.js`, `janelas.js`, `pecas-tela.js` + `PLANO_DESENVOLVIMENTO_MESA` | Não |
 | F ✅ | **Loja de campos por jogador, muda a cada turno (com trava)** | Regras / design | **Média** (mexe em regra, comandos, bot e tela; sem mexer nas regras do banco, a confirmar) | `rodada.js`, `acoes-economia.js`, `comandos.js`, `visao.js`, `tela.js`, `bot.js`, `consultas.js`, `acoes-turno.js`, `style.css`, `online.js` | Não, mas **afeta o balanceamento (A)**: decidir antes de medir de novo |
 
 ### A. Balanceamento — **3 rodadas feitas** (ver `RELATORIO_BALANCEAMENTO.md`, seção "Rodada 3")
@@ -113,6 +114,15 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 
 ---
 
+### G. Mesa (visão superior), Chat e Botão de Objetivo — plano próprio (`Plano de Desenvolvimento Mesa, Chat e Botão de Objetivo`) — ✅ **M1 e M2 prontos e testados em Node; falta o dono testar no celular**
+- **Feito:** Chat (Fase 12) ✅; botão 🎯 Objetivo (online) ✅; protótipo v2 ✅; **M1** números públicos na visão (cartas na mão, vagas usadas por campo, cartas em cada baralho) ✅; **M2** a mesa no lugar da tela de espera e da vez do bot ✅; **Editor** controla fundo e versos dos baralhos (seção Mesa) ✅. `teste_mesa.js` 60/60; a bateria completa continua verde. Sabotei a visão (vazando moedas e loja) e o teste pegou.
+- **Decisões do dono:** campos dos outros mostram usados/vagas; cartas na mão de todos são públicas; com "ver tudo" aparece também o plantado; centro = a SUA loja.
+- **Falta (dono):** trocar os arquivos, **abrir o Editor e clicar em Salvar** (grava `ASSETS.mesa` e `camposTrava` no `cartas.js`), e **testar no celular** (em pé e deitado, Android e iPhone): legibilidade das zonas, 5 a 10 jogadores, o Mercado e o chat com a cena girada (teclado), tocar numa zona, o painel 📜 e o ⚙ (desligar a rotação ou a mesa).
+- **Teste no celular (feito pelo dono, Blocos 0 a 4) e correções:** o dono apontou (1) proporção das imagens, (2) centro desproporcional com a loja, (3) no PC a área de compra descendo até ficar inacessível, (4) com o celular virado a loja cortada e tamanho mínimo. **Corrigido** com o palco de proporção fixa 2:1 e o centro que se adapta à altura (verificado em 140 combinações de tela, jogadores e campos, 0 problemas). **Falta o dono rever no aparelho** as mesmas telas.
+- **Riscos que só o celular mostra:** teclado do Mercado/chat com a cena girada 90°; iPhone anterior ao iOS 16 não entende `cqw`; zona com muitos campos (mostra 12 e "+N"); o botão 💬 do chat fica fixo no canto da tela e pode cobrir parte da mesa; faixa de segurança (notch) ainda não tratada (M4).
+- **Ainda não feito:** **M3** mesa na sua vez (mão embaixo, compra da loja, plantar, Governo, Encerrar turno: reaproveita `Cmd` e `Z`; complexidade *alta*); **M4** ergonomia no celular (miniaturas, áreas seguras, alvos de toque, movimento reduzido; *média*); **M5** animações (*média, opcional*; cobre parte do VFX do item B).
+- **Cuidado:** muitos arquivos mudaram, então o `VERSAO` do `online.js` foi para `2026-11-02a`. Não publicar com partida em andamento.
+
 ## 3. Ideias menores e opcionais (só se fizerem falta)
 - **Ajuste do zoom no iPhone** nos campos de número: só se o teste mostrar o problema; precisa do `style.css`. *Baixa.*
 - **Menos consumo de download:** hoje cada ação reenvia a visão inteira a todos os humanos. Só vale se a medida real mostrar problema; não parece ser o caso. *Baixa a média.*
@@ -129,6 +139,7 @@ Junta num mesmo jogo: partida longa, consumo, sala lotada e as pendências menor
 | 2 | **F. Campos do centro mudam a cada turno** | É uma mudança de **regra central**. Quanto antes decidir, menos retrabalho: ela afeta o balanceamento, o bot, o tutorial e os testes. |
 | 3 | **A. Balanceamento** (trocar os 5 arquivos, jogar 2 jogadores e uma de 6, depois A5/A3/A4) | Define a qualidade do jogo em si. Só faz sentido medir **depois do F**. |
 | 4 | **Sessão 2 de testes** (partida longa, consumo, sala lotada) | Vale mais feita **na versão final de regras** (com F e A): uma partida só cobre tudo. Se quiser divulgar antes, pode fazer já e repetir depois. |
+| 4b | **G. Mesa: testar M1 e M2 no celular**, depois M3 | É o que o dono mais quer ver no jogo e já está pronto; testar no celular antes de começar o M3 evita refazer a mesa na sua vez. |
 | 5 | **C. Tutorial** (começar pelo formato simples, de texto) | Ensina as regras, então só depois de F e A estabilizarem. É o que mais ajuda quem chega sem conhecer ninguém. |
 | 6 | **B. VFX** | Baixo risco e resultado visível, mas é acabamento: não muda se o jogo é bom ou não. |
 | 7 | **D. `qa.html`** | Rede de segurança para regras; mais útil depois que as regras pararem de mudar. Pode subir de posição se você quiser testar F e A sem Node. |
@@ -152,3 +163,4 @@ A **Sessão 2** pode acontecer a qualquer momento, em paralelo.
 | **B. VFX** | `zoom.js` (gancho `Z.fx`), `style.css`, `cartas-visual.js`, `tela.js`. Para efeitos de produção/vitória/eventos: `rodada.js`, `acoes-turno.js`. Para conferir o redesenho online: `online.js`. |
 | **D. `qa.html`** | `qa.html` (atual), `acoes-turno.js`, `acoes-economia.js`, `acoes-plantio.js`, `acoes-mercado.js`, `comandos.js`, `estado.js`, `menu.js`, e o pacote `testes_tempo_de_colheita.zip` para comparar. |
 | **E. Buscar Partida** | `rede.js`, `lobby.js`, `menu.js`, `online.js`, `chat.js` (moderação), `regras_firebase.json`, `teste_regras.js`, `PUBLICACAO_FASE11.md`, `style.css`. |
+| **G. Mesa (M3 em diante)** | `mesa.js`, `tela.js`, `zoom.js`, `janelas.js`, `visao.js`, `pecas-tela.js`, `bot.js`, `online.js`, `style.css`, `cartas-visual.js`, `config.js`, `editor.html`, `teste_comum.js`, `teste_mesa.js` e o resultado do teste no celular (prints). |
